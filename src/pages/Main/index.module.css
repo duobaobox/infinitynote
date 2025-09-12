@@ -1,0 +1,214 @@
+/**
+ * 主页面样式文件
+ * 使用CSS Modules实现样式隔离
+ */
+
+/* 主容器样式 */
+.container {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  margin: 8px 4px 8px 8px; /* 添加右侧4px间距 */
+  border-radius: 6px;
+  border: 1px solid #f3f3f3;
+  background: #ffffff;
+  height: calc(100vh - 16px);
+  overflow: hidden;
+  position: relative;
+}
+
+/* 侧边栏头部区域样式 */
+.sidebarHeader {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-bottom: 1px solid #f3f3f3;
+}
+
+/* 设置按钮样式 */
+.settingsButton {
+  margin-right: 8px;
+}
+
+/* 操作按钮组样式 */
+.actionButtons {
+  gap: 4px;
+}
+
+/* 画布列表容器样式 */
+.canvasListContainer {
+  padding: 8px;
+  overflow-y: auto;
+  height: calc(100% - 120px);
+}
+
+/* 分段控制器样式 */
+.segmentedControl {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* 添加按钮样式 */
+.addButton {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* 画布项样式 */
+.canvasItem {
+  padding: 4px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+/* 激活状态的画布项样式 */
+.canvasItemActive {
+  composes: canvasItem;
+  background: #d1e4ff;
+}
+
+/* 画布项头部样式 */
+.canvasItemHeader {
+  display: flex;
+  align-items: center;
+  padding: 8px 4px;
+}
+
+/* 画布项内容区域样式 */
+.canvasItemContent {
+  flex: 1;
+  margin-left: 5px;
+}
+
+/* 画布项标题行样式 */
+.canvasItemTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 画布项统计信息行样式 */
+.canvasItemStatsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+/* 便签数量文本样式 */
+.notesCount {
+  color: #1677ff;
+  font-size: 10px;
+}
+
+/* 画布标题文本样式 */
+.canvasTitle {
+  color: rgba(61, 61, 61, 0.66);
+  font-size: 12px;
+}
+
+/* 星标图标样式 */
+.starIcon {
+  font-size: 12px;
+  color: #ffc069;
+}
+
+/* 便签列表容器样式 */
+.notesListContainer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+}
+
+/* 便签列表头部样式 */
+.notesListHeader {
+  padding: 8px;
+  border-bottom: 1px solid #f3f3f3;
+  height: 68px;
+}
+
+/* 便签列表标题区域样式 */
+.notesListTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+/* 便签列表标题文本样式 */
+.notesListTitleText {
+  padding: 2px 6px;
+  background: #f3f3f3;
+  border-radius: 4px;
+  font-size: 12px;
+  color: rgba(61, 61, 61, 0.66);
+}
+
+/* 便签列表搜索框样式 */
+.notesListSearch {
+  width: 100%;
+}
+
+/* 便签列表内容区域样式 */
+.notesListContent {
+  height: 52px;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+/* 便签项样式 */
+.noteItem {
+  border-radius: 4px;
+  border-color: #efefef;
+  margin-bottom: 4px;
+}
+
+/* 便签项内容区域样式 */
+.noteItemContent {
+  display: flex;
+  align-items: center;
+}
+
+/* 便签颜色指示器样式 */
+.noteColorIndicator {
+  width: 3px;
+  height: 19px;
+  border-radius: 1px;
+  background: rgba(255, 192, 105, 0.54);
+  margin-right: 9px;
+}
+
+/* 便签标题文本样式 */
+.noteTitle {
+  color: rgba(61, 61, 61, 0.66);
+  font-size: 12px;
+}
+
+/* 主内容区域布局样式 */
+.mainContentLayout {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+/* 主内容区域样式 */
+.mainContent {
+  margin: 8px 8px 8px 4px; /* 左侧添加4px间距，与侧边栏右侧对称 */
+  background: #fff;
+  border-radius: 6px;
+  height: calc(100vh - 16px);
+  overflow: hidden;
+  position: relative;
+}
