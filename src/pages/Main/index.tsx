@@ -1,15 +1,14 @@
 import React from "react";
-// 引入Ant Design图标组件
+// 从图标注册表引入需要的基础图标
 import {
   FolderOpenFilled,
   SearchOutlined,
   SettingOutlined,
-  PlusOutlined,
-  MenuFoldOutlined,
-  RedoOutlined,
-  UndoOutlined,
-  RollbackOutlined
+  PlusOutlined
 } from "@ant-design/icons";
+// 引入图标注册表
+import { iconRegistry } from '../../utils/iconRegistry';
+import type { IconType } from '../../utils/iconRegistry';
 // 引入Ant Design组件
 import {
   Layout,
@@ -23,6 +22,12 @@ import {
 } from "antd";
 // 引入CSS模块样式
 import styles from "./index.module.css";
+
+// 创建动态图标组件
+const DynamicIcon = ({ type }: { type: IconType }) => {
+  const IconComponent = iconRegistry[type];
+  return IconComponent ? <IconComponent /> : null;
+};
 
 // 解构Layout组件中的Sider和Content子组件
 const { Sider, Content } = Layout;
@@ -111,10 +116,10 @@ const Main: React.FC = () => {
 
           {/* 操作按钮组（折叠、刷新、撤销、撤回） */}
           <Space size={4} className={styles.actionButtons}>
-            <Button type="text" size="small" icon={<MenuFoldOutlined />}></Button>
-            <Button type="text" size="small" icon={<RedoOutlined />}></Button>
-            <Button type="text" size="small" icon={<UndoOutlined />}></Button>
-            <Button type="text" size="small" icon={<RollbackOutlined />}></Button>
+            <Button type="text" size="small" icon={<DynamicIcon type="MenuFoldOutlined" />}></Button>
+            <Button type="text" size="small" icon={<DynamicIcon type="RedoOutlined" />}></Button>
+            <Button type="text" size="small" icon={<DynamicIcon type="UndoOutlined" />}></Button>
+            <Button type="text" size="small" icon={<DynamicIcon type="RightOutlined" />}></Button>
           </Space>
         </div>
 
