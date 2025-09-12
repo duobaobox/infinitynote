@@ -3,14 +3,12 @@ import React from 'react';
 import { 
   FolderOpenFilled, 
   SearchOutlined, 
-  UnorderedListOutlined,
   SettingOutlined,
   PlusOutlined
 } from '@ant-design/icons';
 // 引入Ant Design组件
 import { 
   Layout, 
-  Menu, 
   Button, 
   Input, 
   Segmented, 
@@ -37,8 +35,8 @@ const { Sider, Content } = Layout;
  */
 const Main: React.FC = () => {
   return (
-    // 主布局容器，使用Ant Design的Layout组件
-    <Layout className={styles.container}>
+    // 主布局容器
+    <div className={styles.container}>
       {/* 侧边栏 - 固定宽度200px */}
       <Sider 
         width={200} 
@@ -178,14 +176,12 @@ const Main: React.FC = () => {
         </div>
       </Sider>
       
-      {/* 主内容区域 - 自适应宽度 */}
-      <Layout className={styles.mainContentLayout}>
-        <Content className={styles.mainContent}>
-          {/* 画布内容区域，暂时为空 */}
-          {/* 这里将显示选中画布的内容 */}
-        </Content>
-      </Layout>
-    </Layout>
+      {/* 画布区域 - 自适应宽度 */}
+      <Content className={styles.canvas}>
+        {/* 画布内容区域，暂时为空 */}
+        {/* 这里将显示选中画布的内容 */}
+      </Content>
+    </div>
   );
 };
 

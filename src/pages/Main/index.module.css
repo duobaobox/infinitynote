@@ -11,6 +11,7 @@
   position: relative;
   margin: 0;
   padding: 0;
+  display: flex;
 }
 
 /* 侧边栏样式 */
@@ -194,19 +195,11 @@
   font-size: 12px;
 }
 
-/* 主内容区域布局样式 */
-.mainContentLayout {
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  margin: 0;
-  padding: 0;
-}
-
-/* 主内容区域样式 */
-.mainContent {
+/* 画布区域样式 */
+.canvas {
+  flex: 1;
   margin: 8px 8px 8px 4px; /* 左侧添加4px间距，与侧边栏右侧对称 */
-  background: #fff;
+  background: #f9f9f9; /* 添加淡灰色背景以便开发观察 */
   border-radius: 6px;
   height: calc(100vh - 16px);
   overflow: hidden;
