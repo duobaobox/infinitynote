@@ -1,5 +1,5 @@
 /**
- * 主页面样式文件
+ * Dashboard页面样式文件
  * 使用CSS Modules实现样式隔离
  */
 
@@ -11,25 +11,17 @@
   position: relative;
   margin: 0;
   padding: 0;
-  display: flex;
-  background: #f5f5f5; /* 淡灰色背景 */
 }
 
 /* 侧边栏样式 */
 .sidebar {
-  margin: 8px 4px 8px 8px; /* 添加右侧4px间距 */
+  margin: 8px 0 8px 8px;
   border-radius: 6px;
   border: 1px solid #f3f3f3;
   background: #ffffff;
   height: calc(100vh - 16px);
   overflow: hidden;
   position: relative;
-}
-
-/* 侧边栏Splitter样式 */
-.sidebarSplitter {
-  flex: 1;
-  height: 100%;
 }
 
 /* 侧边栏头部区域样式 */
@@ -48,26 +40,33 @@
 
 /* 操作按钮组样式 */
 .actionButtons {
-  gap: 4px;
+  gap: 8px; /* 调整按钮之间的间距 */
 }
 
-/* 分段控制器包装器样式 */
-.segmentedWrapper {
-  padding: 8px 8px 0 8px;
+/* 统一按钮样式 */
+.actionButtons .ant-btn {
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #868686;
+  transition: all 0.3s ease;
 }
 
-/* 添加画布按钮包装器样式 */
-.addButtonWrapper {
-  padding: 0 8px 8px 8px;
+.actionButtons .ant-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #000;
 }
 
 /* 画布列表容器样式 */
 .canvasListContainer {
-  padding: 0 8px;
+  padding: 8px;
   overflow-y: auto;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  height: calc(100% - 120px);
 }
 
 /* 分段控制器样式 */
@@ -79,7 +78,7 @@
 /* 添加按钮样式 */
 .addButton {
   width: 100%;
-  margin-bottom: 0;
+  margin-bottom: 8px;
 }
 
 /* 画布项样式 */
@@ -143,15 +142,18 @@
 
 /* 便签列表容器样式 */
 .notesListContainer {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
 }
 
 /* 便签列表头部样式 */
 .notesListHeader {
   padding: 8px;
   border-bottom: 1px solid #f3f3f3;
+  height: 68px;
 }
 
 /* 便签列表标题区域样式 */
@@ -159,7 +161,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px; /* 增加底部边距 */
+  margin-bottom: 4px;
 }
 
 /* 便签列表标题文本样式 */
@@ -178,7 +180,7 @@
 
 /* 便签列表内容区域样式 */
 .notesListContent {
-  flex: 1;
+  height: 52px;
   padding: 8px;
   overflow-y: auto;
 }
@@ -211,11 +213,19 @@
   font-size: 12px;
 }
 
-/* 画布区域样式 */
-.canvas {
-  flex: 1;
-  margin: 8px 8px 8px 4px; /* 左侧添加4px间距，与侧边栏右侧对称 */
-  background: #ffffff; /* 白色背景 */
+/* 主内容区域布局样式 */
+.mainContentLayout {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
+/* 主内容区域样式 */
+.mainContent {
+  margin: 8px 8px 8px 0;
+  background: #fff;
   border-radius: 6px;
   height: calc(100vh - 16px);
   overflow: hidden;
