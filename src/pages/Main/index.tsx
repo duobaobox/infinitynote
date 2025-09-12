@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 // 引入图标注册表
 import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
@@ -19,6 +19,7 @@ import styles from "./index.module.css";
 // 创建动态图标组件
 const DynamicIcon = ({ type }: { type: IconType }) => {
   const IconComponent = iconRegistry[type];
+  // @ts-ignore - 忽略类型检查，因为iconRegistry包含多种类型
   return IconComponent ? <IconComponent /> : null;
 };
 
@@ -39,6 +40,9 @@ const { Sider, Content } = Layout;
  * - 右侧主内容区域（自适应宽度）
  */
 const Main: React.FC = () => {
+  // 控制侧边栏折叠状态
+  const [collapsed, setCollapsed] = useState(false);
+
   // 生成画布列表假数据（5个画布）
   const canvasItems = Array.from({ length: 4 }, (_, index) => (
     <div
@@ -89,110 +93,125 @@ const Main: React.FC = () => {
     // 主布局容器
     <div className={styles.container}>
       {/* 侧边栏 - 固定宽度200px */}
-      <Sider width={200} theme="light" className={styles.sidebar}>
-        {/* 侧边栏顶部设置区域 */}
-        <div className={styles.sidebarHeader}>
-          {/* 设置按钮 */}
-          <Button
-            type="text"
-            icon={<DynamicIcon type="SettingOutlined" />}
-            size="small"
-            className={styles.settingsButton}
-          >
-            设置
-          </Button>
-
-          {/* 弹性间距，将两侧元素分开 */}
-          <div style={{ flex: 1 }}></div>
-
-          {/* 操作按钮组（折叠、刷新、撤销、撤回） */}
-          <Space size={4} className={styles.actionButtons}>
+      {!collapsed ? (
+        <Sider 
+          width={200} 
+          theme="light" 
+          className={styles.sidebar}
+        >
+          {/* 侧边栏顶部设置区域 */}
+          <div className={styles.sidebarHeader}>
+            {/* 设置按钮 */}
             <Button
               type="text"
+              icon={<DynamicIcon type="SettingOutlined" />}
               size="small"
-              icon={<DynamicIcon type="MenuFoldOutlined" />}
-            ></Button>
+              className={styles.settingsButton}
+            >
+              设置
+            </Button>
+
+            {/* 弹性间距，将两侧元素分开 */}
+            <div style={{ flex: 1 }}></div>
+
+            {/* 操作按钮组（折叠、刷新、撤销、撤回） */}
+            <Space size={4} className={styles.actionButtons}>
+              <Button
+                type="text"
+                size="small"
+                icon={<DynamicIcon type="MenuFoldOutlined" />}
+                onClick={() => setCollapsed(true)}
+              ></Button>
+              <Button
+                type="text"
+                size="small"
+                icon={<DynamicIcon type="RedoOutlined" />}
+              ></Button>
+              <Button
+                type="text"
+                size="small"
+                icon={<DynamicIcon type="LeftOutlined" />}
+              ></Button>
+              <Button
+                type="text"
+                size="small"
+                icon={<DynamicIcon type="RightOutlined" />}
+              ></Button>
+            </Space>
+          </div>
+
+          {/* 分段控制器 - 用于切换视图模式（画布/工作台） */}
+          <div className={styles.segmentedWrapper}>
+            <Segmented
+              size="small"
+              options={[
+                { label: "画布", value: "canvas" },
+                { label: "工作台", value: "workspace" },
+              ]}
+              className={styles.segmentedControl}
+              block
+            />
+          </div>
+
+          {/* 添加画布按钮 */}
+          <div className={styles.addButtonWrapper}>
             <Button
               type="text"
+              icon={<DynamicIcon type="PlusOutlined" />}
               size="small"
-              icon={<DynamicIcon type="RedoOutlined" />}
-            ></Button>
-            <Button
-              type="text"
-              size="small"
-              icon={<DynamicIcon type="LeftOutlined" />}
-            ></Button>
-            <Button
-              type="text"
-              size="small"
-              icon={<DynamicIcon type="RightOutlined" />}
-            ></Button>
-          </Space>
-        </div>
+              className={styles.addButton}
+              disabled
+            >
+              添加画布
+            </Button>
+          </div>
 
-        {/* 分段控制器 - 用于切换视图模式（画布/工作台） */}
-        <div className={styles.segmentedWrapper}>
-          <Segmented
-            size="small"
-            options={[
-              { label: "画布", value: "canvas" },
-              { label: "工作台", value: "workspace" },
-            ]}
-            className={styles.segmentedControl}
-            block
-          />
-        </div>
+          {/* 使用Splitter组件分隔画布列表和便签列表区域 */}
+          <Splitter layout="vertical" className={styles.sidebarSplitter}>
+            <Splitter.Panel defaultSize="30%" min="20%" max="80%">
+              {/* 画布列表区域 */}
+              <div className={styles.canvasListContainer}>{canvasItems}</div>
+            </Splitter.Panel>
 
-        {/* 添加画布按钮 */}
-        <div className={styles.addButtonWrapper}>
-          <Button
-            type="text"
-            icon={<DynamicIcon type="PlusOutlined" />}
-            size="small"
-            className={styles.addButton}
-            disabled
-          >
-            添加画布
-          </Button>
-        </div>
+            <Splitter.Panel defaultSize="70%" min="20%">
+              {/* 便签列表区域 */}
+              <div className={styles.notesListContainer}>
+                {/* 便签列表头部 */}
+                <div className={styles.notesListHeader}>
+                  {/* 标题行 */}
+                  <div className={styles.notesListTitle}>
+                    <div className={styles.notesListTitleText}>默认画布</div>
+                    {/* 徽标数字 - 显示便签数量 */}
+                    <Badge count={21} style={{ backgroundColor: "#1677ff" }} />
+                  </div>
 
-        {/* 使用Splitter组件分隔画布列表和便签列表区域 */}
-        <Splitter layout="vertical" className={styles.sidebarSplitter}>
-          <Splitter.Panel defaultSize="30%" min="20%" max="80%">
-            {/* 画布列表区域 */}
-            <div className={styles.canvasListContainer}>{canvasItems}</div>
-          </Splitter.Panel>
-
-          <Splitter.Panel defaultSize="70%" min="20%">
-            {/* 便签列表区域 */}
-            <div className={styles.notesListContainer}>
-              {/* 便签列表头部 */}
-              <div className={styles.notesListHeader}>
-                {/* 标题行 */}
-                <div className={styles.notesListTitle}>
-                  <div className={styles.notesListTitleText}>默认画布</div>
-                  {/* 徽标数字 - 显示便签数量 */}
-                  <Badge count={21} style={{ backgroundColor: "#1677ff" }} />
+                  {/* 搜索输入框 */}
+                  <Input
+                    placeholder="输入搜索内容"
+                    prefix={<DynamicIcon type="SearchOutlined" />}
+                    size="small"
+                    className={styles.notesListSearch}
+                  />
                 </div>
 
-                {/* 搜索输入框 */}
-                <Input
-                  placeholder="输入搜索内容"
-                  prefix={<DynamicIcon type="SearchOutlined" />}
-                  size="small"
-                  className={styles.notesListSearch}
-                />
+                {/* 便签列表内容区域 */}
+                <div className={styles.notesListContent}>{noteItems}</div>
               </div>
-
-              {/* 便签列表内容区域 */}
-              <div className={styles.notesListContent}>{noteItems}</div>
-            </div>
-          </Splitter.Panel>
-        </Splitter>
-      </Sider>
+            </Splitter.Panel>
+          </Splitter>
+        </Sider>
+      ) : (
+        // 折叠状态下的展开按钮
+        <Button
+          type="text"
+          icon={<DynamicIcon type="MenuUnfoldOutlined" />}
+          onClick={() => setCollapsed(false)}
+          className={styles.floatingCollapseButton}
+        />
+      )}
 
       {/* 画布区域 - 自适应宽度 */}
-      <Content className={styles.canvas}>
+      <Content className={collapsed ? styles.canvasCollapsed : styles.canvas}>
         {/* 画布内容区域，暂时为空 */}
         {/* 这里将显示选中画布的内容 */}
       </Content>

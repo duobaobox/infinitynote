@@ -26,6 +26,13 @@
   position: relative;
 }
 
+/* 侧边栏折叠时的样式 */
+.sidebar :global(.ant-layout-sider-zero-width-trigger) {
+  top: 12px;
+  right: -4px;
+  z-index: 1;
+}
+
 /* 侧边栏Splitter样式 */
 .sidebarSplitter {
   flex: 1;
@@ -220,4 +227,22 @@
   height: calc(100vh - 16px);
   overflow: hidden;
   position: relative;
+}
+
+/* 画布区域折叠样式 */
+.canvasCollapsed {
+  composes: canvas;
+  margin-left: 8px; /* 折叠时左侧边距为8px */
+}
+
+/* 悬浮折叠按钮样式 */
+.floatingCollapseButton {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
