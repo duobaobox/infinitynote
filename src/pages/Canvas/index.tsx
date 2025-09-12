@@ -7,22 +7,12 @@ import type {
   DragStartEvent,
   DragMoveEvent,
 } from "@dnd-kit/core";
-import { Button, FloatButton } from "antd";
 import { VirtualizedNoteContainer } from "../../components/VirtualizedNoteContainer";
 import { useNoteStore } from "../../store/noteStore";
-import { useCanvasStore, initializeDefaultCanvas } from "../../store/tagStore";
-import { iconRegistry } from "../../utils/iconRegistry";
-import type { IconType } from "../../utils/iconRegistry";
+import { useCanvasStore } from "../../store/tagStore";
 import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
 import styles from "./index.module.css";
-
-// 创建动态图标组件
-const DynamicIcon = ({ type }: { type: IconType }) => {
-  const IconComponent = iconRegistry[type];
-  // @ts-ignore - 忽略类型检查，因为iconRegistry包含多种类型
-  return IconComponent ? <IconComponent /> : null;
-};
 
 /**
  * 画布组件
@@ -57,11 +47,6 @@ export const Canvas: React.FC = () => {
     panCanvas,
   } = useCanvasStore();
 
-  // 初始化默认画布
-  useEffect(() => {
-    initializeDefaultCanvas();
-  }, []);
-
   // 获取当前画布的便签
   const canvasNotes = activeCanvasId ? getNotesByCanvas(activeCanvasId) : [];
 
@@ -87,8 +72,14 @@ export const Canvas: React.FC = () => {
   // 处理画布双击创建便签
   const handleCanvasDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (e.target === canvasRef.current) {
-        const canvasRect = canvasRef.current.getBoundingClientRect();
+      // 检查是否点击在空白区域（网格背景或画布本身）
+      const target = e.target as Element;
+      if (
+        target === canvasRef.current ||
+        target.classList.contains("grid") ||
+        target.closest(`.${styles.canvasContent}`)
+      ) {
+        const canvasRect = canvasRef.current!.getBoundingClientRect();
         const clickPosition = {
           x:
             (e.clientX - canvasRect.left - viewport.offset.x) / viewport.scale -
@@ -107,7 +98,14 @@ export const Canvas: React.FC = () => {
   // 处理画布点击清空选择
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent) => {
-      if (e.target === canvasRef.current) {
+      // 只有在点击空白区域时才清空选择
+      const target = e.target as Element;
+      if (
+        target === canvasRef.current ||
+        target.classList.contains("grid") ||
+        (target.closest(`.${styles.canvasContent}`) &&
+          !target.closest("[data-note-card]"))
+      ) {
         clearSelection();
       }
     },
@@ -170,17 +168,28 @@ export const Canvas: React.FC = () => {
 
   // 鼠标拖拽平移
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
-      // 中键或Ctrl+左键
-      e.preventDefault();
-      setIsPanning(true);
-      setPanStart({ x: e.clientX, y: e.clientY });
+    if (
+      e.target === canvasRef.current ||
+      (e.target as Element).closest(".canvasContent")
+    ) {
+      if (
+        e.button === 1 ||
+        (e.button === 0 && e.ctrlKey) ||
+        (e.button === 0 && e.altKey)
+      ) {
+        // 中键或Ctrl+左键或Alt+左键
+        e.preventDefault();
+        e.stopPropagation();
+        setIsPanning(true);
+        setPanStart({ x: e.clientX, y: e.clientY });
+      }
     }
   }, []);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (isPanning && panStart) {
+        e.preventDefault();
         const deltaX = e.clientX - panStart.x;
         const deltaY = e.clientY - panStart.y;
 
@@ -191,10 +200,47 @@ export const Canvas: React.FC = () => {
     [isPanning, panStart, panCanvas]
   );
 
-  const handleMouseUp = useCallback(() => {
-    setIsPanning(false);
-    setPanStart(null);
-  }, []);
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      if (isPanning) {
+        e.preventDefault();
+        setIsPanning(false);
+        setPanStart(null);
+      }
+    },
+    [isPanning]
+  );
+
+  // 添加全局鼠标事件处理
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isPanning && panStart) {
+        e.preventDefault();
+        const deltaX = e.clientX - panStart.x;
+        const deltaY = e.clientY - panStart.y;
+
+        panCanvas({ x: deltaX, y: deltaY });
+        setPanStart({ x: e.clientX, y: e.clientY });
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (isPanning) {
+        setIsPanning(false);
+        setPanStart(null);
+      }
+    };
+
+    if (isPanning) {
+      document.addEventListener("mousemove", handleGlobalMouseMove);
+      document.addEventListener("mouseup", handleGlobalMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleGlobalMouseMove);
+      document.removeEventListener("mouseup", handleGlobalMouseUp);
+    };
+  }, [isPanning, panStart, panCanvas]);
 
   // 触摸事件处理
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -275,6 +321,13 @@ export const Canvas: React.FC = () => {
           case "Escape":
             clearSelection();
             break;
+          case " ":
+            // 空格键临时切换到拖拽模式
+            if (!isPanning) {
+              e.preventDefault();
+              // 这里可以添加空格键拖拽的逻辑
+            }
+            break;
         }
       }
     };
@@ -285,44 +338,6 @@ export const Canvas: React.FC = () => {
 
   return (
     <div className={styles.canvasContainer}>
-      {/* 画布工具栏 */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarLeft}>
-          <Button
-            type="text"
-            icon={<DynamicIcon type="PlusOutlined" />}
-            onClick={() => handleCreateNote()}
-          >
-            新建便签
-          </Button>
-          <div className={styles.divider} />
-          <Button
-            type="text"
-            icon={<DynamicIcon type="ZoomInOutlined" />}
-            onClick={zoomIn}
-            title="放大 (Ctrl/Cmd + +)"
-          />
-          <Button
-            type="text"
-            icon={<DynamicIcon type="ZoomOutOutlined" />}
-            onClick={zoomOut}
-            title="缩小 (Ctrl/Cmd + -)"
-          />
-          <Button
-            type="text"
-            icon={<DynamicIcon type="BorderOutlined" />}
-            onClick={resetViewport}
-            title="重置视图 (Ctrl/Cmd + 0)"
-          />
-        </div>
-
-        <div className={styles.toolbarRight}>
-          <span className={styles.scaleInfo}>
-            {Math.round(viewport.scale * 100)}%
-          </span>
-        </div>
-      </div>
-
       {/* 画布区域 */}
       <div
         ref={canvasRef}
@@ -347,14 +362,14 @@ export const Canvas: React.FC = () => {
         >
           {/* 画布内容容器 */}
           <div
-            className={styles.canvasContent}
+            className={`${styles.canvasContent} canvasContent`}
             style={{
               transform: `translate(${viewport.offset.x}px, ${viewport.offset.y}px) scale(${viewport.scale})`,
               transformOrigin: "0 0",
             }}
           >
             {/* 网格背景 */}
-            <div className={styles.grid} />
+            <div className={`${styles.grid} grid`} />
 
             {/* 便签列表 */}
             <VirtualizedNoteContainer
@@ -374,20 +389,6 @@ export const Canvas: React.FC = () => {
           </div>
         </DndContext>
       </div>
-
-      {/* 浮动按钮 */}
-      <FloatButton.Group>
-        <FloatButton
-          icon={<DynamicIcon type="PlusOutlined" />}
-          tooltip="新建便签 (Ctrl/Cmd + N)"
-          onClick={() => handleCreateNote()}
-        />
-        <FloatButton
-          icon={<DynamicIcon type="BorderOutlined" />}
-          tooltip="重置视图 (Ctrl/Cmd + 0)"
-          onClick={resetViewport}
-        />
-      </FloatButton.Group>
     </div>
   );
 };

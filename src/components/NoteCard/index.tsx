@@ -64,6 +64,7 @@ export const NoteCard = memo<NoteCardProps>(
 
     return (
       <div
+        data-note-card
         className={`${styles.noteCard} ${isDragging ? styles.dragging : ""} ${
           isSelected ? styles.selected : ""
         }`}

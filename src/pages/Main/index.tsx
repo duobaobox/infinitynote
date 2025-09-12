@@ -1,9 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 // 引入图标注册表
 import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
+// 引入状态管理
+import { useNoteStore } from "../../store/noteStore";
+import { useCanvasStore, initializeDefaultCanvas } from "../../store/tagStore";
+import { NoteColor } from "../../types";
+import type { Position } from "../../types";
 // 引入画布组件
 import Canvas from "../Canvas";
+// 引入工具栏组件
+import { CanvasToolbar } from "../../components/CanvasToolbar";
 // 引入Ant Design组件
 import {
   Layout, // 用于整体页面布局，包含Sider和Content
@@ -44,6 +51,31 @@ const { Sider, Content } = Layout;
 const Main: React.FC = () => {
   // 控制侧边栏折叠状态
   const [collapsed, setCollapsed] = useState(false);
+
+  // 状态管理
+  const { createNote } = useNoteStore();
+  const { activeCanvasId, viewport } = useCanvasStore();
+
+  // 初始化默认画布
+  useEffect(() => {
+    initializeDefaultCanvas();
+  }, []);
+
+  // 创建新便签
+  const handleCreateNote = useCallback(
+    (position?: Position) => {
+      if (!activeCanvasId) return;
+
+      // 计算在画布坐标系中的位置
+      const canvasPosition = position || {
+        x: (window.innerWidth / 2 - viewport.offset.x) / viewport.scale - 100,
+        y: (window.innerHeight / 2 - viewport.offset.y) / viewport.scale - 75,
+      };
+
+      createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
+    },
+    [activeCanvasId, viewport, createNote]
+  );
 
   // 生成画布列表假数据（5个画布）
   const canvasItems = Array.from({ length: 4 }, (_, index) => (
@@ -212,6 +244,9 @@ const Main: React.FC = () => {
       <Content className={collapsed ? styles.canvasCollapsed : styles.canvas}>
         {/* 画布内容区域 */}
         <Canvas />
+
+        {/* 画布工具栏 */}
+        <CanvasToolbar onCreateNote={handleCreateNote} />
       </Content>
     </div>
   );

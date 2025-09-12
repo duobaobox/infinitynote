@@ -1,0 +1,53 @@
+.canvasToolbar {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 12px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.toolbarButton {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.toolbarButton:hover {
+  background: #f5f5f5;
+  color: #1677ff;
+}
+
+.zoomIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: 8px 4px;
+  font-size: 12px;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.zoomValue {
+  font-weight: 600;
+  line-height: 1;
+}
+
+.zoomUnit {
+  line-height: 1;
+  margin-top: 2px;
+}
