@@ -1,24 +1,17 @@
 import React from "react";
-// 从图标注册表引入需要的基础图标
-import {
-  FolderOpenFilled,
-  SearchOutlined,
-  SettingOutlined,
-  PlusOutlined
-} from "@ant-design/icons";
 // 引入图标注册表
-import { iconRegistry } from '../../utils/iconRegistry';
-import type { IconType } from '../../utils/iconRegistry';
+import { iconRegistry } from "../../utils/iconRegistry";
+import type { IconType } from "../../utils/iconRegistry";
 // 引入Ant Design组件
 import {
-  Layout,
-  Button,
-  Input,
-  Segmented,
-  Badge,
-  Card,
-  Space,
-  Splitter,
+  Layout, // 用于整体页面布局，包含Sider和Content
+  Button, // 用于设置按钮、添加画布按钮和操作按钮组
+  Input, // 用于便签列表的搜索框
+  Segmented, // 用于视图模式切换（Daily/Weekly）
+  Badge, // 用于显示便签数量的徽标
+  Card, // 用于便签项的容器
+  Space, // 用于操作按钮组的间距控制
+  Splitter, // 用于分隔画布列表和便签列表区域
 } from "antd";
 // 引入CSS模块样式
 import styles from "./index.module.css";
@@ -47,16 +40,14 @@ const { Sider, Content } = Layout;
  */
 const Main: React.FC = () => {
   // 生成画布列表假数据（5个画布）
-  const canvasItems = Array.from({ length: 5 }, (_, index) => (
+  const canvasItems = Array.from({ length: 4 }, (_, index) => (
     <div
       key={index}
       className={index === 0 ? styles.canvasItemActive : styles.canvasItem}
     >
       <div className={styles.canvasItemHeader}>
         {/* 文件夹图标 */}
-        <FolderOpenFilled
-          style={{ fontSize: 24, color: "rgba(0, 0, 0, 0.45)" }}
-        />
+        <DynamicIcon type="FolderOpenFilled" />
         {/* 画布项内容区域 */}
         <div className={styles.canvasItemContent}>
           {/* 标题行 */}
@@ -104,7 +95,7 @@ const Main: React.FC = () => {
           {/* 设置按钮 */}
           <Button
             type="text"
-            icon={<SettingOutlined />}
+            icon={<DynamicIcon type="SettingOutlined" />}
             size="small"
             className={styles.settingsButton}
           >
@@ -116,20 +107,36 @@ const Main: React.FC = () => {
 
           {/* 操作按钮组（折叠、刷新、撤销、撤回） */}
           <Space size={4} className={styles.actionButtons}>
-            <Button type="text" size="small" icon={<DynamicIcon type="MenuFoldOutlined" />}></Button>
-            <Button type="text" size="small" icon={<DynamicIcon type="RedoOutlined" />}></Button>
-            <Button type="text" size="small" icon={<DynamicIcon type="UndoOutlined" />}></Button>
-            <Button type="text" size="small" icon={<DynamicIcon type="RightOutlined" />}></Button>
+            <Button
+              type="text"
+              size="small"
+              icon={<DynamicIcon type="MenuFoldOutlined" />}
+            ></Button>
+            <Button
+              type="text"
+              size="small"
+              icon={<DynamicIcon type="RedoOutlined" />}
+            ></Button>
+            <Button
+              type="text"
+              size="small"
+              icon={<DynamicIcon type="LeftOutlined" />}
+            ></Button>
+            <Button
+              type="text"
+              size="small"
+              icon={<DynamicIcon type="RightOutlined" />}
+            ></Button>
           </Space>
         </div>
 
-        {/* 分段控制器 - 用于切换视图模式（Daily/Weekly等） */}
+        {/* 分段控制器 - 用于切换视图模式（画布/工作台） */}
         <div className={styles.segmentedWrapper}>
           <Segmented
             size="small"
             options={[
-              { label: "Daily", value: "daily" },
-              { label: "Weekly", value: "weekly" },
+              { label: "画布", value: "canvas" },
+              { label: "工作台", value: "workspace" },
             ]}
             className={styles.segmentedControl}
             block
@@ -140,7 +147,7 @@ const Main: React.FC = () => {
         <div className={styles.addButtonWrapper}>
           <Button
             type="text"
-            icon={<PlusOutlined />}
+            icon={<DynamicIcon type="PlusOutlined" />}
             size="small"
             className={styles.addButton}
             disabled
@@ -171,7 +178,7 @@ const Main: React.FC = () => {
                 {/* 搜索输入框 */}
                 <Input
                   placeholder="输入搜索内容"
-                  prefix={<SearchOutlined />}
+                  prefix={<DynamicIcon type="SearchOutlined" />}
                   size="small"
                   className={styles.notesListSearch}
                 />

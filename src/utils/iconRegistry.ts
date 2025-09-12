@@ -1,3 +1,4 @@
+// 明确导入需要的图标，避免类型问题
 import {
   MenuFoldOutlined,
   RedoOutlined,
@@ -8,7 +9,8 @@ import {
   SettingOutlined,
   PlusOutlined,
   StarOutlined,
-  StarFilled
+  StarFilled,
+  LeftOutlined
 } from '@ant-design/icons';
 
 // 创建图标注册表
@@ -22,7 +24,8 @@ export const iconRegistry = {
   SettingOutlined,
   PlusOutlined,
   StarOutlined,
-  StarFilled
+  StarFilled,
+  LeftOutlined
 };
 
 // 导出图标类型
