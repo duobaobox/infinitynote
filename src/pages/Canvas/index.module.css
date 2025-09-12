@@ -1,0 +1,267 @@
+/**
+ * 画布页面样式文件
+ */
+
+/* 画布容器 */
+.canvasContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 工具栏 */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.toolbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: #e0e0e0;
+  margin: 0 4px;
+}
+
+.scaleInfo {
+  font-size: 12px;
+  color: #666;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* 画布区域 */
+.canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #f5f5f5;
+  user-select: none;
+}
+
+/* 画布内容容器 */
+.canvasContent {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+}
+
+/* 网格背景 */
+.grid {
+  position: absolute;
+  top: -2000px;
+  left: -2000px;
+  width: 4000px;
+  height: 4000px;
+  opacity: 0.5;
+  background-image: radial-gradient(circle, #d0d0d0 1px, transparent 1px);
+  background-size: 20px 20px;
+  pointer-events: none;
+}
+
+/* 网格在不同缩放级别下的显示 */
+@media (min-resolution: 2dppx) {
+  .grid {
+    background-image: radial-gradient(circle, #d0d0d0 0.5px, transparent 0.5px);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .toolbar {
+    padding: 6px 12px;
+  }
+
+  .toolbarLeft {
+    gap: 4px;
+  }
+
+  .toolbarRight {
+    gap: 8px;
+  }
+
+  .scaleInfo {
+    font-size: 11px;
+    padding: 3px 6px;
+    min-width: 45px;
+  }
+}
+
+/* 暗色主题支持 */
+@media (prefers-color-scheme: dark) {
+  .canvasContainer {
+    background: #1a1a1a;
+  }
+
+  .toolbar {
+    background: #2a2a2a;
+    border-bottom-color: #404040;
+  }
+
+  .divider {
+    background: #404040;
+  }
+
+  .scaleInfo {
+    background: #333;
+    color: #ccc;
+  }
+
+  .canvas {
+    background: #1a1a1a;
+  }
+
+  .grid {
+    background-image: radial-gradient(circle, #404040 1px, transparent 1px);
+  }
+}
+
+/* 画布状态样式 */
+.canvas[data-panning="true"] {
+  cursor: grabbing !important;
+}
+
+.canvas[data-selecting="true"] {
+  cursor: crosshair;
+}
+
+/* 平滑过渡 */
+.canvasContent {
+  transition: transform 0.1s ease-out;
+}
+
+/* 禁用过渡（在拖拽时） */
+.canvasContent[data-dragging="true"] {
+  transition: none;
+}
+
+/* 选择框样式 */
+.selectionBox {
+  position: absolute;
+  border: 1px dashed #1677ff;
+  background: rgba(22, 119, 255, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* 浮动按钮样式调整 */
+:global(.ant-float-btn-group) {
+  right: 24px !important;
+  bottom: 24px !important;
+}
+
+:global(.ant-float-btn) {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 工具提示样式 */
+:global(.ant-tooltip) {
+  z-index: 2000 !important;
+}
+
+/* 按钮样式调整 */
+.toolbar :global(.ant-btn) {
+  border: none;
+  box-shadow: none;
+  height: 32px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar :global(.ant-btn:hover) {
+  background: #f0f0f0;
+}
+
+.toolbar :global(.ant-btn:active) {
+  background: #e0e0e0;
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-size: 14px;
+}
+
+/* 空状态 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  font-size: 14px;
+  gap: 16px;
+}
+
+.empty .emptyIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.empty .emptyText {
+  text-align: center;
+  line-height: 1.5;
+}
+
+.empty .emptyHint {
+  font-size: 12px;
+  color: #ccc;
+  text-align: center;
+}
+
+/* 性能优化：GPU加速 */
+.canvasContent {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* 防止文本选择 */
+.canvas * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 滚动条样式 */
+.canvas::-webkit-scrollbar {
+  display: none;
+}
+
+.canvas {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

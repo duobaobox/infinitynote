@@ -2,6 +2,8 @@ import React, { useState } from "react";
 // 引入图标注册表
 import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
+// 引入画布组件
+import Canvas from "../Canvas";
 // 引入Ant Design组件
 import {
   Layout, // 用于整体页面布局，包含Sider和Content
@@ -94,11 +96,7 @@ const Main: React.FC = () => {
     <div className={styles.container}>
       {/* 侧边栏 - 固定宽度200px */}
       {!collapsed ? (
-        <Sider 
-          width={200} 
-          theme="light" 
-          className={styles.sidebar}
-        >
+        <Sider width={200} theme="light" className={styles.sidebar}>
           {/* 侧边栏顶部设置区域 */}
           <div className={styles.sidebarHeader}>
             {/* 设置按钮 */}
@@ -212,8 +210,8 @@ const Main: React.FC = () => {
 
       {/* 画布区域 - 自适应宽度 */}
       <Content className={collapsed ? styles.canvasCollapsed : styles.canvas}>
-        {/* 画布内容区域，暂时为空 */}
-        {/* 这里将显示选中画布的内容 */}
+        {/* 画布内容区域 */}
+        <Canvas />
       </Content>
     </div>
   );
