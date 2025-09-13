@@ -10,9 +10,39 @@ export interface KeyboardShortcut {
   preventDefault?: boolean;
 }
 
+/**
+ * 键盘快捷键 Hook
+ *
+ * 功能增强：
+ * - 忽略输入框中的快捷键
+ * - 支持 Mac/Windows 差异处理
+ * - 更好的错误处理
+ * - 性能优化
+ */
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
+  // 检查是否为 Mac 系统
+  const isMac = useCallback(() => {
+    return (
+      typeof navigator !== "undefined" &&
+      navigator.platform.toUpperCase().indexOf("MAC") >= 0
+    );
+  }, []);
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      // 忽略在输入框、文本域或可编辑元素中的按键
+      const target = event.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.contentEditable === "true" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      const mac = isMac();
+
       shortcuts.forEach((shortcut) => {
         const {
           key,
@@ -26,21 +56,41 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
 
         // 检查键是否匹配
         const keyMatch = event.key.toLowerCase() === key.toLowerCase();
-        const ctrlMatch = event.ctrlKey === ctrlKey;
+
+        // Mac 系统上 Cmd 键对应 metaKey，Windows/Linux 上 Ctrl 键对应 ctrlKey
+        const modifierCtrlMatch = mac
+          ? ctrlKey
+            ? event.metaKey
+            : !event.metaKey
+          : ctrlKey
+          ? event.ctrlKey
+          : !event.ctrlKey;
+
         const shiftMatch = event.shiftKey === shiftKey;
         const altMatch = event.altKey === altKey;
         const metaMatch = event.metaKey === metaKey;
 
-        if (keyMatch && ctrlMatch && shiftMatch && altMatch && metaMatch) {
+        if (
+          keyMatch &&
+          modifierCtrlMatch &&
+          shiftMatch &&
+          altMatch &&
+          metaMatch
+        ) {
           if (preventDefault) {
             event.preventDefault();
             event.stopPropagation();
           }
-          callback(event);
+
+          try {
+            callback(event);
+          } catch (error) {
+            console.error("快捷键执行失败:", error);
+          }
         }
       });
     },
-    [shortcuts]
+    [shortcuts, isMac]
   );
 
   useEffect(() => {

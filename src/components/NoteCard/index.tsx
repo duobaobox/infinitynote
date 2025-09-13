@@ -1,7 +1,6 @@
-import React, { memo, useCallback, useState, useRef } from "react";
+import React, { memo, useCallback } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { Note } from "../../types";
-import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import styles from "./index.module.css";
 
@@ -12,10 +11,22 @@ interface NoteCardProps {
   isSelected: boolean;
 }
 
+/**
+ * 便签卡片组件
+ *
+ * 功能特性：
+ * - 支持拖拽操作
+ * - 响应式缩放显示
+ * - 主题颜色适配
+ * - 选中状态显示
+ *
+ * 性能优化：
+ * - 使用 memo 避免不必要的重渲染
+ * - 硬件加速的拖拽动画
+ */
 export const NoteCard = memo<NoteCardProps>(
-  ({ note, scale, onSelect, isSelected }) => {
+  ({ note, onSelect, isSelected }) => {
     const { isDark } = useTheme();
-    const [isDragging, setIsDragging] = useState(false);
 
     // 使用 dnd-kit 的拖拽功能
     const {

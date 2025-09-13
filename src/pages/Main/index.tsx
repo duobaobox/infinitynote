@@ -62,8 +62,8 @@ const Main: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // 状态管理
-  const { createNote } = useNoteStore();
-  const { activeCanvasId, viewport } = useCanvasStore();
+  const { createNote, notes, getNotesByCanvas } = useNoteStore();
+  const { activeCanvasId, viewport, canvases } = useCanvasStore();
 
   // 主题状态
   const { isDark } = useTheme();
@@ -89,11 +89,20 @@ const Main: React.FC = () => {
     [activeCanvasId, viewport, createNote]
   );
 
-  // 生成画布列表假数据（5个画布）
-  const canvasItems = Array.from({ length: 4 }, (_, index) => (
+  // 获取当前画布的便签数量
+  const getCurrentCanvasNoteCount = (canvasId: string) => {
+    return getNotesByCanvas(canvasId).length;
+  };
+
+  // 渲染画布列表（使用真实数据）
+  const canvasItems = canvases.map((canvas, index) => (
     <div
-      key={index}
-      className={index === 0 ? styles.canvasItemActive : styles.canvasItem}
+      key={canvas.id}
+      className={
+        canvas.id === activeCanvasId
+          ? styles.canvasItemActive
+          : styles.canvasItem
+      }
     >
       <div className={styles.canvasItemHeader}>
         {/* 文件夹图标 */}
@@ -102,17 +111,17 @@ const Main: React.FC = () => {
         <div className={styles.canvasItemContent}>
           {/* 标题行 */}
           <div className={styles.canvasItemTitleRow}>
-            <div className={styles.canvasTitle}>
-              {index === 0 ? "默认画布" : `画布${index + 1}`}
-            </div>
+            <div className={styles.canvasTitle}>{canvas.name}</div>
             {/* 星标图标（仅默认画布） */}
-            {index === 0 && <div className={styles.starIcon}>★</div>}
+            {canvas.isDefault && <div className={styles.starIcon}>★</div>}
             {/* 空白占位符（非默认画布） */}
-            {index !== 0 && <div></div>}
+            {!canvas.isDefault && <div></div>}
           </div>
           {/* 统计信息行 */}
           <div className={styles.canvasItemStatsRow}>
-            <div className={styles.notesCount}>{index % 3}便签</div>
+            <div className={styles.notesCount}>
+              {getCurrentCanvasNoteCount(canvas.id)}便签
+            </div>
             {/* 空白占位符，用于布局对齐 */}
             <div></div>
           </div>
@@ -121,16 +130,22 @@ const Main: React.FC = () => {
     </div>
   ));
 
-  // 生成便签列表假数据（8个便签）
-  const noteItems = Array.from({ length: 8 }, (_, index) => (
-    <Card size="small" className={styles.noteItem} key={index}>
+  // 获取当前画布的便签
+  const currentCanvasNotes = activeCanvasId
+    ? getNotesByCanvas(activeCanvasId)
+    : [];
+
+  // 渲染便签列表（使用真实数据）
+  const noteItems = currentCanvasNotes.map((note) => (
+    <Card size="small" className={styles.noteItem} key={note.id}>
       <div className={styles.noteItemContent}>
         {/* 便签颜色指示器 */}
-        <div className={styles.noteColorIndicator}></div>
+        <div
+          className={styles.noteColorIndicator}
+          style={{ backgroundColor: note.color }}
+        ></div>
         {/* 便签标题 */}
-        <div className={styles.noteTitle}>
-          {index === 0 ? "便签" : `便签${index + 1}`}
-        </div>
+        <div className={styles.noteTitle}>{note.title || "无标题"}</div>
       </div>
     </Card>
   ));
@@ -231,9 +246,12 @@ const Main: React.FC = () => {
                 <div className={styles.notesListHeader}>
                   {/* 标题行 */}
                   <div className={styles.notesListTitle}>
-                    <div className={styles.notesListTitleText}>默认画布</div>
+                    <div className={styles.notesListTitleText}>
+                      {canvases.find((c) => c.id === activeCanvasId)?.name ||
+                        "画布"}
+                    </div>
                     {/* 徽标数字 - 显示便签数量 */}
-                    <Badge count={21} />
+                    <Badge count={currentCanvasNotes.length} />
                   </div>
 
                   {/* 搜索输入框 */}
