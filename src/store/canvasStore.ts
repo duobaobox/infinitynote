@@ -5,7 +5,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { Canvas, Position, CanvasViewport } from "../types";
 import { dbOperations } from "../utils/db";
-import { canvasStoreEvents, storeEventBus } from "./storeEvents";
+import { canvasStoreEvents } from "./storeEvents";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -114,9 +114,9 @@ export const useCanvasStore = create<CanvasStore>()(
         const id = isDefault ? DEFAULT_CANVAS_ID : generateId();
         const now = new Date();
 
-        // 如果是默认画布，先检查内存和数据库中是否已存在
+        // 如果是默认画布，先检查内存和数据库中是否已存在（防止重复创建）
         if (isDefault) {
-          // 检查内存中是否已存在
+          // 1. 检查内存中是否已存在
           const existingCanvasInMemory = get().canvases.find(
             (c) => c.id === DEFAULT_CANVAS_ID
           );
@@ -125,7 +125,7 @@ export const useCanvasStore = create<CanvasStore>()(
             return DEFAULT_CANVAS_ID;
           }
 
-          // 检查数据库中是否已存在
+          // 2. 检查数据库中是否已存在（优先检查固定ID）
           try {
             const existingCanvasInDB = await dbOperations.getCanvasById(
               DEFAULT_CANVAS_ID
@@ -146,10 +146,26 @@ export const useCanvasStore = create<CanvasStore>()(
                 isDefault: existingCanvasInDB.isDefault || false,
               };
 
-              set((state) => ({
-                canvases: [...state.canvases, formattedCanvas],
-                activeCanvasId: state.activeCanvasId || DEFAULT_CANVAS_ID,
-              }));
+              set((state) => {
+                // 检查是否已存在相同ID的画布，避免重复添加
+                const existingCanvas = state.canvases.find(
+                  (c) => c.id === formattedCanvas.id
+                );
+                if (existingCanvas) {
+                  logWithDedup(
+                    `🎨 画布 ${formattedCanvas.id} 已存在于内存中，跳过重复添加`
+                  );
+                  return {
+                    canvases: state.canvases,
+                    activeCanvasId: state.activeCanvasId || DEFAULT_CANVAS_ID,
+                  };
+                }
+
+                return {
+                  canvases: [...state.canvases, formattedCanvas],
+                  activeCanvasId: state.activeCanvasId || DEFAULT_CANVAS_ID,
+                };
+              });
 
               return DEFAULT_CANVAS_ID;
             }
@@ -157,8 +173,59 @@ export const useCanvasStore = create<CanvasStore>()(
             // 数据库查询失败，继续创建流程
             console.warn("⚠️ 检查数据库中的默认画布时出错，继续创建:", dbError);
           }
+
+          // 3. 额外安全检查：确保不会重复创建默认画布
+          try {
+            const allCanvases = await dbOperations.getAllCanvases();
+            const existingDefaults = allCanvases.filter((c) => c.isDefault);
+
+            if (existingDefaults.length > 0) {
+              // 如果已经有默认画布，加载第一个并跳过创建
+              const firstDefault = existingDefaults[0];
+              logWithDedup(
+                `🎨 发现现有默认画布，加载: ${firstDefault.id.slice(-8)}`
+              );
+
+              const formattedCanvas: Canvas = {
+                id: firstDefault.id,
+                name: firstDefault.name,
+                scale: firstDefault.scale,
+                offset: firstDefault.offset,
+                backgroundColor: firstDefault.backgroundColor,
+                createdAt: firstDefault.createdAt,
+                updatedAt: firstDefault.updatedAt,
+                isDefault: firstDefault.isDefault || false,
+              };
+
+              set((state) => {
+                // 检查是否已存在相同ID的画布，避免重复添加
+                const existingCanvas = state.canvases.find(
+                  (c) => c.id === formattedCanvas.id
+                );
+                if (existingCanvas) {
+                  logWithDedup(
+                    `🎨 画布 ${formattedCanvas.id} 已存在于内存中，跳过重复添加`
+                  );
+                  return {
+                    canvases: state.canvases,
+                    activeCanvasId: state.activeCanvasId || firstDefault.id,
+                  };
+                }
+
+                return {
+                  canvases: [...state.canvases, formattedCanvas],
+                  activeCanvasId: state.activeCanvasId || firstDefault.id,
+                };
+              });
+
+              return firstDefault.id;
+            }
+          } catch (checkError) {
+            console.warn("⚠️ 检查现有默认画布时出错:", checkError);
+          }
         }
 
+        // 创建新画布对象
         const newCanvas: Canvas = {
           id,
           name,
@@ -171,11 +238,25 @@ export const useCanvasStore = create<CanvasStore>()(
         };
 
         try {
-          // 先尝试添加到数据库，避免重复创建
+          // 4. 尝试添加到数据库
           await dbOperations.addCanvas(newCanvas);
 
-          // 数据库操作成功后，更新内存状态
+          // 5. 数据库操作成功后，更新内存状态
           set((state) => {
+            // 检查是否已存在相同ID的画布，避免重复添加
+            const existingCanvas = state.canvases.find(
+              (c) => c.id === newCanvas.id
+            );
+            if (existingCanvas) {
+              logWithDedup(
+                `🎨 画布 ${newCanvas.id} 已存在于内存中，跳过重复添加`
+              );
+              return {
+                canvases: state.canvases,
+                activeCanvasId: state.activeCanvasId || id,
+              };
+            }
+
             const updatedCanvases = [...state.canvases, newCanvas];
             return {
               canvases: updatedCanvases,
@@ -187,7 +268,7 @@ export const useCanvasStore = create<CanvasStore>()(
             };
           });
 
-          console.log(`✅ 画布创建成功，ID: ${id}`);
+          logWithDedup(`✅ 画布创建成功，ID: ${id.slice(-8)}, 名称: ${name}`);
 
           // 发送画布创建事件
           canvasStoreEvents.notifyCanvasCreated(id);
@@ -196,7 +277,7 @@ export const useCanvasStore = create<CanvasStore>()(
         } catch (error) {
           console.error("❌ 创建画布失败:", error);
 
-          // 如果是因为键已存在的错误，且是默认画布，则尝试加载现有的
+          // 6. 错误处理：如果是因为键已存在，且是默认画布，则加载现有的
           if (
             isDefault &&
             error instanceof Error &&
@@ -208,9 +289,9 @@ export const useCanvasStore = create<CanvasStore>()(
               );
               if (existingCanvas) {
                 logWithDedup(
-                  `🎨 默认画布已存在，加载现有画布: ${DEFAULT_CANVAS_ID}`
+                  `🎨 键冲突，加载现有默认画布: ${DEFAULT_CANVAS_ID}`
                 );
-                // 加载到内存
+
                 const formattedCanvas: Canvas = {
                   id: existingCanvas.id,
                   name: existingCanvas.name,
@@ -222,10 +303,26 @@ export const useCanvasStore = create<CanvasStore>()(
                   isDefault: existingCanvas.isDefault || false,
                 };
 
-                set((state) => ({
-                  canvases: [...state.canvases, formattedCanvas],
-                  activeCanvasId: state.activeCanvasId || DEFAULT_CANVAS_ID,
-                }));
+                set((state) => {
+                  // 检查是否已存在相同ID的画布，避免重复添加
+                  const existingMemoryCanvas = state.canvases.find(
+                    (c) => c.id === formattedCanvas.id
+                  );
+                  if (existingMemoryCanvas) {
+                    logWithDedup(
+                      `🎨 画布 ${formattedCanvas.id} 已存在于内存中，跳过重复添加`
+                    );
+                    return {
+                      canvases: state.canvases,
+                      activeCanvasId: state.activeCanvasId || DEFAULT_CANVAS_ID,
+                    };
+                  }
+
+                  return {
+                    canvases: [...state.canvases, formattedCanvas],
+                    activeCanvasId: state.activeCanvasId || DEFAULT_CANVAS_ID,
+                  };
+                });
 
                 return DEFAULT_CANVAS_ID;
               }
@@ -468,9 +565,37 @@ export const useCanvasStore = create<CanvasStore>()(
             defaultCanvas?.id ||
             (formattedCanvases.length > 0 ? formattedCanvases[0].id : null);
 
-          set({
-            canvases: formattedCanvases,
-            activeCanvasId,
+          // 使用去重逻辑确保不会有重复的画布
+          set((state) => {
+            // 如果当前内存中已有画布，进行去重合并
+            const currentCanvases = state.canvases;
+            const mergedCanvases: Canvas[] = [];
+            const seenIds = new Set<string>();
+
+            // 首先添加数据库中的画布（优先级较高）
+            for (const dbCanvas of formattedCanvases) {
+              if (!seenIds.has(dbCanvas.id)) {
+                mergedCanvases.push(dbCanvas);
+                seenIds.add(dbCanvas.id);
+              }
+            }
+
+            // 然后添加内存中可能存在的其他画布（不在数据库中的）
+            for (const memCanvas of currentCanvases) {
+              if (!seenIds.has(memCanvas.id)) {
+                mergedCanvases.push(memCanvas);
+                seenIds.add(memCanvas.id);
+              }
+            }
+
+            logWithDedup(
+              `🎨 画布去重合并完成，共 ${mergedCanvases.length} 个画布`
+            );
+
+            return {
+              canvases: mergedCanvases,
+              activeCanvasId,
+            };
           });
 
           // 输出详细信息但去重
@@ -499,29 +624,62 @@ export const useCanvasStore = create<CanvasStore>()(
       // 初始化画布数据
       initialize: async () => {
         try {
-          // 检查数据库健康状态
+          console.log("🎨 开始初始化画布数据...");
+
+          // 检查是否正在进行数据清除操作
+          const isDataClearing = sessionStorage.getItem("isDataClearing");
+          if (isDataClearing) {
+            // 如果正在清除数据，清除标记并确保创建全新的默认画布
+            sessionStorage.removeItem("isDataClearing");
+            console.log("🎨 检测到数据清除操作，执行全新初始化");
+          }
+
+          // 1. 重置内存状态，确保从干净状态开始
+          set({
+            canvases: [],
+            activeCanvasId: null,
+            viewport: { ...DEFAULT_VIEWPORT },
+          });
+
+          // 2. 检查数据库健康状态
           const isHealthy = await dbOperations.healthCheck();
           if (!isHealthy) {
             throw new Error("数据库连接失败");
           }
 
-          // 清理重复的默认画布（在加载前清理）
+          // 3. 清理重复的默认画布（在加载前清理）
           await dbOperations.cleanupDefaultCanvases();
 
-          // 加载所有画布
+          // 4. 加载所有画布
           await get().loadCanvasesFromDB();
 
-          // 检查是否需要创建默认画布（通过固定ID检查）
+          // 5. 检查是否需要创建默认画布（通过固定ID检查）
           const { canvases } = get();
+          console.log(`🎨 当前加载的画布数量: ${canvases.length}`);
+          console.log(
+            `🎨 画布详情:`,
+            canvases.map((c) => ({
+              id: c.id.slice(-8),
+              name: c.name,
+              isDefault: c.isDefault,
+            }))
+          );
+
           const defaultCanvas = canvases.find(
             (canvas) => canvas.id === DEFAULT_CANVAS_ID
           );
 
           if (!defaultCanvas) {
             console.log("🎨 默认画布不存在，创建默认画布");
-            await get().createCanvas("默认画布", true);
+            const createdCanvasId = await get().createCanvas("默认画布", true);
+            console.log(`🎨 创建默认画布完成，ID: ${createdCanvasId}`);
           } else {
             console.log(`🎨 默认画布已存在，ID: ${DEFAULT_CANVAS_ID}`);
+            // 确保默认画布被设为活动画布
+            if (!get().activeCanvasId) {
+              set({ activeCanvasId: DEFAULT_CANVAS_ID });
+              console.log(`🎨 设置默认画布为活动画布: ${DEFAULT_CANVAS_ID}`);
+            }
           }
         } catch (error) {
           console.error("❌ 画布初始化失败:", error);
@@ -535,7 +693,7 @@ export const useCanvasStore = create<CanvasStore>()(
           if (!hasDefaultCanvas) {
             console.log("🎨 使用内存模式创建默认画布");
             const now = new Date();
-            const defaultCanvas: Canvas = {
+            const defaultCanvasObj: Canvas = {
               id: DEFAULT_CANVAS_ID,
               name: "默认画布",
               scale: 1,
@@ -547,13 +705,27 @@ export const useCanvasStore = create<CanvasStore>()(
             };
 
             set({
-              canvases: [defaultCanvas],
+              canvases: [defaultCanvasObj],
               activeCanvasId: DEFAULT_CANVAS_ID,
             });
 
             console.log(
               `🎨 内存模式创建默认画布完成，ID: ${DEFAULT_CANVAS_ID}`
             );
+          }
+
+          // 6. 最终安全检查：确保画布列表中没有重复项
+          const finalState = get();
+          const uniqueCanvases = finalState.canvases.filter(
+            (canvas, index, arr) =>
+              arr.findIndex((c) => c.id === canvas.id) === index
+          );
+
+          if (uniqueCanvases.length !== finalState.canvases.length) {
+            console.warn(
+              `⚠️ 发现重复画布，执行去重: ${finalState.canvases.length} -> ${uniqueCanvases.length}`
+            );
+            set({ canvases: uniqueCanvases });
           }
         }
       },

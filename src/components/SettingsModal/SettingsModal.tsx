@@ -33,7 +33,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Modal, Menu, message } from "antd";
+import { Modal, Menu, message, App } from "antd";
 import type {
   SettingsModalProps,
   SettingTabKey,
@@ -175,26 +175,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       const file = await handleFileImport();
 
       // 显示确认对话框
-      const userConfirmed = window.confirm(
-        "确认导入数据\n\n导入数据将覆盖当前所有数据（包括笔记、画布和设置），此操作不可恢复。确定要继续吗？"
-      );
-
-      if (userConfirmed) {
-        const loadingMessage = message.loading("正在导入数据，请稍候...", 0);
-        try {
-          await importAllData(file);
-          loadingMessage();
-          message.success("数据导入成功，页面即将刷新", 2);
-          // importAllData 函数内部会自动刷新页面
-        } catch (error) {
-          loadingMessage();
-          console.error("导入失败:", error);
-          message.error(
-            error instanceof Error ? error.message : "导入失败，请检查文件格式",
-            5
-          );
-        }
-      }
+      modal.confirm({
+        title: "确认导入数据",
+        content:
+          "导入数据将覆盖当前所有数据（包括笔记、画布和设置），此操作不可恢复。确定要继续吗？",
+        okText: "确认导入",
+        cancelText: "取消",
+        okType: "danger",
+        onOk: async () => {
+          const loadingMessage = message.loading("正在导入数据，请稍候...", 0);
+          try {
+            await importAllData(file);
+            loadingMessage();
+            message.success("数据导入成功，页面即将刷新", 2);
+            // importAllData 函数内部会自动刷新页面
+          } catch (error) {
+            loadingMessage();
+            console.error("导入失败:", error);
+            message.error(
+              error instanceof Error
+                ? error.message
+                : "导入失败，请检查文件格式",
+              5
+            );
+          }
+        },
+      });
     } catch (error) {
       if (error instanceof Error && error.message !== "未选择文件") {
         console.error("导入失败:", error);
@@ -203,18 +209,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     }
   };
 
+  const { modal } = App.useApp();
+
   const handleClearData = () => {
     console.log("🔧 handleClearData 被调用");
 
-    // 使用原生确认对话框作为备选方案
-    const userConfirmed = window.confirm(
-      "确认清除所有数据\n\n此操作将删除所有本地数据（包括笔记、画布和设置）且不可恢复，确定要继续吗？"
-    );
-
-    if (userConfirmed) {
-      console.log("🔧 用户确认清除数据");
-
-      const executeClear = async () => {
+    modal.confirm({
+      title: "确认清除所有数据",
+      content:
+        "此操作将删除所有本地数据（包括笔记、画布和设置）且不可恢复，确定要继续吗？",
+      okText: "确认清除",
+      cancelText: "取消",
+      okType: "danger",
+      onOk: async () => {
+        console.log("🔧 用户确认清除数据");
         const loadingMessage = message.loading(
           "正在清除所有数据，请稍候...",
           0
@@ -234,13 +242,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
             5
           );
         }
-      };
-
-      // 立即执行清除操作
-      executeClear();
-    } else {
-      console.log("🔧 用户取消清除操作");
-    }
+      },
+      onCancel: () => {
+        console.log("🔧 用户取消清除操作");
+      },
+    });
   };
 
   const handleCheckUpdate = () => {

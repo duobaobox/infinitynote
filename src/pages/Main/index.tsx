@@ -106,6 +106,12 @@ const Main: React.FC = () => {
       try {
         setIsInitialized(true);
 
+        // 检查是否为数据清除后的初始化
+        const isDataClearing = sessionStorage.getItem("isDataClearing");
+        if (isDataClearing) {
+          logWithDedup("🎉 检测到数据清除标记，开始全新初始化");
+        }
+
         // 先初始化画布（画布数据需要先加载，便签依赖画布ID）
         await initializeDefaultCanvas();
 

@@ -1,5 +1,5 @@
 import type { Note, Canvas } from "../types";
-import { dbOperations } from "./db";
+import { dbOperations, db } from "./db";
 import type { SettingsConfig } from "../components/SettingsModal/types";
 import { loadSettingsFromStorage } from "../components/SettingsModal/utils";
 
@@ -346,45 +346,55 @@ export const clearAllData = async (): Promise<void> => {
   try {
     console.log("🗑️ 开始清除所有数据...");
 
-    // 清除数据库中的所有数据
+    // 1. 清除数据库中的所有数据
     console.log("🗑️ 清除数据库数据...");
     await Promise.all([
       dbOperations.clearAllNotes(),
       dbOperations.clearAllCanvases(),
     ]);
 
-    // 清除本地存储
+    // 2. 清除本地存储
     console.log("🗑️ 清除本地存储...");
     localStorage.clear();
 
-    // 清除会话存储
+    // 3. 清除会话存储
+    console.log("🗑️ 清除会话存储...");
     sessionStorage.clear();
 
-    // 清除IndexedDB缓存
+    // 4. 清除 Zustand 持久化存储
+    console.log("🗑️ 清除 Zustand 持久化存储...");
     try {
-      const databases = await indexedDB.databases();
-      await Promise.all(
-        databases.map((db) => {
-          if (db.name) {
-            return new Promise<void>((resolve, reject) => {
-              const deleteReq = indexedDB.deleteDatabase(db.name!);
-              deleteReq.onsuccess = () => resolve();
-              deleteReq.onerror = () => reject(deleteReq.error);
-            });
-          }
-          return Promise.resolve();
-        })
-      );
-    } catch (dbError) {
-      console.warn("⚠️ 清除IndexedDB时出现警告:", dbError);
+      // 清除 note-store 的持久化数据
+      localStorage.removeItem("note-store");
+      // 清除 canvas-store 的持久化数据
+      localStorage.removeItem("canvas-store");
+      // 清除设置数据
+      localStorage.removeItem("infinitynote-settings");
+    } catch (storageError) {
+      console.warn("⚠️ 清除持久化存储时出现警告:", storageError);
     }
+
+    // 5. 强制关闭并重新打开 IndexedDB 连接
+    console.log("🗑️ 重置数据库连接...");
+    try {
+      // 关闭当前数据库连接
+      if (db.isOpen()) {
+        db.close();
+      }
+    } catch (dbCloseError) {
+      console.warn("⚠️ 关闭数据库连接时出现警告:", dbCloseError);
+    }
+
+    // 6. 设置一个标记，表示正在进行数据清除操作
+    sessionStorage.setItem("isDataClearing", "true");
 
     console.log("✅ 所有数据清除成功");
 
-    // 延迟刷新页面，确保清除操作完成
+    // 7. 延迟刷新页面，确保所有清除操作完成
     setTimeout(() => {
+      console.log("🔄 刷新页面以重置应用状态...");
       window.location.reload();
-    }, 500);
+    }, 1000);
   } catch (error) {
     console.error("❌ 清除数据失败:", error);
     throw new Error(
