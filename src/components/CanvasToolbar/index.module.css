@@ -51,21 +51,3 @@
   line-height: 1;
   margin-top: 2px;
 }
-
-/* 主题切换按钮样式 */
-.toolbarButton button {
-  background: var(--color-bg-container);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.toolbarButton button:hover {
-  background: var(--color-bg-elevated);
-  border-color: var(--color-primary);
-  transform: scale(1.05);
-}

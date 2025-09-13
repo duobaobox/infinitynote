@@ -2,9 +2,10 @@
  * 显示设置选项卡
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Divider, Switch, Select, Space, Typography } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
+import { useTheme } from "../../../theme";
 import type { DisplaySettings } from "../types";
 import {
   THEME_OPTIONS,
@@ -24,6 +25,28 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
   settings,
   onSettingChange,
 }) => {
+  // 使用主题 hook 来直接控制应用主题
+  const { theme: currentTheme, setTheme } = useTheme();
+
+  // 处理主题切换逻辑
+  const handleThemeChange = (value: string) => {
+    // 更新设置存储
+    onSettingChange("theme", value);
+
+    // 直接设置主题，ThemeProvider 会处理 auto 模式的逻辑
+    if (value === "light" || value === "dark" || value === "auto") {
+      setTheme(value as any);
+    }
+  };
+
+  // 当设置页面打开时，同步当前主题状态
+  useEffect(() => {
+    // 如果设置中的主题与当前应用主题不一致，需要同步
+    if (settings.theme !== currentTheme) {
+      setTheme(settings.theme as any);
+    }
+  }, [settings.theme, currentTheme, setTheme]);
+
   return (
     <div className={styles.contentSection}>
       <Title level={3}>
@@ -39,7 +62,7 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
             <Select
               style={{ width: 200, marginTop: 8 }}
               value={settings.theme}
-              onChange={(value) => onSettingChange("theme", value)}
+              onChange={handleThemeChange}
               options={[...THEME_OPTIONS]}
             />
           </div>

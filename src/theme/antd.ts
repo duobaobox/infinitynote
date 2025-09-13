@@ -186,7 +186,7 @@ export const compactTheme: ThemeConfig = {
 };
 
 // 主题类型定义
-export type ThemeType = "light" | "dark" | "compact";
+export type ThemeType = "light" | "dark" | "compact" | "auto";
 
 // 主题映射
 export const themes: Record<ThemeType, ThemeConfig> = {

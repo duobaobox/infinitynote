@@ -35,7 +35,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const [currentTheme, setCurrentTheme] = useState<ThemeType>(theme);
 
   // 计算是否为暗黑主题
-  const isDark = currentTheme === "dark";
+  const isDark =
+    currentTheme === "dark" ||
+    (currentTheme === "auto" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   // 设置主题
   const setTheme = (newTheme: ThemeType) => {
@@ -51,18 +54,26 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   // 应用 CSS 变量
   useEffect(() => {
-    if (currentTheme === "light" || currentTheme === "dark") {
-      applyCSSVariables(currentTheme);
+    let actualTheme: "light" | "dark" | "compact" = currentTheme as any;
+
+    // 如果是 auto 模式，根据系统主题决定实际主题
+    if (currentTheme === "auto") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      actualTheme = mediaQuery.matches ? "dark" : "light";
+    }
+
+    if (actualTheme === "light" || actualTheme === "dark") {
+      applyCSSVariables(actualTheme);
     } else {
       // 紧凑主题默认使用明亮主题的变量
       applyCSSVariables("light");
     }
 
     // 添加主题类名到 body
-    document.body.className = `theme-${currentTheme}`;
+    document.body.className = `theme-${actualTheme}`;
 
     // 设置页面基础背景色
-    const themeConfig = getThemeConfig(currentTheme);
+    const themeConfig = getThemeConfig(actualTheme);
     if (themeConfig.token?.colorBgLayout) {
       document.body.style.backgroundColor = themeConfig.token
         .colorBgLayout as string;
@@ -74,10 +85,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-      // 只有当用户没有手动设置主题时才跟随系统
+      // 只有当用户设置为 auto 模式或没有手动设置主题时才跟随系统
       const savedTheme = localStorage.getItem("infinitynote-theme");
-      if (!savedTheme) {
-        setTheme(e.matches ? "dark" : "light");
+      if (!savedTheme || currentTheme === "auto") {
+        // 如果是 auto 模式，需要重新触发渲染以更新 isDark 状态
+        if (currentTheme === "auto") {
+          setCurrentTheme("auto"); // 强制重新渲染
+        } else {
+          setTheme(e.matches ? "dark" : "light");
+        }
       }
     };
 
@@ -91,7 +107,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     return () => {
       mediaQuery.removeEventListener("change", handleSystemThemeChange);
     };
-  }, []);
+  }, [currentTheme]);
 
   const contextValue: ThemeContextType = {
     theme: currentTheme,
