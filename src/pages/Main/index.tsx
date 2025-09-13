@@ -75,6 +75,8 @@ const Main: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   // 控制初始化状态，防止重复初始化
   const [isInitialized, setIsInitialized] = useState(false);
+  // 控制画布拖动模式状态
+  const [isDragMode, setIsDragMode] = useState(false);
 
   // 获取App Context中的modal实例
   const { modal } = App.useApp();
@@ -120,6 +122,42 @@ const Main: React.FC = () => {
 
     initializeApp();
   }, [initialize, isInitialized, setIsInitialized]);
+
+  // 键盘快捷键处理
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 如果焦点在输入框中，不处理快捷键
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.contentEditable === "true"
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case "d":
+        case "D":
+          // D键切换拖动模式
+          if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            setIsDragMode(!isDragMode);
+          }
+          break;
+        case "Escape":
+          // ESC键退出拖动模式
+          if (isDragMode) {
+            e.preventDefault();
+            setIsDragMode(false);
+          }
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isDragMode]);
 
   // 创建新便签
   const handleCreateNote = useCallback(
@@ -188,6 +226,11 @@ const Main: React.FC = () => {
       });
     }
   }, [canvases.length, createCanvas, setActiveCanvas, modal]);
+
+  // 处理拖动模式切换
+  const handleToggleDragMode = useCallback((enabled: boolean) => {
+    setIsDragMode(enabled);
+  }, []);
 
   // 处理删除画布
   const handleDeleteCanvas = useCallback(
@@ -528,10 +571,14 @@ const Main: React.FC = () => {
       {/* 画布区域 - 自适应宽度 */}
       <Content className={collapsed ? styles.canvasCollapsed : styles.canvas}>
         {/* 画布内容区域 */}
-        <Canvas />
+        <Canvas isDragMode={isDragMode} />
 
         {/* 画布工具栏 */}
-        <CanvasToolbar onCreateNote={handleCreateNote} />
+        <CanvasToolbar
+          onCreateNote={handleCreateNote}
+          isDragMode={isDragMode}
+          onToggleDragMode={handleToggleDragMode}
+        />
       </Content>
 
       {/* 设置弹窗 */}

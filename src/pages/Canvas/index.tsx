@@ -9,9 +9,18 @@ import { useNoteStore } from "../../store/noteStore";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useTheme, canvasGridThemes } from "../../theme";
 import { loadSettingsFromStorage } from "../../components/SettingsModal/utils";
+import { iconRegistry } from "../../utils/iconRegistry";
+import type { IconType } from "../../utils/iconRegistry";
 import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
 import styles from "./index.module.css";
+
+// 创建动态图标组件
+const DynamicIcon = ({ type }: { type: IconType }) => {
+  const IconComponent = iconRegistry[type];
+  // @ts-expect-error - iconRegistry包含多种类型，需要忽略类型检查
+  return IconComponent ? <IconComponent /> : null;
+};
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -25,10 +34,14 @@ const logWithDedup = (message: string, ...args: any[]) => {
   }
 };
 
+interface CanvasProps {
+  isDragMode?: boolean;
+}
+
 /**
  * 画布组件
  */
-export const Canvas: React.FC = () => {
+export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [] = useState<Position | null>(null);
@@ -222,25 +235,30 @@ export const Canvas: React.FC = () => {
   );
 
   // 鼠标拖拽平移
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (
-      e.target === canvasRef.current ||
-      (e.target as Element).closest(".canvasContent")
-    ) {
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
       if (
-        e.button === 1 ||
-        (e.button === 0 && e.ctrlKey) ||
-        (e.button === 0 && e.altKey)
+        e.target === canvasRef.current ||
+        (e.target as Element).closest(".canvasContent")
       ) {
-        // 中键或Ctrl+左键或Alt+左键
-        e.preventDefault();
-        e.stopPropagation();
-        panningRef.current = true;
-        panStartRef.current = { x: e.clientX, y: e.clientY };
-        setIsPanning(true); // 仅用于UI状态显示
+        // 在拖动模式下，左键也可以拖动画布
+        if (
+          e.button === 1 ||
+          (e.button === 0 && e.ctrlKey) ||
+          (e.button === 0 && e.altKey) ||
+          (e.button === 0 && isDragMode) // 拖动模式下左键拖动
+        ) {
+          // 中键或Ctrl+左键或Alt+左键或拖动模式下的左键
+          e.preventDefault();
+          e.stopPropagation();
+          panningRef.current = true;
+          panStartRef.current = { x: e.clientX, y: e.clientY };
+          setIsPanning(true); // 仅用于UI状态显示
+        }
       }
-    }
-  }, []);
+    },
+    [isDragMode]
+  );
 
   // 使用 useRef 来避免频繁的状态更新
   const panningRef = useRef(false);
@@ -459,7 +477,7 @@ export const Canvas: React.FC = () => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          cursor: isPanning ? "grabbing" : "grab",
+          cursor: isPanning ? "grabbing" : isDragMode ? "grab" : "default",
         }}
       >
         <DndContext
@@ -515,6 +533,15 @@ export const Canvas: React.FC = () => {
 
       {/* 独立的缩放指示器 */}
       <ZoomIndicator />
+
+      {/* 拖动模式提示 */}
+      {isDragMode && (
+        <div className={styles.dragModeIndicator}>
+          <DynamicIcon type="DragOutlined" />
+          <span>画布移动模式</span>
+          <span className={styles.dragModeHint}>按 ESC 退出</span>
+        </div>
+      )}
     </div>
   );
 };
