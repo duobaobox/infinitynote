@@ -16,6 +16,8 @@ import type { Position } from "../../types";
 import Canvas from "../Canvas";
 // 引入工具栏组件
 import { CanvasToolbar } from "../../components/CanvasToolbar";
+// 引入设置弹窗组件
+import SettingsModal from "../../components/SettingsModal/index";
 // 引入Ant Design组件
 import {
   Layout, // 用于整体页面布局，包含Sider和Content
@@ -56,6 +58,8 @@ const { Sider, Content } = Layout;
 const Main: React.FC = () => {
   // 控制侧边栏折叠状态
   const [collapsed, setCollapsed] = useState(false);
+  // 控制设置弹窗状态
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // 状态管理
   const { createNote } = useNoteStore();
@@ -153,6 +157,7 @@ const Main: React.FC = () => {
               icon={<DynamicIcon type="SettingOutlined" />}
               size="small"
               className={styles.settingsButton}
+              onClick={() => setSettingsOpen(true)}
             >
               设置
             </Button>
@@ -264,6 +269,12 @@ const Main: React.FC = () => {
         {/* 画布工具栏 */}
         <CanvasToolbar onCreateNote={handleCreateNote} />
       </Content>
+
+      {/* 设置弹窗 */}
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 };

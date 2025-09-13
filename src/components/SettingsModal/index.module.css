@@ -1,0 +1,465 @@
+/**
+ * ========================================
+ * 设置模态框主体样式
+ * ========================================
+ */
+
+/* 模态框容器 */
+.settingsModal {
+  max-width: 80vw !important;
+  width: 80vw !important;
+}
+
+/* 模态框主要组件样式 */
+.settingsModal .ant-modal {
+  height: 80vh !important;
+  max-height: 80vh !important;
+  top: 10vh !important; /* 居中显示：(100vh - 80vh) / 2 = 10vh */
+  padding-bottom: 0 !important;
+}
+
+.settingsModal .ant-modal-content {
+  padding: 0;
+  overflow: hidden;
+  height: 80vh !important;
+  max-height: 80vh !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.settingsModal .ant-modal-header {
+  border-bottom: 1px solid var(--color-border-secondary);
+  padding: var(--spacing-md) var(--spacing-lg);
+  flex-shrink: 0;
+  height: 55px; /* 固定头部高度 */
+}
+
+.settingsModal .ant-modal-body {
+  padding: 0 0 24px 0 !important; /* 底部留白24px */
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: calc(80vh - 55px) !important; /* 减去头部高度 */
+}
+
+/* 全局强制样式覆盖 */
+:global(.ant-modal.settingsModal .ant-modal-content) {
+  height: 80vh !important;
+  max-height: 80vh !important;
+}
+
+:global(.ant-modal.settingsModal) {
+  height: 80vh !important;
+  max-height: 80vh !important;
+  top: 10vh !important;
+}
+
+:global(.ant-modal.settingsModal .ant-modal-body) {
+  height: calc(80vh - 55px) !important;
+  padding: 0 0 24px 0 !important; /* 底部留白24px */
+}
+
+/**
+ * ========================================
+ * 模态框布局结构
+ * ========================================
+ */
+
+/* 主要内容布局容器 */
+.modalContent {
+  display: flex;
+  height: calc(100% - 24px); /* 减去底部留白 */
+  min-height: 0; /* 重要：确保flex容器可以缩小 */
+}
+
+/**
+ * ========================================
+ * 左侧导航区域
+ * ========================================
+ */
+
+/* 侧边栏容器 */
+.sidebar {
+  width: 200px;
+  background: var(--color-bg-container);
+  border-right: 1px solid var(--color-border-secondary);
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarMenu {
+  border: none;
+  background: transparent;
+  flex: 1;
+  padding: var(--spacing-sm) 0;
+}
+
+.sidebarMenu .ant-menu-item {
+  margin: 0 var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  height: 44px;
+  line-height: 44px;
+  padding: 0 var(--spacing-md);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.sidebarMenu .ant-menu-item:hover {
+  background: var(--hover-bg-color);
+  color: var(--color-primary);
+}
+
+.sidebarMenu .ant-menu-item-selected {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.sidebarMenu .ant-menu-item-selected::after {
+  display: none; /* 移除默认的右边框 */
+}
+
+.sidebarMenu .anticon {
+  font-size: 16px;
+  margin-right: var(--spacing-sm);
+}
+
+/**
+ * ========================================
+ * 右侧内容区域
+ * ========================================
+ */
+
+/* 内容区域容器 */
+.content {
+  flex: 1;
+  background: var(--color-bg-base);
+  height: 100%;
+  min-height: 0; /* 确保flex子元素可以缩小 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止整个内容区域滚动 */
+}
+
+.contentSection {
+  flex: 1;
+  padding: var(--spacing-lg);
+  padding-bottom: var(--spacing-xl); /* 底部留白 */
+  overflow-y: auto; /* 只有内容区域可以滚动 */
+  overflow-x: hidden;
+}
+
+.contentSection::-webkit-scrollbar {
+  width: 4px;
+}
+
+.contentSection::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.contentSection::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+.contentSection::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+.contentSection .ant-typography h3 {
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.contentSection .ant-divider {
+  margin: var(--spacing-sm) 0 var(--spacing-lg) 0;
+}
+
+/**
+ * ========================================
+ * 设置内容组件样式
+ * ========================================
+ */
+
+/* 设置分组容器 */
+.settingGroup {
+  margin-bottom: var(--spacing-xl);
+  background: var(--color-bg-container);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border-secondary);
+}
+
+.settingGroup:last-child {
+  margin-bottom: 0;
+}
+
+.settingGroup .ant-typography h4 {
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-secondary);
+  padding-bottom: var(--spacing-sm);
+}
+
+.settingItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+  gap: var(--spacing-md);
+  min-height: 48px;
+}
+
+.settingItem:not(:last-child) {
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-border-secondary);
+  gap: var(--spacing-md);
+}
+
+.settingRow:last-child {
+  border-bottom: none;
+}
+
+.settingLabel {
+  flex: 1;
+}
+
+.settingLabel .ant-typography {
+  display: block;
+  margin: 0;
+}
+
+.settingLabel .ant-typography + .ant-typography {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+/* 密码输入框样式 */
+.passwordInput {
+  flex: 1;
+  height: 32px;
+  padding: 4px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-bg-container);
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.passwordInput:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 存储信息样式 */
+.storageInfo {
+  margin-top: var(--spacing-md);
+}
+
+.infoCard {
+  padding: var(--spacing-sm);
+  background: var(--color-bg-container);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.storageValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: var(--spacing-xs);
+}
+
+/* 快捷键列表样式 */
+.shortcutList {
+  background: var(--color-bg-container);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.shortcutItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.shortcutItem:last-child {
+  border-bottom: none;
+}
+
+.shortcut {
+  background: var(--color-bg-layout);
+  color: var(--color-text-secondary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
+    "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+}
+
+/* 同步状态样式 */
+.syncStatus {
+  text-align: center;
+  padding: var(--spacing-xl);
+  background: var(--color-bg-container);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius);
+}
+
+/* 关于页面样式 */
+.aboutSection {
+  text-align: center;
+  padding: var(--spacing-md) 0;
+}
+
+.appInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.appLogo {
+  flex-shrink: 0;
+}
+
+.appDetails {
+  text-align: left;
+  flex: 1;
+}
+
+.appDetails .ant-typography h2 {
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--color-text);
+}
+
+.appDetails .ant-typography p {
+  margin: var(--spacing-xs) 0 0 0;
+}
+
+.featureList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--color-bg-container);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.featureItem:hover {
+  background: var(--hover-bg-color);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.featureItem .anticon {
+  font-size: 16px;
+}
+
+/**
+ * ========================================
+ * 响应式设计
+ * ========================================
+ */
+
+@media (max-width: 768px) {
+  .modalContent {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-secondary);
+  }
+
+  .sidebarMenu {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .sidebarMenu .ant-menu-item {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 0 var(--spacing-md);
+  }
+
+  .content {
+    padding: var(--spacing-md);
+  }
+
+  .appInfo {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .appDetails {
+    text-align: center;
+  }
+
+  .featureList {
+    grid-template-columns: 1fr;
+  }
+}
+
+/**
+ * ========================================
+ * 滚动条样式统一设置
+ * ========================================
+ */
+
+.sidebar::-webkit-scrollbar,
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.content::-webkit-scrollbar-track {
+  background: var(--color-bg-container);
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.content::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
