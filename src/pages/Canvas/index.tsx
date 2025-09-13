@@ -1,6 +1,12 @@
 // 画布视图页面
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
 import { DndContext } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { VirtualizedNoteContainer } from "../../components/VirtualizedNoteContainer";
@@ -76,12 +82,12 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
 
   // 状态管理
   const {
+    notes, // 直接订阅 notes 数组
     selectedNoteIds,
     createNote,
     moveNote,
     selectNote,
     clearSelection,
-    getNotesByCanvas,
     startDrag,
     endDrag,
   } = useNoteStore();
@@ -96,8 +102,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     panCanvas,
   } = useCanvasStore();
 
-  // 获取当前画布的便签
-  const canvasNotes = activeCanvasId ? getNotesByCanvas(activeCanvasId) : [];
+  // 获取当前画布的便签（响应式计算）
+  const canvasNotes = useMemo(() => {
+    if (!activeCanvasId) return [];
+    return notes.filter((note) => note.canvasId === activeCanvasId);
+  }, [notes, activeCanvasId]);
 
   // 详细的调试信息但去重
   useEffect(() => {

@@ -42,11 +42,15 @@ export const NoteCard = memo<NoteCardProps>(
       },
     });
 
-    // 处理点击选择（不影响拖拽）
-    const handleClick = useCallback(
+    // 处理点击选择（避免与拖拽冲突）
+    const handleMouseUp = useCallback(
       (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onSelect(note.id);
+        // 在鼠标释放时处理点击选择（避免与dnd-kit拖拽冲突）
+        if (e.button === 0) {
+          // 左键点击
+          e.stopPropagation();
+          onSelect(note.id);
+        }
       },
       [note.id, onSelect]
     );
@@ -102,7 +106,7 @@ export const NoteCard = memo<NoteCardProps>(
           ...getColorStyle(),
           ...dragStyle,
         }}
-        onClick={handleClick}
+        onMouseUp={handleMouseUp}
         {...listeners}
         {...attributes}
       >

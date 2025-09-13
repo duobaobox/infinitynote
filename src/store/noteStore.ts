@@ -59,8 +59,12 @@ interface NoteActions {
   resizeNote: (id: string, size: Size) => Promise<void>;
   /** 设置便签层级 */
   setNoteZIndex: (id: string, zIndex: number) => Promise<void>;
+  /** 重平衡所有便签的 zIndex */
+  rebalanceZIndexes: () => Promise<void>;
   /** 将便签置顶 */
   bringToFront: (id: string) => Promise<void>;
+  /** 带防抖的置顶方法 */
+  debouncedBringToFront: (id: string, delay?: number) => void;
   /** 选中便签 */
   selectNote: (id: string, multi?: boolean) => void;
   /** 取消选中便签 */
@@ -83,6 +87,14 @@ interface NoteActions {
   loadNotesFromDB: () => Promise<void>;
   /** 初始化数据 */
   initialize: () => Promise<void>;
+
+  // 层级管理常量
+  readonly LAYER_STEP: number;
+  readonly MAX_Z_INDEX: number;
+  readonly MIN_Z_INDEX: number;
+
+  // 内部状态（不对外暴露）
+  readonly _debouncedBringToFrontMap: Map<string, NodeJS.Timeout>;
 }
 
 type NoteStore = NoteState & NoteActions;
@@ -286,11 +298,100 @@ export const useNoteStore = create<NoteStore>()(
         await get().updateNote(id, { zIndex: newZIndex });
       },
 
-      // 将便签置顶
+      // 层级管理常量
+      LAYER_STEP: 10,
+      MAX_Z_INDEX: 999999,
+      MIN_Z_INDEX: 1,
+
+      // 重平衡所有便签的 zIndex，避免数值过大
+      rebalanceZIndexes: async () => {
+        const { notes } = get();
+        if (notes.length === 0) return;
+
+        console.log("🔄 开始重平衡便签层级...");
+
+        try {
+          // 按当前 zIndex 排序
+          const sortedNotes = [...notes].sort((a, b) => a.zIndex - b.zIndex);
+          const updates: Array<{ id: string; zIndex: number }> = [];
+
+          // 重新分配 zIndex，从 MIN_Z_INDEX 开始，每个便签间隔 LAYER_STEP
+          sortedNotes.forEach((note, index) => {
+            const newZIndex = get().MIN_Z_INDEX + index * get().LAYER_STEP;
+            if (note.zIndex !== newZIndex) {
+              updates.push({ id: note.id, zIndex: newZIndex });
+            }
+          });
+
+          if (updates.length === 0) {
+            console.log("✅ 层级已平衡，无需调整");
+            return;
+          }
+
+          // 批量更新内存状态
+          set((state) => ({
+            notes: state.notes.map((note) => {
+              const update = updates.find((u) => u.id === note.id);
+              return update
+                ? { ...note, zIndex: update.zIndex, updatedAt: new Date() }
+                : note;
+            }),
+            maxZIndex:
+              get().MIN_Z_INDEX + (sortedNotes.length - 1) * get().LAYER_STEP,
+          }));
+
+          // 批量更新数据库
+          const dbUpdates = updates.map(({ id, zIndex }) =>
+            dbOperations.updateNote(id, { zIndex, updatedAt: new Date() })
+          );
+          await Promise.all(dbUpdates);
+
+          console.log(`✅ 层级重平衡完成，更新了 ${updates.length} 个便签`);
+        } catch (error) {
+          console.error("❌ 层级重平衡失败:", error);
+          // 重新加载数据以恢复状态
+          await get().loadNotesFromDB();
+          throw new Error(
+            `层级重平衡失败: ${
+              error instanceof Error ? error.message : "未知错误"
+            }`
+          );
+        }
+      },
+
+      // 将便签置顶（优化版本）
       bringToFront: async (id: string) => {
-        const { maxZIndex } = get();
-        const newZIndex = maxZIndex + 1;
+        const { maxZIndex, notes, LAYER_STEP, MAX_Z_INDEX } = get();
+        const targetNote = notes.find((note) => note.id === id);
+
+        if (!targetNote) {
+          console.warn(`⚠️ 便签不存在: ${id.slice(-8)}`);
+          return;
+        }
+
+        // 检查是否需要重平衡
+        if (maxZIndex >= MAX_Z_INDEX - LAYER_STEP) {
+          console.log("🔄 zIndex 接近上限，执行重平衡...");
+          await get().rebalanceZIndexes();
+        }
+
+        const newZIndex = Math.max(maxZIndex, get().maxZIndex) + LAYER_STEP;
         const updatedAt = new Date();
+
+        console.log(
+          `🔝 开始置顶便签: ${id.slice(-8)}, 当前zIndex: ${
+            targetNote.zIndex
+          }, 新zIndex: ${newZIndex}, 当前maxZIndex: ${maxZIndex}`
+        );
+
+        // 如果已经是最顶层，无需操作
+        if (targetNote.zIndex === maxZIndex) {
+          console.log(`✅ 便签已在最顶层: ${id.slice(-8)}`);
+          return;
+        }
+
+        // 保存原始状态用于错误恢复
+        const originalNote = { ...targetNote };
 
         try {
           // 先更新内存状态
@@ -307,11 +408,24 @@ export const useNoteStore = create<NoteStore>()(
             updatedAt,
           });
 
-          console.log(`✅ 便签置顶成功，ID: ${id}`);
+          console.log(
+            `✅ 便签置顶成功，ID: ${id.slice(-8)}, 新zIndex: ${newZIndex}`
+          );
         } catch (error) {
           console.error("❌ 便签置顶失败:", error);
-          // 重新加载数据以恢复状态
-          await get().loadNotesFromDB();
+
+          // 精确恢复失败的便签状态，而不是重新加载所有数据
+          set((state) => ({
+            notes: state.notes.map((note) =>
+              note.id === id ? originalNote : note
+            ),
+            maxZIndex: Math.max(
+              ...state.notes.map((n) =>
+                n.id === id ? originalNote.zIndex : n.zIndex
+              )
+            ),
+          }));
+
           throw new Error(
             `便签置顶失败: ${
               error instanceof Error ? error.message : "未知错误"
@@ -320,10 +434,59 @@ export const useNoteStore = create<NoteStore>()(
         }
       },
 
-      // 选中便签
+      // 防抖置顶操作的映射表
+      _debouncedBringToFrontMap: new Map<string, NodeJS.Timeout>(),
+
+      // 带防抖的数据库同步方法（只处理数据库操作）
+      debouncedBringToFront: (id: string, delay = 100) => {
+        const { _debouncedBringToFrontMap } = get();
+
+        // 清除之前的定时器
+        const existingTimer = _debouncedBringToFrontMap.get(id);
+        if (existingTimer) {
+          clearTimeout(existingTimer);
+        }
+
+        // 设置新的定时器，只同步数据库
+        const timer = setTimeout(async () => {
+          try {
+            const { notes } = get();
+            const targetNote = notes.find((note) => note.id === id);
+
+            if (targetNote) {
+              console.log(
+                `💾 防抖数据库同步: ${id.slice(-8)}, zIndex: ${
+                  targetNote.zIndex
+                }`
+              );
+
+              // 只同步到数据库，不更新内存状态（内存状态已经在selectNote中更新）
+              await dbOperations.updateNote(id, {
+                zIndex: targetNote.zIndex,
+                updatedAt: targetNote.updatedAt,
+              });
+
+              console.log(`✅ 数据库同步成功: ${id.slice(-8)}`);
+            }
+          } catch (error) {
+            console.error("❌ 防抖数据库同步失败:", error);
+            // 如果数据库同步失败，重新调用完整的置顶方法
+            get().bringToFront(id).catch(console.error);
+          }
+          _debouncedBringToFrontMap.delete(id);
+        }, delay);
+
+        _debouncedBringToFrontMap.set(id, timer);
+      },
+
+      // 选中便签（支持自动置顶）
       selectNote: (id: string, multi = false) => {
-        set((state) => {
-          if (multi) {
+        const { notes, maxZIndex, LAYER_STEP } = get();
+        const targetNote = notes.find((note) => note.id === id);
+
+        if (multi) {
+          // 多选模式：切换选中状态，不置顶
+          set((state) => {
             const isSelected = state.selectedNoteIds.includes(id);
             return {
               selectedNoteIds: isSelected
@@ -332,10 +495,32 @@ export const useNoteStore = create<NoteStore>()(
                   )
                 : [...state.selectedNoteIds, id],
             };
-          } else {
-            return { selectedNoteIds: [id] };
+          });
+        } else {
+          if (!targetNote) {
+            console.warn(`⚠️ 选中的便签不存在: ${id.slice(-8)}`);
+            return;
           }
-        });
+
+          // 立即更新选中状态
+          set({ selectedNoteIds: [id] });
+
+          // 自动置顶：将便签置顶到最上层
+          const newZIndex = maxZIndex + LAYER_STEP;
+
+          // 立即更新内存状态，提供即时视觉反馈
+          set((state) => ({
+            notes: state.notes.map((note) =>
+              note.id === id
+                ? { ...note, zIndex: newZIndex, updatedAt: new Date() }
+                : note
+            ),
+            maxZIndex: newZIndex,
+          }));
+
+          // 防抖数据库操作，避免频繁写入
+          get().debouncedBringToFront(id);
+        }
       },
 
       // 取消选中便签

@@ -68,6 +68,11 @@ interface CanvasActions {
   zoomOut: () => void;
   /** 平移画布 */
   panCanvas: (delta: Position) => void;
+  /** 聚焦到指定便签 */
+  focusToNote: (
+    notePosition: Position,
+    noteSize?: { width: number; height: number }
+  ) => void;
   /** 从数据库加载画布 */
   loadCanvasesFromDB: () => Promise<void>;
   /** 初始化画布数据 */
@@ -541,6 +546,39 @@ export const useCanvasStore = create<CanvasStore>()(
           y: viewport.offset.y + delta.y,
         };
         get().setOffset(newOffset);
+      },
+
+      // 聚焦到指定便签
+      focusToNote: (
+        notePosition: Position,
+        noteSize = { width: 200, height: 150 }
+      ) => {
+        // 获取当前视口信息
+        const { viewport } = get();
+
+        // 计算画布中心点（屏幕中心）
+        const canvasCenter = {
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+        };
+
+        // 计算便签中心点
+        const noteCenterX = notePosition.x + noteSize.width / 2;
+        const noteCenterY = notePosition.y + noteSize.height / 2;
+
+        // 计算需要的偏移量，使便签中心对齐到画布中心
+        // offset 是画布相对于屏幕的偏移，所以需要反向计算
+        const newOffset = {
+          x: canvasCenter.x - noteCenterX * viewport.scale,
+          y: canvasCenter.y - noteCenterY * viewport.scale,
+        };
+
+        // 应用新的偏移量
+        get().setOffset(newOffset);
+
+        console.log(
+          `✅ 聚焦到便签位置: (${notePosition.x}, ${notePosition.y})`
+        );
       },
 
       // 从数据库加载画布

@@ -311,6 +311,12 @@
   border-color: var(--color-border);
   background: var(--color-bg-elevated);
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.noteItem:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 便签项内容区域样式 */
@@ -332,6 +338,11 @@
 .noteTitle {
   color: var(--color-text-secondary);
   font-size: 12px;
+  flex: 1;
+  margin-left: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 画布区域样式 */

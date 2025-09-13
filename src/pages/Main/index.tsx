@@ -11,7 +11,7 @@ import {
 // 引入主题
 import { useTheme } from "../../theme";
 import { NoteColor } from "../../types";
-import type { Position } from "../../types";
+import type { Position, Note } from "../../types";
 // 引入画布组件
 import Canvas from "../Canvas";
 // 引入工具栏组件
@@ -82,7 +82,8 @@ const Main: React.FC = () => {
   const { modal } = App.useApp();
 
   // 状态管理
-  const { createNote, getNotesByCanvas, initialize } = useNoteStore();
+  const { createNote, getNotesByCanvas, initialize, selectNote } =
+    useNoteStore();
   const {
     activeCanvasId,
     viewport,
@@ -90,6 +91,7 @@ const Main: React.FC = () => {
     setActiveCanvas,
     createCanvas,
     deleteCanvas,
+    focusToNote,
   } = useCanvasStore();
 
   // 主题状态
@@ -237,6 +239,30 @@ const Main: React.FC = () => {
   const handleToggleDragMode = useCallback((enabled: boolean) => {
     setIsDragMode(enabled);
   }, []);
+
+  // 处理便签点击 - 聚焦到画布中的便签并置顶
+  const handleNoteClick = useCallback(
+    async (note: Note) => {
+      try {
+        // 如果当前不在该便签所属的画布，先切换画布
+        if (activeCanvasId !== note.canvasId) {
+          setActiveCanvas(note.canvasId);
+        }
+
+        // 使用selectNote统一处理选中和置顶逻辑
+        // 这样确保便签列表和画布点击行为一致
+        selectNote(note.id, false);
+
+        // 聚焦到便签位置
+        focusToNote(note.position, note.size);
+
+        console.log(`🎯 聚焦并立即置顶便签: ${note.title || "无标题"}`);
+      } catch (error) {
+        console.error("❌ 聚焦便签失败:", error);
+      }
+    },
+    [activeCanvasId, setActiveCanvas, focusToNote, selectNote]
+  );
 
   // 处理删除画布
   const handleDeleteCanvas = useCallback(
@@ -432,7 +458,13 @@ const Main: React.FC = () => {
 
   // 渲染便签列表（使用真实数据）
   const noteItems = currentCanvasNotes.map((note) => (
-    <Card size="small" className={styles.noteItem} key={note.id}>
+    <Card
+      size="small"
+      className={styles.noteItem}
+      key={note.id}
+      onClick={() => handleNoteClick(note)}
+      style={{ cursor: "pointer" }}
+    >
       <div className={styles.noteItemContent}>
         {/* 便签颜色指示器 */}
         <div
