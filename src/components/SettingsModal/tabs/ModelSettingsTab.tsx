@@ -13,7 +13,7 @@ const { Title, Text } = Typography;
 
 export interface ModelSettingsTabProps {
   settings: ModelSettings;
-  onSettingChange: (key: keyof ModelSettings, value: any) => void;
+  onSettingChange: (key: keyof ModelSettings, value: string) => void;
 }
 
 const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({

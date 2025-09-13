@@ -11,11 +11,13 @@ export class CanvasService {
       const stored = localStorage.getItem(STORAGE_KEYS.CANVAS_STATE);
       if (stored) {
         const canvases = JSON.parse(stored);
-        return canvases.map((canvas: any) => ({
-          ...canvas,
-          createdAt: new Date(canvas.createdAt),
-          updatedAt: new Date(canvas.updatedAt),
-        }));
+        return canvases.map(
+          (canvas: Canvas & { createdAt: string; updatedAt: string }) => ({
+            ...canvas,
+            createdAt: new Date(canvas.createdAt),
+            updatedAt: new Date(canvas.updatedAt),
+          })
+        );
       }
     } catch (error) {
       console.error("获取画布列表失败:", error);
@@ -111,7 +113,7 @@ export class CanvasService {
   }
 
   // 缩放画布
-  static zoomCanvas(id: string, scale: number, _center?: Position): void {
+  static zoomCanvas(id: string, scale: number): void {
     const clampedScale = Math.max(
       CANVAS_CONFIG.MIN_SCALE,
       Math.min(CANVAS_CONFIG.MAX_SCALE, scale)
@@ -134,7 +136,7 @@ export class CanvasService {
   }
 
   // 获取画布边界
-  static getCanvasBounds(_id: string): {
+  static getCanvasBounds(): {
     minX: number;
     minY: number;
     maxX: number;

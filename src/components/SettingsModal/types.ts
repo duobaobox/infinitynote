@@ -164,7 +164,10 @@ export interface SettingsConfig {
 /**
  * 设置更新回调函数类型
  */
-export type SettingUpdateCallback<T = any> = (key: string, value: T) => void;
+export type SettingUpdateCallback<T = string | boolean | number> = (
+  key: string,
+  value: T
+) => void;
 
 /**
  * 设置导入导出格式

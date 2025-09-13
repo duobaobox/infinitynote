@@ -1,5 +1,17 @@
 // 主题系统导出文件
-export { ThemeProvider, useTheme, ThemeToggle } from "./ThemeProvider";
+import { useContext } from "react";
+import { ThemeContext, type ThemeContextType } from "./context";
+
+export { ThemeProvider, ThemeToggle } from "./ThemeProvider";
+
+// 使用主题的钩子
+export const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error("useTheme 必须在 ThemeProvider 内部使用");
+  }
+  return context;
+};
 export {
   lightTheme,
   darkTheme,

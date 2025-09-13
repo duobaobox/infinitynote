@@ -1,20 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { getThemeConfig, type ThemeType } from "./antd";
 import { applyCSSVariables } from "./variables";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-
-// 主题上下文类型定义
-interface ThemeContextType {
-  theme: ThemeType;
-  setTheme: (theme: ThemeType) => void;
-  isDark: boolean;
-  toggleTheme: () => void;
-}
-
-// 创建主题上下文
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import { ThemeContext, type ThemeContextType } from "./context";
 
 // 主题提供者组件属性
 interface ThemeProviderProps {
@@ -54,7 +44,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   // 应用 CSS 变量
   useEffect(() => {
-    let actualTheme: "light" | "dark" | "compact" = currentTheme as any;
+    let actualTheme: "light" | "dark" | "compact" = currentTheme as
+      | "light"
+      | "dark"
+      | "compact";
 
     // 如果是 auto 模式，根据系统主题决定实际主题
     if (currentTheme === "auto") {
@@ -129,14 +122,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   );
 };
 
-// 使用主题的钩子
-export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error("useTheme 必须在 ThemeProvider 内部使用");
-  }
-  return context;
-};
+// 使用主题的钩子 - 移到单独的文件以避免 fast refresh 警告
 
 // 主题切换按钮组件
 export const ThemeToggle: React.FC<{

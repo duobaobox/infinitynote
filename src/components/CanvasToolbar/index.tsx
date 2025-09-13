@@ -9,7 +9,7 @@ import styles from "./index.module.css";
 // 创建动态图标组件
 const DynamicIcon = ({ type }: { type: IconType }) => {
   const IconComponent = iconRegistry[type];
-  // @ts-ignore - 忽略类型检查，因为iconRegistry包含多种类型
+  // @ts-expect-error - iconRegistry包含多种类型，需要忽略类型检查
   return IconComponent ? <IconComponent /> : null;
 };
 
@@ -20,7 +20,7 @@ interface CanvasToolbarProps {
 export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   onCreateNote,
 }) => {
-  const { viewport, zoomIn, zoomOut, resetViewport } = useCanvasStore();
+  const { zoomIn, zoomOut, resetViewport } = useCanvasStore();
 
   return (
     <div className={styles.canvasToolbar}>
@@ -63,25 +63,6 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
             onClick={resetViewport}
             className={styles.toolbarButton}
           />
-        </Tooltip>
-
-        <Tooltip
-          title={
-            <div>
-              <div>当前缩放: {Math.round(viewport.scale * 100)}%</div>
-              <div style={{ fontSize: "11px", opacity: 0.8, marginTop: "4px" }}>
-                拖拽画布: 中键/Ctrl+左键/Alt+左键
-              </div>
-            </div>
-          }
-          placement="left"
-        >
-          <div className={styles.zoomIndicator}>
-            <div className={styles.zoomValue}>
-              {Math.round(viewport.scale * 100)}
-            </div>
-            <div className={styles.zoomUnit}>%</div>
-          </div>
         </Tooltip>
       </Space>
     </div>

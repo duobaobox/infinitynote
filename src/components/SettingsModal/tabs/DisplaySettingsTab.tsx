@@ -18,7 +18,10 @@ const { Title, Text } = Typography;
 
 export interface DisplaySettingsTabProps {
   settings: DisplaySettings;
-  onSettingChange: (key: keyof DisplaySettings, value: any) => void;
+  onSettingChange: (
+    key: keyof DisplaySettings,
+    value: string | boolean
+  ) => void;
 }
 
 const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
@@ -35,7 +38,7 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
 
     // 直接设置主题，ThemeProvider 会处理 auto 模式的逻辑
     if (value === "light" || value === "dark" || value === "auto") {
-      setTheme(value as any);
+      setTheme(value as "light" | "dark" | "auto");
     }
   };
 
@@ -43,7 +46,7 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
   useEffect(() => {
     // 如果设置中的主题与当前应用主题不一致，需要同步
     if (settings.theme !== currentTheme) {
-      setTheme(settings.theme as any);
+      setTheme(settings.theme as "light" | "dark" | "auto");
     }
   }, [settings.theme, currentTheme, setTheme]);
 

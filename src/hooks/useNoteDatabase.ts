@@ -55,7 +55,7 @@ export const useNoteDatabase = () => {
   // 更新便签
   const updateNote = async (id: string, changes: Partial<Note>) => {
     try {
-      const { id: _, ...updateData } = changes;
+      const { id, ...updateData } = changes;
       await dbOperations.updateNote(parseInt(id), {
         ...updateData,
         updatedAt: new Date(),

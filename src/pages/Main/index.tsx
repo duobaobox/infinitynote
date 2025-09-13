@@ -35,7 +35,7 @@ import styles from "./index.module.css";
 // 创建动态图标组件
 const DynamicIcon = ({ type }: { type: IconType }) => {
   const IconComponent = iconRegistry[type];
-  // @ts-ignore - 忽略类型检查，因为iconRegistry包含多种类型
+  // @ts-expect-error - iconRegistry包含多种类型，需要忽略类型检查
   return IconComponent ? <IconComponent /> : null;
 };
 

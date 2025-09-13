@@ -2,15 +2,13 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
-import type {
-  DragEndEvent,
-  DragStartEvent,
-  DragMoveEvent,
-} from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { VirtualizedNoteContainer } from "../../components/VirtualizedNoteContainer";
+import { ZoomIndicator } from "../../components/ZoomIndicator";
 import { useNoteStore } from "../../store/noteStore";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useTheme, canvasGridThemes } from "../../theme";
+import { loadSettingsFromStorage } from "../../components/SettingsModal/utils";
 import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
 import styles from "./index.module.css";
@@ -29,6 +27,27 @@ export const Canvas: React.FC = () => {
   // 主题状态
   const { isDark } = useTheme();
   const gridTheme = isDark ? canvasGridThemes.dark : canvasGridThemes.light;
+
+  // 显示设置
+  const [displaySettings, setDisplaySettings] = useState(() => {
+    const settings = loadSettingsFromStorage();
+    return settings.display;
+  });
+
+  // 监听设置变化
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const settings = loadSettingsFromStorage();
+      setDisplaySettings(settings.display);
+    };
+
+    // 监听自定义事件（当设置页面更新设置时触发）
+    window.addEventListener("settingsChanged", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("settingsChanged", handleStorageChange);
+    };
+  }, []);
 
   // 状态管理
   const {
@@ -130,7 +149,7 @@ export const Canvas: React.FC = () => {
     [startDrag]
   );
 
-  const handleDragMove = useCallback((_event: DragMoveEvent) => {
+  const handleDragMove = useCallback(() => {
     // 可以在这里添加拖拽过程中的逻辑
   }, []);
 
@@ -375,22 +394,28 @@ export const Canvas: React.FC = () => {
             style={{
               transform: `translate(${viewport.offset.x}px, ${viewport.offset.y}px) scale(${viewport.scale})`,
               transformOrigin: "0 0",
+              // 根据设置控制平滑缩放动画
+              transition: displaySettings.smoothZoom
+                ? "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                : "none",
             }}
           >
-            {/* 网格背景 */}
-            <div
-              className={`${styles.grid} grid`}
-              style={
-                {
-                  "--grid-color": gridTheme.gridColor,
-                  "--grid-size": `${gridTheme.gridSize}px`,
-                  "--grid-opacity": gridTheme.gridOpacity,
-                  // 应用主题颜色，覆盖原有的固定颜色
-                  backgroundImage: `radial-gradient(circle, ${gridTheme.gridColor} 1px, transparent 1px)`,
-                  opacity: gridTheme.gridOpacity,
-                } as React.CSSProperties
-              }
-            />
+            {/* 网格背景 - 根据设置控制显示 */}
+            {displaySettings.showGrid && (
+              <div
+                className={`${styles.grid} grid`}
+                style={
+                  {
+                    "--grid-color": gridTheme.gridColor,
+                    "--grid-size": `${gridTheme.gridSize}px`,
+                    "--grid-opacity": gridTheme.gridOpacity,
+                    // 应用主题颜色，覆盖原有的固定颜色
+                    backgroundImage: `radial-gradient(circle, ${gridTheme.gridColor} 1px, transparent 1px)`,
+                    opacity: gridTheme.gridOpacity,
+                  } as React.CSSProperties
+                }
+              />
+            )}
 
             {/* 便签列表 */}
             <VirtualizedNoteContainer
@@ -410,6 +435,9 @@ export const Canvas: React.FC = () => {
           </div>
         </DndContext>
       </div>
+
+      {/* 独立的缩放指示器 */}
+      <ZoomIndicator />
     </div>
   );
 };

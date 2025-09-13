@@ -175,7 +175,7 @@ export const readSettingsFromFile = (
         const content = event.target?.result as string;
         const exportData = JSON.parse(content) as SettingsExportData;
         resolve(exportData);
-      } catch (error) {
+      } catch {
         reject(new Error("Invalid settings file format"));
       }
     };
@@ -239,14 +239,14 @@ export const calculateStorageUsage = (): {
 /**
  * 深度合并对象
  */
-function deepMerge<T extends Record<string, any>>(
+function deepMerge<T extends Record<string, unknown>>(
   target: T,
   source: Partial<T>
 ): T {
   const result = { ...target };
 
   for (const key in source) {
-    if (source.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
       const sourceValue = source[key];
       const targetValue = result[key];
 
@@ -258,9 +258,12 @@ function deepMerge<T extends Record<string, any>>(
         typeof targetValue === "object" &&
         !Array.isArray(targetValue)
       ) {
-        (result as any)[key] = deepMerge(targetValue, sourceValue);
+        (result as Record<string, unknown>)[key] = deepMerge(
+          targetValue,
+          sourceValue
+        );
       } else if (sourceValue !== undefined) {
-        (result as any)[key] = sourceValue;
+        (result as Record<string, unknown>)[key] = sourceValue;
       }
     }
   }

@@ -13,7 +13,10 @@ const { Title, Text } = Typography;
 
 export interface GeneralSettingsTabProps {
   settings: GeneralSettings;
-  onSettingChange: (key: keyof GeneralSettings, value: any) => void;
+  onSettingChange: (
+    key: keyof GeneralSettings,
+    value: boolean | string
+  ) => void;
 }
 
 const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({

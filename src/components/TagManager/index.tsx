@@ -34,10 +34,17 @@ export const TagManager: React.FC<TagManagerProps> = ({
       try {
         const parsedTags = JSON.parse(savedTags);
         setTags(
-          parsedTags.map((tag: any) => ({
-            ...tag,
-            createdAt: new Date(tag.createdAt),
-          }))
+          parsedTags.map(
+            (tag: {
+              id: string;
+              name: string;
+              color: string;
+              createdAt: string;
+            }) => ({
+              ...tag,
+              createdAt: new Date(tag.createdAt),
+            })
+          )
         );
       } catch (error) {
         console.error("加载标签失败:", error);

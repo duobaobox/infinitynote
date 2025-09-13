@@ -197,7 +197,7 @@ export const DEFAULT_DISPLAY_SETTINGS = {
   theme: "light" as const,
   showGrid: true,
   smoothZoom: true,
-  toolbarPosition: "left" as const,
+  toolbarPosition: "right" as const,
   zoomControlPosition: "bottom-right" as const,
 };
 

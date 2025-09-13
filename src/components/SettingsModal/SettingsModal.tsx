@@ -83,7 +83,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
   const handleSettingChange = <K extends keyof SettingsConfig>(
     section: K,
     key: keyof SettingsConfig[K],
-    value: any
+    value: SettingsConfig[K][keyof SettingsConfig[K]]
   ) => {
     const newSettings = {
       ...settings,
@@ -94,13 +94,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     };
     setSettings(newSettings);
     saveSettingsToStorage(newSettings);
+
+    // 触发自定义事件，通知其他组件设置已更新
+    window.dispatchEvent(
+      new CustomEvent("settingsChanged", {
+        detail: { section, key, value, settings: newSettings },
+      })
+    );
   };
 
   const handleExportData = () => {
     try {
       downloadSettingsFile(settings);
       message.success("设置数据导出成功");
-    } catch (error) {
+    } catch {
       message.error("导出失败，请重试");
     }
   };
@@ -120,7 +127,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
         setSettings(newSettings);
         saveSettingsToStorage(newSettings);
         message.success("设置数据导入成功");
-      } catch (error) {
+      } catch {
         message.error("导入失败，请检查文件格式");
       }
     };
@@ -141,7 +148,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
           const defaultSettings = getDefaultSettings();
           setSettings(defaultSettings);
           message.success("数据清除成功");
-        } catch (error) {
+        } catch {
           message.error("清除失败，请重试");
         }
       },
