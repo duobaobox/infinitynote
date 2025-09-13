@@ -1,5 +1,33 @@
 /**
- * 设置模块常量定义
+ * SettingsModal 常量配置文件
+ *
+ * 功能说明：
+ * 定义 SettingsModal 组件使用的所有常量配置，包括菜单配置、选项列表、
+ * 默认值、快捷键定义、应用信息等。集中管理常量便于维护和修改。
+ *
+ * 主要常量：
+ * - MENU_ITEMS: 左侧导航菜单配置
+ * - API_PROVIDERS: API 提供商选项
+ * - MODEL_OPTIONS: 模型选择选项
+ * - LANGUAGE_OPTIONS: 语言选择选项
+ * - THEME_OPTIONS: 主题选择选项
+ * - TOOLBAR_POSITION_OPTIONS: 工具栏位置选项
+ * - ZOOM_POSITION_OPTIONS: 缩放控制位置选项
+ * - EDIT_SHORTCUTS: 编辑快捷键列表
+ * - VIEW_SHORTCUTS: 视图快捷键列表
+ * - DEFAULT_*_SETTINGS: 各模块默认设置值
+ * - APP_INFO: 应用基本信息
+ * - STORAGE_KEYS: 本地存储键名
+ * - MODAL_CONFIG: 模态框尺寸配置
+ *
+ * 设计原则：
+ * - 集中管理：所有常量统一定义，便于维护
+ * - 类型安全：使用 TypeScript 的 const assertions
+ * - 可配置性：支持通过修改常量调整界面行为
+ *
+ * @author InfinityNote Team
+ * @since v1.5.7
+ * @lastModified 2024-12-13
  */
 
 import type { SettingMenuItem, ShortcutConfig, AppInfo } from "./types";

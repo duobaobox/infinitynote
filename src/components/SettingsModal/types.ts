@@ -1,5 +1,29 @@
 /**
- * 设置模态框相关类型定义
+ * SettingsModal 类型定义文件
+ *
+ * 功能说明：
+ * 定义 SettingsModal 组件及其子组件所需的所有 TypeScript 类型接口。
+ * 包含设置数据模型、组件属性接口、枚举类型等完整的类型系统。
+ *
+ * 主要类型：
+ * - SettingsModalProps: 主组件属性接口
+ * - SettingsConfig: 完整设置配置数据结构
+ * - ModelSettings: 模型服务设置
+ * - GeneralSettings: 常规应用设置
+ * - DisplaySettings: 界面显示设置
+ * - DataSettings: 数据管理设置
+ * - CloudSettings: 云同步设置
+ * - ShortcutConfig: 快捷键配置
+ * - AppInfo: 应用信息
+ *
+ * 设计原则：
+ * - 类型安全：严格的类型约束，避免运行时错误
+ * - 可扩展性：便于添加新的设置项和模块
+ * - 向后兼容：支持设置数据的版本迁移
+ *
+ * @author InfinityNote Team
+ * @since v1.5.7
+ * @lastModified 2024-12-13
  */
 
 import type { ReactNode } from "react";

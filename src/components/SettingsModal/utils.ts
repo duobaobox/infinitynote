@@ -1,5 +1,41 @@
 /**
- * 设置数据管理工具
+ * SettingsModal 工具函数库
+ *
+ * 功能说明：
+ * 提供 SettingsModal 组件所需的所有工具函数，包括设置数据的加载保存、
+ * 导入导出、存储管理、数据验证等核心功能。这些函数独立于组件，
+ * 可以在其他地方复用。
+ *
+ * 主要功能模块：
+ *
+ * 📁 设置管理：
+ * - getDefaultSettings(): 获取默认设置配置
+ * - loadSettingsFromStorage(): 从本地存储加载设置
+ * - saveSettingsToStorage(): 保存设置到本地存储
+ * - clearSettingsFromStorage(): 清除本地存储设置
+ *
+ * 📥📤 导入导出：
+ * - exportSettings(): 导出设置数据
+ * - importSettings(): 导入设置数据
+ * - downloadSettingsFile(): 下载设置文件
+ * - readSettingsFromFile(): 从文件读取设置
+ *
+ * 📊 存储统计：
+ * - calculateStorageUsage(): 计算本地存储使用情况
+ *
+ * 🔧 数据处理：
+ * - deepMerge(): 深度合并对象
+ * - validateSettings(): 验证设置数据有效性
+ *
+ * 技术特性：
+ * - 错误处理：完善的异常捕获和处理
+ * - 类型安全：严格的 TypeScript 类型检查
+ * - 向后兼容：支持旧版本设置数据迁移
+ * - 性能优化：避免不必要的数据序列化
+ *
+ * @author InfinityNote Team
+ * @since v1.5.7
+ * @lastModified 2024-12-13
  */
 
 import type { SettingsConfig, SettingsExportData } from "./types";

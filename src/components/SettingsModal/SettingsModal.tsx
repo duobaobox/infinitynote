@@ -1,15 +1,35 @@
 /**
- * 设置模态框主组件
+ * SettingsModal - 应用设置管理主组件
  *
- * 功能特性:
- * - 🎛️ 7个功能完整的设置选项卡
- * - 💾 自动本地存储和数据持久化
- * - 📥📤 完整的设置导入导出功能
- * - 🎨 响应式设计和主题支持
- * - 🔧 模块化架构便于扩展
+ * 功能说明：
+ * 这是一个完整的设置管理模态框，提供应用程序的所有配置选项管理功能。
+ * 采用左侧导航菜单 + 右侧内容区域的布局设计，支持7个设置模块。
+ *
+ * 核心功能：
+ * - 🎛️ 设置数据的实时加载、保存和同步
+ * - 📁 设置的导入导出和备份恢复
+ * - 🎨 多模块选项卡式界面，支持响应式设计
+ * - 🔄 自动触发设置变更事件，通知其他组件
+ * - 💾 本地存储集成，数据持久化
+ *
+ * 设置模块：
+ * - 🤖 模型服务：API配置、密钥管理、模型选择
+ * - ⚙️ 常规设置：自动保存、会话恢复、语言设置
+ * - 🎨 显示设置：主题切换、界面布局、网格显示
+ * - 💾 数据管理：导入导出、存储统计、数据清理
+ * - ⌨️ 快捷键：编辑和视图快捷键展示
+ * - ☁️ 云同步：云端数据同步（开发中）
+ * - ℹ️ 关于我们：应用信息、更新检查、测试面板
+ *
+ * 技术特性：
+ * - TypeScript 类型安全
+ * - CSS Modules 样式隔离
+ * - Ant Design 组件库
+ * - 事件驱动的状态管理
  *
  * @author InfinityNote Team
- * @version 1.0.0
+ * @since v1.5.7
+ * @lastModified 2024-12-13
  */
 
 import React, { useState, useEffect } from "react";
@@ -83,7 +103,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
   const handleSettingChange = <K extends keyof SettingsConfig>(
     section: K,
     key: keyof SettingsConfig[K],
-    value: SettingsConfig[K][keyof SettingsConfig[K]]
+    value: any
   ) => {
     const newSettings = {
       ...settings,

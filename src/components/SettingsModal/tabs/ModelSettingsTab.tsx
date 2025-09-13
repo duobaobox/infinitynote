@@ -1,5 +1,31 @@
 /**
- * 模型服务设置选项卡
+ * ModelSettingsTab - 模型服务设置选项卡组件
+ *
+ * 功能说明：
+ * 提供 AI 模型服务的配置界面，包括 API 提供商选择、密钥配置、
+ * 默认模型选择和自定义端点设置。支持多种主流 AI 服务提供商。
+ *
+ * 主要功能：
+ * - 🔌 API 提供商选择（OpenAI、Anthropic、Azure、本地模型）
+ * - 🔑 API 密钥安全配置和验证
+ * - 🤖 默认模型选择和管理
+ * - 🌐 自定义 API 端点配置（Azure 等）
+ * - ✅ 连接测试和状态验证
+ *
+ * 支持的提供商：
+ * - OpenAI: GPT-4, GPT-3.5 等模型
+ * - Anthropic: Claude 系列模型
+ * - Azure OpenAI: 企业级 OpenAI 服务
+ * - 本地模型: 自部署的模型服务
+ *
+ * 安全特性：
+ * - API 密钥本地加密存储
+ * - 敏感信息不会在界面明文显示
+ * - 支持密钥有效性验证
+ *
+ * @author InfinityNote Team
+ * @since v1.5.7
+ * @lastModified 2024-12-13
  */
 
 import React from "react";
