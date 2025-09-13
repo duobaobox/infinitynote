@@ -10,10 +10,39 @@ class InfinityNoteDatabase extends Dexie {
 
   constructor() {
     super("InfinityNoteDatabase");
+
+    // 版本1：基础字段
     this.version(1).stores({
       notes:
         "++id, title, content, color, zIndex, canvasId, createdAt, updatedAt, position.x, position.y, size.width, size.height",
     });
+
+    // 版本2：添加扩展字段（未来功能）
+    this.version(2)
+      .stores({
+        notes:
+          "++id, title, content, color, zIndex, canvasId, createdAt, updatedAt, position.x, position.y, size.width, size.height, tags, priority, reminderAt, isPinned, isArchived, isFavorite, contentType, permission, templateId, parentNoteId, lastAccessedAt, version, isDeleted, deletedAt",
+      })
+      .upgrade((tx) => {
+        // 数据迁移：为现有便签添加默认值
+        return tx
+          .table("notes")
+          .toCollection()
+          .modify((note) => {
+            // 添加新字段的默认值
+            if (note.tags === undefined) note.tags = [];
+            if (note.priority === undefined) note.priority = 2; // 默认中等优先级
+            if (note.isPinned === undefined) note.isPinned = false;
+            if (note.isArchived === undefined) note.isArchived = false;
+            if (note.isFavorite === undefined) note.isFavorite = false;
+            if (note.contentType === undefined) note.contentType = "text";
+            if (note.permission === undefined) note.permission = "private";
+            if (note.version === undefined) note.version = 1;
+            if (note.isDeleted === undefined) note.isDeleted = false;
+            if (note.lastAccessedAt === undefined)
+              note.lastAccessedAt = note.updatedAt;
+          });
+      });
   }
 }
 
