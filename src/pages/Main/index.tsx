@@ -8,6 +8,8 @@ import {
   useCanvasStore,
   initializeDefaultCanvas,
 } from "../../store/canvasStore";
+// 引入主题
+import { useTheme } from "../../theme";
 import { NoteColor } from "../../types";
 import type { Position } from "../../types";
 // 引入画布组件
@@ -58,6 +60,9 @@ const Main: React.FC = () => {
   // 状态管理
   const { createNote } = useNoteStore();
   const { activeCanvasId, viewport } = useCanvasStore();
+
+  // 主题状态
+  const { isDark } = useTheme();
 
   // 初始化默认画布
   useEffect(() => {
@@ -128,10 +133,18 @@ const Main: React.FC = () => {
 
   return (
     // 主布局容器
-    <div className={styles.container}>
+    <div
+      className={`${styles.container} ${
+        isDark ? styles.darkTheme : styles.lightTheme
+      }`}
+    >
       {/* 侧边栏 - 固定宽度200px */}
       {!collapsed ? (
-        <Sider width={200} theme="light" className={styles.sidebar}>
+        <Sider
+          width={200}
+          theme={isDark ? "dark" : "light"}
+          className={styles.sidebar}
+        >
           {/* 侧边栏顶部设置区域 */}
           <div className={styles.sidebarHeader}>
             {/* 设置按钮 */}
@@ -215,7 +228,7 @@ const Main: React.FC = () => {
                   <div className={styles.notesListTitle}>
                     <div className={styles.notesListTitleText}>默认画布</div>
                     {/* 徽标数字 - 显示便签数量 */}
-                    <Badge count={21} style={{ backgroundColor: "#1677ff" }} />
+                    <Badge count={21} />
                   </div>
 
                   {/* 搜索输入框 */}

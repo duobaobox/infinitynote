@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Input, Button, List, Tag, Popconfirm, message } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { tagColors } from "../../theme/variables";
 import styles from "./index.module.css";
 
 interface TagItem {
@@ -15,25 +16,6 @@ interface TagManagerProps {
   onClose: () => void;
   onTagSelect?: (tag: TagItem) => void;
 }
-
-const TAG_COLORS = [
-  "#f50",
-  "#2db7f5",
-  "#87d068",
-  "#108ee9",
-  "#f5222d",
-  "#fa541c",
-  "#faad14",
-  "#fadb14",
-  "#a0d911",
-  "#52c41a",
-  "#13c2c2",
-  "#1890ff",
-  "#2f54eb",
-  "#722ed1",
-  "#eb2f96",
-  "#fa8c16",
-];
 
 export const TagManager: React.FC<TagManagerProps> = ({
   visible,
@@ -84,7 +66,7 @@ export const TagManager: React.FC<TagManagerProps> = ({
     const newTag: TagItem = {
       id: Date.now().toString(),
       name: newTagName.trim(),
-      color: TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)],
+      color: tagColors[Math.floor(Math.random() * tagColors.length)],
       createdAt: new Date(),
     };
 

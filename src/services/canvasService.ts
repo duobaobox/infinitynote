@@ -1,6 +1,9 @@
 import type { Canvas, Position } from "../types";
 import { STORAGE_KEYS, CANVAS_CONFIG } from "../constants";
 
+// 默认背景色 - 使用白色作为默认值，主题切换会在CSS层面处理
+const DEFAULT_BG_COLOR = "#ffffff";
+
 export class CanvasService {
   // 获取所有画布
   static getCanvases(): Canvas[] {
@@ -29,7 +32,7 @@ export class CanvasService {
       name: "默认画布",
       scale: CANVAS_CONFIG.DEFAULT_SCALE,
       offset: { x: 0, y: 0 },
-      backgroundColor: "#ffffff",
+      backgroundColor: DEFAULT_BG_COLOR,
       createdAt: new Date(),
       updatedAt: new Date(),
       isDefault: true,
@@ -52,7 +55,7 @@ export class CanvasService {
       name,
       scale: CANVAS_CONFIG.DEFAULT_SCALE,
       offset: { x: 0, y: 0 },
-      backgroundColor: "#ffffff",
+      backgroundColor: DEFAULT_BG_COLOR,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

@@ -342,7 +342,11 @@ export const Canvas: React.FC = () => {
   }, [zoomIn, zoomOut, resetViewport, handleCreateNote, clearSelection]);
 
   return (
-    <div className={styles.canvasContainer}>
+    <div
+      className={`${styles.canvasContainer} ${
+        isDark ? styles.darkTheme : styles.lightTheme
+      }`}
+    >
       {/* 画布区域 */}
       <div
         ref={canvasRef}
@@ -375,12 +379,15 @@ export const Canvas: React.FC = () => {
           >
             {/* 网格背景 */}
             <div
-              className={`${styles.grid} grid canvas-grid`}
+              className={`${styles.grid} grid`}
               style={
                 {
                   "--grid-color": gridTheme.gridColor,
                   "--grid-size": `${gridTheme.gridSize}px`,
                   "--grid-opacity": gridTheme.gridOpacity,
+                  // 应用主题颜色，覆盖原有的固定颜色
+                  backgroundImage: `radial-gradient(circle, ${gridTheme.gridColor} 1px, transparent 1px)`,
+                  opacity: gridTheme.gridOpacity,
                 } as React.CSSProperties
               }
             />

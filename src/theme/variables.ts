@@ -29,10 +29,13 @@ export const cssVariables = {
     "--color-border": "#d9d9d9",
     "--color-border-secondary": "#f0f0f0",
 
-    // 链接色
+    // 链接颜色
     "--color-link": "#1890ff",
     "--color-link-hover": "#40a9ff",
     "--color-link-active": "#096dd9",
+
+    // 扩展颜色
+    "--color-primary-bg": "#e6f7ff",
 
     // 阴影
     "--box-shadow": "0 2px 8px rgba(0, 0, 0, 0.08)",
@@ -50,6 +53,24 @@ export const cssVariables = {
     "--spacing-md": "16px",
     "--spacing-lg": "24px",
     "--spacing-xl": "32px",
+
+    // 组件特定颜色
+    "--background-secondary": "#f5f5f5",
+    "--hover-bg-color": "#e6f7ff",
+    "--text-color": "#262626",
+    "--primary-color": "#1890ff",
+    "--border-color": "#d9d9d9",
+    "--text-color-secondary": "#8c8c8c",
+
+    // 工具栏和Canvas特定颜色
+    "--toolbar-bg": "#ffffff",
+    "--toolbar-border": "#e0e0e0",
+    "--divider-color": "#e0e0e0",
+    "--scale-info-bg": "#f5f5f5",
+    "--scale-info-color": "#666666",
+    "--grid-color": "#d0d0d0",
+    "--selection-border": "#1677ff",
+    "--selection-bg": "rgba(22, 119, 255, 0.1)",
   },
 
   dark: {
@@ -86,6 +107,9 @@ export const cssVariables = {
     "--color-link-hover": "#3c9ae8",
     "--color-link-active": "#0c5aa6",
 
+    // 扩展颜色
+    "--color-primary-bg": "#112f4a",
+
     // 阴影
     "--box-shadow": "0 2px 8px rgba(0, 0, 0, 0.3)",
     "--box-shadow-secondary": "0 4px 12px rgba(0, 0, 0, 0.4)",
@@ -102,8 +126,49 @@ export const cssVariables = {
     "--spacing-md": "16px",
     "--spacing-lg": "24px",
     "--spacing-xl": "32px",
+
+    // 组件特定颜色
+    "--background-secondary": "#141414",
+    "--hover-bg-color": "#1f1f1f",
+    "--text-color": "#ffffff",
+    "--primary-color": "#177ddc",
+    "--border-color": "#434343",
+    "--text-color-secondary": "#a6a6a6",
+
+    // 工具栏和Canvas特定颜色
+    "--toolbar-bg": "#141414",
+    "--toolbar-border": "#434343",
+    "--divider-color": "#434343",
+    "--scale-info-bg": "#1f1f1f",
+    "--scale-info-color": "#a6a6a6",
+    "--grid-color": "#404040",
+    "--selection-border": "#177ddc",
+    "--selection-bg": "rgba(23, 125, 220, 0.1)",
   },
 };
+
+// 标签颜色定义 - 主题无关
+export const tagColors = [
+  "#f50",
+  "#2db7f5",
+  "#87d068",
+  "#108ee9",
+  "#f5222d",
+  "#fa541c",
+  "#faad14",
+  "#fadb14",
+  "#a0d911",
+  "#52c41a",
+  "#13c2c2",
+  "#1890ff",
+  "#2f54eb",
+  "#722ed1",
+  "#eb2f96",
+  "#fa8c16",
+];
+
+// 默认便签颜色
+export const defaultNoteColor = "#FFF2CC";
 
 // 应用 CSS 变量到文档根元素
 export const applyCSSVariables = (theme: "light" | "dark") => {
@@ -150,14 +215,14 @@ export const noteColorThemes = {
 // 画布网格主题
 export const canvasGridThemes = {
   light: {
-    backgroundColor: "#fafafa",
-    gridColor: "#f0f0f0",
+    backgroundColor: "#f5f5f5",
+    gridColor: "#d0d0d0", // 使用原来的点颜色
     gridSize: 20,
     gridOpacity: 0.5,
   },
   dark: {
-    backgroundColor: "#0a0a0a",
-    gridColor: "#262626",
+    backgroundColor: "#1a1a1a",
+    gridColor: "#404040", // 暗黑主题下的点颜色
     gridSize: 20,
     gridOpacity: 0.3,
   },

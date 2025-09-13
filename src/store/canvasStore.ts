@@ -5,6 +5,9 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { Canvas, Position, CanvasViewport } from "../types";
 
+// 默认背景色
+const DEFAULT_BG_COLOR = "#f5f5f5";
+
 /**
  * 画布状态接口
  */
@@ -92,7 +95,7 @@ export const useCanvasStore = create<CanvasStore>()(
           name,
           scale: 1,
           offset: { x: 0, y: 0 },
-          backgroundColor: "#f5f5f5",
+          backgroundColor: DEFAULT_BG_COLOR,
           createdAt: now,
           updatedAt: now,
           isDefault,

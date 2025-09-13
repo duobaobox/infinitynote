@@ -8,9 +8,21 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #f5f5f5;
+  background: var(--color-bg-layout);
   position: relative;
   overflow: hidden;
+}
+
+/* 明亮主题样式 */
+.lightTheme {
+  --canvas-bg: #f5f5f5;
+  --canvas-container-bg: #ffffff;
+}
+
+/* 暗黑主题样式 */
+.darkTheme {
+  --canvas-bg: #1a1a1a;
+  --canvas-container-bg: #141414;
 }
 
 /* 工具栏 */
@@ -19,9 +31,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--toolbar-border);
+  box-shadow: var(--box-shadow);
   z-index: 100;
 }
 
@@ -40,15 +52,15 @@
 .divider {
   width: 1px;
   height: 20px;
-  background: #e0e0e0;
+  background: var(--divider-color);
   margin: 0 4px;
 }
 
 .scaleInfo {
   font-size: 12px;
-  color: #666;
+  color: var(--scale-info-color);
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
-  background: #f5f5f5;
+  background: var(--scale-info-bg);
   padding: 4px 8px;
   border-radius: 4px;
   min-width: 50px;
@@ -60,7 +72,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #f5f5f5;
+  background: var(--color-bg-canvas);
   user-select: none;
 }
 
@@ -80,7 +92,11 @@
   width: 4000px;
   height: 4000px;
   opacity: 0.5;
-  background-image: radial-gradient(circle, #d0d0d0 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    var(--grid-color) 1px,
+    transparent 1px
+  );
   background-size: 20px 20px;
   pointer-events: none;
 }
@@ -88,7 +104,11 @@
 /* 网格在不同缩放级别下的显示 */
 @media (min-resolution: 2dppx) {
   .grid {
-    background-image: radial-gradient(circle, #d0d0d0 0.5px, transparent 0.5px);
+    background-image: radial-gradient(
+      circle,
+      var(--grid-color) 0.5px,
+      transparent 0.5px
+    );
   }
 }
 
@@ -113,34 +133,7 @@
   }
 }
 
-/* 暗色主题支持 */
-@media (prefers-color-scheme: dark) {
-  .canvasContainer {
-    background: #1a1a1a;
-  }
-
-  .toolbar {
-    background: #2a2a2a;
-    border-bottom-color: #404040;
-  }
-
-  .divider {
-    background: #404040;
-  }
-
-  .scaleInfo {
-    background: #333;
-    color: #ccc;
-  }
-
-  .canvas {
-    background: #1a1a1a;
-  }
-
-  .grid {
-    background-image: radial-gradient(circle, #404040 1px, transparent 1px);
-  }
-}
+/* 原有的媒体查询已被主题系统替代 */
 
 /* 画布状态样式 */
 .canvas[data-panning="true"] {
@@ -164,8 +157,8 @@
 /* 选择框样式 */
 .selectionBox {
   position: absolute;
-  border: 1px dashed #1677ff;
-  background: rgba(22, 119, 255, 0.1);
+  border: 1px dashed var(--selection-border);
+  background: var(--selection-bg);
   pointer-events: none;
   z-index: 1000;
 }
@@ -177,7 +170,7 @@
 }
 
 :global(.ant-float-btn) {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: var(--box-shadow-secondary) !important;
 }
 
 /* 工具提示样式 */
@@ -197,11 +190,11 @@
 }
 
 .toolbar :global(.ant-btn:hover) {
-  background: #f0f0f0;
+  background: var(--hover-bg-color);
 }
 
 .toolbar :global(.ant-btn:active) {
-  background: #e0e0e0;
+  background: var(--color-bg-elevated);
 }
 
 /* 加载状态 */
@@ -210,7 +203,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
@@ -221,7 +214,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #999;
+  color: var(--color-text-tertiary);
   font-size: 14px;
   gap: 16px;
 }
@@ -238,7 +231,7 @@
 
 .empty .emptyHint {
   font-size: 12px;
-  color: #ccc;
+  color: var(--color-text-quaternary);
   text-align: center;
 }
 

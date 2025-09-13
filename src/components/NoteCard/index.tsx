@@ -54,17 +54,27 @@ export const NoteCard = memo<NoteCardProps>(
       // 根据主题选择颜色映射
       const themeColors = isDark ? noteColorThemes.dark : noteColorThemes.light;
 
-      // 颜色映射，将便签颜色字符串映射到实际颜色值
-      const colorKey = note.color
-        .toLowerCase()
-        .replace(/[^a-z]/g, "") as keyof typeof themeColors;
-      const backgroundColor = themeColors[colorKey] || themeColors.yellow;
+      // 十六进制颜色到颜色名称的映射
+      const colorHexToName: Record<string, keyof typeof themeColors> = {
+        "#FFF2CC": "yellow",
+        "#FFE6E6": "pink",
+        "#E6F3FF": "blue",
+        "#E6FFE6": "green",
+        "#F0E6FF": "purple",
+        "#FFE6CC": "orange",
+        "#FFD6D6": "red",
+        "#F0F0F0": "gray",
+      };
+
+      // 获取颜色名称，默认为 yellow
+      const colorName = colorHexToName[note.color] || "yellow";
+      const backgroundColor = themeColors[colorName];
 
       return {
         backgroundColor,
         // 在暗黑主题下调整边框和文字颜色
         border: isDark ? `1px solid ${backgroundColor}` : "none",
-        color: isDark ? "var(--color-text)" : "#262626",
+        color: isDark ? "var(--color-text)" : "var(--color-text)",
       };
     };
 

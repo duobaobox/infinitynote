@@ -3,11 +3,11 @@
   right: 20px;
   top: 50%;
   transform: translateY(-50%);
-  background: #ffffff;
-  border: 1px solid #f0f0f0;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 12px 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--box-shadow-secondary);
   z-index: 1000;
 }
 
@@ -19,13 +19,13 @@
   justify-content: center;
   border: none;
   background: transparent;
-  color: #666;
+  color: var(--color-text-secondary);
   transition: all 0.2s ease;
 }
 
 .toolbarButton:hover {
-  background: #f5f5f5;
-  color: #1677ff;
+  background: var(--color-bg-container);
+  color: var(--color-primary);
 }
 
 .zoomIndicator {
@@ -36,8 +36,8 @@
   min-width: 36px;
   padding: 8px 4px;
   font-size: 12px;
-  color: #666;
-  background: #f8f9fa;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-container);
   border-radius: 4px;
   margin-top: 4px;
 }
@@ -50,4 +50,22 @@
 .zoomUnit {
   line-height: 1;
   margin-top: 2px;
+}
+
+/* 主题切换按钮样式 */
+.toolbarButton button {
+  background: var(--color-bg-container);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toolbarButton button:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-primary);
+  transform: scale(1.05);
 }

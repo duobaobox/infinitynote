@@ -69,12 +69,26 @@ body {
   outline-offset: 2px;
 }
 
-/* 画布网格背景 */
+/* 画布点状背景（保持原有样式，但支持主题） */
 .canvas-grid {
-  background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    var(--grid-color) 1px,
+    transparent 1px
+  );
   background-size: var(--grid-size) var(--grid-size);
   opacity: var(--grid-opacity);
+}
+
+/* 高分辨率屏幕优化 */
+@media (min-resolution: 2dppx) {
+  .canvas-grid {
+    background-image: radial-gradient(
+      circle,
+      var(--grid-color) 0.5px,
+      transparent 0.5px
+    );
+  }
 }
 
 /* 便签卡片样式增强 */
