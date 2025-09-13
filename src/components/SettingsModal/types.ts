@@ -122,6 +122,8 @@ export interface DataSettings {
   storageUsed: string;
   /** 笔记数量 */
   noteCount: number;
+  /** 画布数量 */
+  canvasCount?: number;
   /** 最后备份时间 */
   lastBackupTime?: Date;
 }

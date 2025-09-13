@@ -43,12 +43,15 @@ import { MENU_ITEMS, EDIT_SHORTCUTS, VIEW_SHORTCUTS } from "./constants";
 import {
   loadSettingsFromStorage,
   saveSettingsToStorage,
-  downloadSettingsFile,
-  readSettingsFromFile,
-  importSettings,
   calculateStorageUsage,
   getDefaultSettings,
 } from "./utils";
+import {
+  clearAllData,
+  exportAllData,
+  handleFileImport,
+  importAllData,
+} from "../../utils/export";
 import {
   ModelSettingsTab,
   GeneralSettingsTab,
@@ -85,18 +88,50 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       // 从本地存储加载设置
       const loadedSettings = loadSettingsFromStorage();
 
-      // 计算当前存储使用情况
-      const storageInfo = calculateStorageUsage();
+      // 异步加载数据库统计信息
+      const updateStorageStats = async () => {
+        try {
+          const { dbOperations } = await import("../../utils/db");
+          const stats = await dbOperations.getStats();
 
-      // 更新设置状态，包含最新的存储统计
-      setSettings({
-        ...loadedSettings,
-        data: {
-          ...loadedSettings.data,
-          storageUsed: storageInfo.used,
-          noteCount: storageInfo.noteCount,
-        },
-      });
+          // 格式化存储大小
+          const formatBytes = (bytes: number): string => {
+            if (bytes === 0) return "0 B";
+            const k = 1024;
+            const sizes = ["B", "KB", "MB", "GB"];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return (
+              parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+            );
+          };
+
+          // 更新设置状态，包含最新的存储统计
+          setSettings({
+            ...loadedSettings,
+            data: {
+              ...loadedSettings.data,
+              storageUsed: formatBytes(stats.databaseSize),
+              noteCount: stats.totalNotes,
+              canvasCount: stats.totalCanvases,
+              lastBackupTime: stats.lastModified || undefined,
+            },
+          });
+        } catch (error) {
+          console.error("获取存储统计失败:", error);
+          // 如果获取数据库统计失败，使用原有的计算方法作为备用
+          const storageInfo = calculateStorageUsage();
+          setSettings({
+            ...loadedSettings,
+            data: {
+              ...loadedSettings.data,
+              storageUsed: storageInfo.used,
+              noteCount: storageInfo.noteCount,
+            },
+          });
+        }
+      };
+
+      updateStorageStats();
     }
   }, [open]);
 
@@ -123,56 +158,89 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     );
   };
 
-  const handleExportData = () => {
+  const handleExportData = async () => {
     try {
-      downloadSettingsFile(settings);
-      message.success("设置数据导出成功");
-    } catch {
+      // 使用新的完整数据导出功能
+      await exportAllData();
+      message.success("所有数据导出成功");
+    } catch (error) {
+      console.error("导出失败:", error);
       message.error("导出失败，请重试");
     }
   };
 
-  const handleImportData = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
+  const handleImportData = async () => {
+    try {
+      // 使用新的完整数据导入功能
+      const file = await handleFileImport();
 
-    input.onchange = async (event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+      // 显示确认对话框
+      const userConfirmed = window.confirm(
+        "确认导入数据\n\n导入数据将覆盖当前所有数据（包括笔记、画布和设置），此操作不可恢复。确定要继续吗？"
+      );
 
-      try {
-        const exportData = await readSettingsFromFile(file);
-        const newSettings = importSettings(exportData, settings);
-        setSettings(newSettings);
-        saveSettingsToStorage(newSettings);
-        message.success("设置数据导入成功");
-      } catch {
-        message.error("导入失败，请检查文件格式");
+      if (userConfirmed) {
+        const loadingMessage = message.loading("正在导入数据，请稍候...", 0);
+        try {
+          await importAllData(file);
+          loadingMessage();
+          message.success("数据导入成功，页面即将刷新", 2);
+          // importAllData 函数内部会自动刷新页面
+        } catch (error) {
+          loadingMessage();
+          console.error("导入失败:", error);
+          message.error(
+            error instanceof Error ? error.message : "导入失败，请检查文件格式",
+            5
+          );
+        }
       }
-    };
-
-    input.click();
+    } catch (error) {
+      if (error instanceof Error && error.message !== "未选择文件") {
+        console.error("导入失败:", error);
+        message.error("导入失败，请重试");
+      }
+    }
   };
 
   const handleClearData = () => {
-    Modal.confirm({
-      title: "确认清除所有数据",
-      content: "此操作将删除所有本地数据且不可恢复，确定要继续吗？",
-      okText: "确认",
-      cancelText: "取消",
-      okType: "danger",
-      onOk: () => {
+    console.log("🔧 handleClearData 被调用");
+
+    // 使用原生确认对话框作为备选方案
+    const userConfirmed = window.confirm(
+      "确认清除所有数据\n\n此操作将删除所有本地数据（包括笔记、画布和设置）且不可恢复，确定要继续吗？"
+    );
+
+    if (userConfirmed) {
+      console.log("🔧 用户确认清除数据");
+
+      const executeClear = async () => {
+        const loadingMessage = message.loading(
+          "正在清除所有数据，请稍候...",
+          0
+        );
         try {
-          localStorage.clear();
-          const defaultSettings = getDefaultSettings();
-          setSettings(defaultSettings);
-          message.success("数据清除成功");
-        } catch {
-          message.error("清除失败，请重试");
+          console.log("🔧 开始执行清除函数");
+          // 使用新的完整数据清除功能
+          await clearAllData();
+          loadingMessage();
+          message.success("所有数据清除成功，页面即将刷新", 2);
+          // clearAllData 函数内部会自动刷新页面
+        } catch (error) {
+          loadingMessage();
+          console.error("清除失败:", error);
+          message.error(
+            `清除失败: ${error instanceof Error ? error.message : "请重试"}`,
+            5
+          );
         }
-      },
-    });
+      };
+
+      // 立即执行清除操作
+      executeClear();
+    } else {
+      console.log("🔧 用户取消清除操作");
+    }
   };
 
   const handleCheckUpdate = () => {

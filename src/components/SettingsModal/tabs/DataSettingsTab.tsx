@@ -91,7 +91,19 @@ const DataSettingsTab: React.FC<DataSettingsTabProps> = ({
           </div>
 
           <div className={styles.settingItem}>
-            <Button danger icon={<DeleteOutlined />} onClick={onClearData}>
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => {
+                console.log("🔧 清除数据按钮被点击");
+                console.log("🔧 onClearData 函数:", onClearData);
+                if (onClearData) {
+                  onClearData();
+                } else {
+                  console.error("❌ onClearData 函数未定义");
+                }
+              }}
+            >
               清除所有数据
             </Button>
             <Text type="secondary" style={{ marginLeft: 12 }}>
@@ -105,7 +117,7 @@ const DataSettingsTab: React.FC<DataSettingsTabProps> = ({
         <Title level={4}>存储信息</Title>
         <div className={styles.storageInfo}>
           <Row gutter={[16, 16]}>
-            <Col span={12}>
+            <Col span={8}>
               <div className={styles.infoCard}>
                 <Text strong>已用存储</Text>
                 <div className={styles.storageValue}>
@@ -113,13 +125,33 @@ const DataSettingsTab: React.FC<DataSettingsTabProps> = ({
                 </div>
               </div>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <div className={styles.infoCard}>
                 <Text strong>笔记数量</Text>
                 <div className={styles.storageValue}>{settings.noteCount}</div>
               </div>
             </Col>
+            <Col span={8}>
+              <div className={styles.infoCard}>
+                <Text strong>画布数量</Text>
+                <div className={styles.storageValue}>
+                  {settings.canvasCount || 0}
+                </div>
+              </div>
+            </Col>
           </Row>
+          {settings.lastBackupTime && (
+            <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+              <Col span={24}>
+                <div className={styles.infoCard}>
+                  <Text strong>最后修改时间</Text>
+                  <div className={styles.storageValue}>
+                    {new Date(settings.lastBackupTime).toLocaleString()}
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          )}
         </div>
       </div>
     </div>

@@ -70,7 +70,9 @@ export class NoteService {
     } catch (error) {
       console.error("❌ NoteService: 获取便签列表失败:", error);
       throw new Error(
-        `获取便签列表失败: ${error instanceof Error ? error.message : "未知错误"}`
+        `获取便签列表失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
       );
     }
   }
@@ -87,7 +89,9 @@ export class NoteService {
     } catch (error) {
       console.error("❌ NoteService: 根据画布ID获取便签失败:", error);
       throw new Error(
-        `获取画布便签失败: ${error instanceof Error ? error.message : "未知错误"}`
+        `获取画布便签失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
       );
     }
   }
@@ -138,11 +142,13 @@ export class NoteService {
   static async deleteNotes(ids: string[]): Promise<void> {
     try {
       // 使用并发删除提高性能
-      await Promise.all(ids.map(id => dbOperations.deleteNote(id)));
+      await Promise.all(ids.map((id) => dbOperations.deleteNote(id)));
     } catch (error) {
       console.error("❌ NoteService: 批量删除便签失败:", error);
       throw new Error(
-        `批量删除便签失败: ${error instanceof Error ? error.message : "未知错误"}`
+        `批量删除便签失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
       );
     }
   }
@@ -189,7 +195,6 @@ export class NoteService {
       );
     }
   }
-}
 
   /**
    * 复制便签
