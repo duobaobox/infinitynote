@@ -13,13 +13,25 @@ import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
 import styles from "./index.module.css";
 
+// 日志去重机制
+const loggedMessages = new Set<string>();
+const logWithDedup = (message: string, ...args: any[]) => {
+  const key = `${message}_${JSON.stringify(args)}`;
+  if (!loggedMessages.has(key)) {
+    loggedMessages.add(key);
+    console.log(message, ...args);
+    // 5秒后清除记录，允许重新打印
+    setTimeout(() => loggedMessages.delete(key), 5000);
+  }
+};
+
 /**
  * 画布组件
  */
 export const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
-  const [panStart, setPanStart] = useState<Position | null>(null);
+  const [] = useState<Position | null>(null);
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(
     null
   );
@@ -74,21 +86,40 @@ export const Canvas: React.FC = () => {
   // 获取当前画布的便签
   const canvasNotes = activeCanvasId ? getNotesByCanvas(activeCanvasId) : [];
 
+  // 详细的调试信息但去重
+  useEffect(() => {
+    if (activeCanvasId && canvasNotes.length > 0) {
+      logWithDedup(
+        `📝 画布 ${activeCanvasId.slice(-8)}: ${canvasNotes.length} 个便签`,
+        canvasNotes.map((note) => ({
+          id: note.id.slice(-8),
+          title: note.title,
+          position: note.position,
+        }))
+      );
+    }
+  }, [activeCanvasId, canvasNotes]);
+
   // 创建新便签
   const handleCreateNote = useCallback(
-    (position?: Position) => {
+    async (position?: Position) => {
       if (!activeCanvasId) return;
 
       const canvasRect = canvasRef.current?.getBoundingClientRect();
       if (!canvasRect) return;
 
-      // 计算在画布坐标系中的位置
-      const canvasPosition = position || {
-        x: (canvasRect.width / 2 - viewport.offset.x) / viewport.scale - 100,
-        y: (canvasRect.height / 2 - viewport.offset.y) / viewport.scale - 75,
-      };
+      try {
+        // 计算在画布坐标系中的位置
+        const canvasPosition = position || {
+          x: (canvasRect.width / 2 - viewport.offset.x) / viewport.scale - 100,
+          y: (canvasRect.height / 2 - viewport.offset.y) / viewport.scale - 75,
+        };
 
-      createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
+        await createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
+        console.log("✅ 画布便签创建成功");
+      } catch (error) {
+        console.error("❌ 画布便签创建失败:", error);
+      }
     },
     [activeCanvasId, viewport, createNote]
   );

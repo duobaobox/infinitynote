@@ -42,6 +42,18 @@ const DynamicIcon = ({ type }: { type: IconType }) => {
 // 解构Layout组件中的Sider和Content子组件
 const { Sider, Content } = Layout;
 
+// 日志去重机制
+const loggedMessages = new Set<string>();
+const logWithDedup = (message: string, ...args: any[]) => {
+  const key = `${message}_${JSON.stringify(args)}`;
+  if (!loggedMessages.has(key)) {
+    loggedMessages.add(key);
+    console.log(message, ...args);
+    // 5秒后清除记录，允许重新打印
+    setTimeout(() => loggedMessages.delete(key), 5000);
+  }
+};
+
 /**
  * 主页面组件
  * 这是应用的主页面，包含侧边栏和主内容区域
@@ -62,29 +74,55 @@ const Main: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // 状态管理
-  const { createNote, notes, getNotesByCanvas } = useNoteStore();
+  const { createNote, notes, getNotesByCanvas, initialize } = useNoteStore();
   const { activeCanvasId, viewport, canvases } = useCanvasStore();
 
   // 主题状态
   const { isDark } = useTheme();
 
-  // 初始化默认画布
+  // 初始化应用数据
   useEffect(() => {
-    initializeDefaultCanvas();
-  }, []);
+    let isInitialized = false;
+
+    const initializeApp = async () => {
+      if (isInitialized) return; // 防止重复初始化
+      isInitialized = true;
+
+      try {
+        // 先初始化画布（画布数据需要先加载，便签依赖画布ID）
+        await initializeDefaultCanvas();
+
+        // 再初始化便签数据（从数据库加载）
+        await initialize();
+
+        logWithDedup("🎉 应用启动完成");
+      } catch (error) {
+        console.error("❌ 应用初始化失败:", error);
+        // 即使初始化失败，也让应用继续运行
+      }
+    };
+
+    initializeApp();
+  }, [initialize]);
 
   // 创建新便签
   const handleCreateNote = useCallback(
-    (position?: Position) => {
+    async (position?: Position) => {
       if (!activeCanvasId) return;
 
-      // 计算在画布坐标系中的位置
-      const canvasPosition = position || {
-        x: (window.innerWidth / 2 - viewport.offset.x) / viewport.scale - 100,
-        y: (window.innerHeight / 2 - viewport.offset.y) / viewport.scale - 75,
-      };
+      try {
+        // 计算在画布坐标系中的位置
+        const canvasPosition = position || {
+          x: (window.innerWidth / 2 - viewport.offset.x) / viewport.scale - 100,
+          y: (window.innerHeight / 2 - viewport.offset.y) / viewport.scale - 75,
+        };
 
-      createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
+        await createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
+        console.log("✅ 便签创建成功");
+      } catch (error) {
+        console.error("❌ 创建便签失败:", error);
+        // 可以在这里添加用户提示
+      }
     },
     [activeCanvasId, viewport, createNote]
   );
