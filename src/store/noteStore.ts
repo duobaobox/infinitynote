@@ -91,7 +91,7 @@ type NoteStore = NoteState & NoteActions;
  */
 const generateId = (): string => {
   return (
-    "note_" + Date.now().toString(36) + Math.random().toString(36).substr(2)
+    "note_" + Date.now().toString(36) + Math.random().toString(36).substring(2)
   );
 };
 
@@ -512,3 +512,11 @@ export const useNoteStore = create<NoteStore>()(
     }
   )
 );
+
+// 暴露重新加载方法到全局，供画布Store调用
+if (typeof window !== "undefined") {
+  (window as any).noteStoreReload = () => {
+    const store = useNoteStore.getState();
+    store.loadNotesFromDB();
+  };
+}

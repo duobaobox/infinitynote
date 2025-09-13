@@ -177,6 +177,85 @@
   color: var(--color-warning);
 }
 
+/* 删除按钮样式 */
+.deleteButton {
+  padding: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.deleteButton:hover {
+  opacity: 1;
+  color: var(--color-error) !important;
+}
+
+.deleteButton .anticon {
+  font-size: 10px !important;
+}
+
+/* 确认对话框样式 */
+:global(.ant-modal-confirm .ant-modal-body) {
+  padding: 24px !important;
+}
+
+:global(.ant-modal-confirm .ant-modal-confirm-title) {
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  color: var(--text-color) !important;
+}
+
+:global(.ant-modal-confirm .ant-modal-confirm-content) {
+  margin-top: 16px !important;
+  color: var(--text-color-secondary) !important;
+  line-height: 1.6 !important;
+}
+
+:global(.ant-modal-confirm .ant-modal-confirm-content p) {
+  margin-bottom: 8px !important;
+}
+
+:global(.ant-modal-confirm .ant-modal-confirm-content strong) {
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+}
+
+/* 确认对话框按钮样式 */
+:global(.ant-modal-confirm .ant-btn-dangerous) {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+:global(.ant-modal-confirm .ant-btn-dangerous:hover) {
+  background-color: #ff7875 !important;
+  border-color: #ff7875 !important;
+  color: #ffffff !important;
+}
+
+:global(.ant-modal-confirm .ant-btn-dangerous:focus) {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: #ffffff !important;
+}
+
+:global(.ant-modal-confirm .ant-btn-dangerous:active) {
+  background-color: #d9363e !important;
+  border-color: #d9363e !important;
+  color: #ffffff !important;
+}
+
+/* 确保按钮文字显示 */
+:global(.ant-modal-confirm .ant-btn-dangerous span) {
+  color: #ffffff !important;
+}
+
 /* 便签列表容器样式 */
 .notesListContainer {
   display: flex;

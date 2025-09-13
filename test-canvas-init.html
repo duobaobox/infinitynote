@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画布初始化测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .log-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 2px 0;
+        }
+        .log-success { color: #28a745; }
+        .log-error { color: #dc3545; }
+        .log-warning { color: #ffc107; }
+        .log-info { color: #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>画布初始化测试</h1>
+        <p>这个页面用于测试画布初始化逻辑是否正常工作，特别是检查是否还有"Key already exists"错误。</p>
+        
+        <div>
+            <button onclick="testCanvasInit()">测试画布初始化</button>
+            <button onclick="clearDatabase()">清空数据库</button>
+            <button onclick="clearLogs()">清空日志</button>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div class="log-container">
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 简化的数据库和画布存储模拟
+        import Dexie from 'https://unpkg.com/dexie@4.2.0/dist/dexie.mjs';
+        
+        class TestDatabase extends Dexie {
+            constructor() {
+                super("TestInfinityNoteDatabase");
+                this.version(1).stores({
+                    canvases: "id, name, scale, backgroundColor, createdAt, updatedAt, isDefault, offset.x, offset.y",
+                });
+            }
+        }
+        
+        const db = new TestDatabase();
+        const DEFAULT_CANVAS_ID = "canvas_default";
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            document.getElementById('logs').appendChild(logEntry);
+            
+            // 自动滚动到底部
+            const logContainer = document.querySelector('.log-container');
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        async function createCanvas(name, isDefault = false) {
+            const id = isDefault ? DEFAULT_CANVAS_ID : `canvas_${Date.now()}`;
+            const now = new Date();
+            
+            // 检查是否已存在
+            if (isDefault) {
+                try {
+                    const existing = await db.canvases.get(DEFAULT_CANVAS_ID);
+                    if (existing) {
+                        log(`🎨 默认画布已存在，ID: ${DEFAULT_CANVAS_ID}`, 'info');
+                        return DEFAULT_CANVAS_ID;
+                    }
+                } catch (error) {
+                    log(`⚠️ 检查现有画布时出错: ${error.message}`, 'warning');
+                }
+            }
+            
+            const newCanvas = {
+                id,
+                name,
+                scale: 1,
+                offset: { x: 0, y: 0 },
+                backgroundColor: "#f5f5f5",
+                createdAt: now,
+                updatedAt: now,
+                isDefault,
+            };
+            
+            try {
+                await db.canvases.add(newCanvas);
+                log(`✅ 画布创建成功，ID: ${id}`, 'success');
+                return id;
+            } catch (error) {
+                if (error.name === 'ConstraintError' && error.message.includes('Key already exists')) {
+                    log(`❌ 画布已存在错误: ${error.message}`, 'error');
+                    
+                    if (isDefault) {
+                        // 尝试加载现有的
+                        try {
+                            const existing = await db.canvases.get(DEFAULT_CANVAS_ID);
+                            if (existing) {
+                                log(`🎨 加载现有默认画布: ${DEFAULT_CANVAS_ID}`, 'info');
+                                return DEFAULT_CANVAS_ID;
+                            }
+                        } catch (loadError) {
+                            log(`❌ 加载现有画布失败: ${loadError.message}`, 'error');
+                        }
+                    }
+                }
+                
+                log(`❌ 创建画布失败: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function testCanvasInit() {
+            log('🚀 开始测试画布初始化...', 'info');
+            
+            try {
+                // 测试多次创建默认画布
+                log('📝 测试1: 创建默认画布', 'info');
+                const id1 = await createCanvas("默认画布", true);
+                
+                log('📝 测试2: 再次创建默认画布（应该返回现有的）', 'info');
+                const id2 = await createCanvas("默认画布", true);
+                
+                log('📝 测试3: 第三次创建默认画布', 'info');
+                const id3 = await createCanvas("默认画布", true);
+                
+                if (id1 === id2 && id2 === id3 && id1 === DEFAULT_CANVAS_ID) {
+                    log('✅ 测试通过：所有创建操作都返回相同的默认画布ID', 'success');
+                    showStatus('测试通过！画布初始化逻辑正常工作。');
+                } else {
+                    log(`❌ 测试失败：ID不一致 - ${id1}, ${id2}, ${id3}`, 'error');
+                    showStatus('测试失败：画布ID不一致', true);
+                }
+                
+                // 检查数据库中的画布数量
+                const allCanvases = await db.canvases.toArray();
+                const defaultCanvases = allCanvases.filter(c => c.isDefault);
+                
+                log(`📊 数据库中总画布数量: ${allCanvases.length}`, 'info');
+                log(`📊 默认画布数量: ${defaultCanvases.length}`, 'info');
+                
+                if (defaultCanvases.length === 1) {
+                    log('✅ 默认画布数量正确（只有1个）', 'success');
+                } else {
+                    log(`❌ 默认画布数量异常: ${defaultCanvases.length}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 测试过程中出现错误: ${error.message}`, 'error');
+                showStatus(`测试失败: ${error.message}`, true);
+            }
+        }
+        
+        async function clearDatabase() {
+            try {
+                await db.canvases.clear();
+                log('🧹 数据库已清空', 'info');
+                showStatus('数据库已清空');
+            } catch (error) {
+                log(`❌ 清空数据库失败: ${error.message}`, 'error');
+                showStatus(`清空失败: ${error.message}`, true);
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // 将函数暴露到全局作用域
+        window.testCanvasInit = testCanvasInit;
+        window.clearDatabase = clearDatabase;
+        window.clearLogs = clearLogs;
+        
+        // 页面加载时的初始化
+        log('📱 测试页面已加载，可以开始测试', 'info');
+    </script>
+</body>
+</html>

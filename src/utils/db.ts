@@ -70,6 +70,35 @@ class InfinityNoteDatabase extends Dexie {
 
 export const db = new InfinityNoteDatabase();
 
+// 数据库重连辅助函数
+const ensureDbOpen = async (): Promise<void> => {
+  if (!db.isOpen()) {
+    console.log("🔄 数据库未打开，尝试重新打开...");
+    await db.open();
+  }
+};
+
+// 带重连机制的数据库操作包装器
+const withDbRetry = async <T>(operation: () => Promise<T>): Promise<T> => {
+  try {
+    await ensureDbOpen();
+    return await operation();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Need to reopen db")) {
+      try {
+        console.log("🔄 尝试重新打开数据库...");
+        db.close();
+        await db.open();
+        return await operation();
+      } catch (retryError) {
+        console.error("❌ 重新打开数据库后仍然失败:", retryError);
+        throw retryError;
+      }
+    }
+    throw error;
+  }
+};
+
 /**
  * 数据库操作方法
  * 包含完整的错误处理和日志记录
@@ -78,9 +107,11 @@ export const dbOperations = {
   // 添加便签
   async addNote(note: NoteDB): Promise<string> {
     try {
-      await db.notes.add(note);
-      console.log(`✅ Note added successfully with ID: ${note.id}`);
-      return note.id;
+      return await withDbRetry(async () => {
+        await db.notes.add(note);
+        console.log(`✅ Note added successfully with ID: ${note.id}`);
+        return note.id;
+      });
     } catch (error) {
       console.error("❌ Failed to add note:", error);
       throw new Error(
@@ -181,7 +212,7 @@ export const dbOperations = {
   // 批量操作：添加多个便签
   async addMultipleNotes(notes: Omit<NoteDB, "id">[]): Promise<number[]> {
     try {
-      const ids = await db.notes.bulkAdd(notes, { allKeys: true });
+      const ids = await db.notes.bulkAdd(notes as any, { allKeys: true });
       console.log(`✅ ${notes.length} notes added successfully`);
       return ids as number[];
     } catch (error) {
@@ -197,10 +228,12 @@ export const dbOperations = {
   // 数据库健康检查
   async healthCheck(): Promise<boolean> {
     try {
-      await db.notes.count();
-      await db.canvases.count();
-      // 移除健康检查的成功日志，减少噪音
-      return true;
+      return await withDbRetry(async () => {
+        await db.notes.count();
+        await db.canvases.count();
+        // 移除健康检查的成功日志，减少噪音
+        return true;
+      });
     } catch (error) {
       console.error("❌ Database health check failed:", error);
       return false;
@@ -260,9 +293,11 @@ export const dbOperations = {
   // 添加画布
   async addCanvas(canvas: CanvasDB): Promise<string> {
     try {
-      await db.canvases.add(canvas);
-      console.log(`✅ Canvas added successfully with ID: ${canvas.id}`);
-      return canvas.id;
+      return await withDbRetry(async () => {
+        await db.canvases.add(canvas);
+        console.log(`✅ Canvas added successfully with ID: ${canvas.id}`);
+        return canvas.id;
+      });
     } catch (error) {
       console.error("❌ Failed to add canvas:", error);
       throw new Error(
@@ -274,15 +309,17 @@ export const dbOperations = {
   // 更新画布
   async updateCanvas(id: string, changes: Partial<CanvasDB>): Promise<number> {
     try {
-      const result = await db.canvases.update(id, {
-        ...changes,
-        updatedAt: new Date(),
+      return await withDbRetry(async () => {
+        const result = await db.canvases.update(id, {
+          ...changes,
+          updatedAt: new Date(),
+        });
+        if (result === 0) {
+          throw new Error(`画布 ID ${id} 不存在`);
+        }
+        console.log(`✅ Canvas updated successfully: ${id}`);
+        return result;
       });
-      if (result === 0) {
-        throw new Error(`画布 ID ${id} 不存在`);
-      }
-      console.log(`✅ Canvas updated successfully: ${id}`);
-      return result;
     } catch (error) {
       console.error(`❌ Failed to update canvas ${id}:`, error);
       throw new Error(
@@ -307,18 +344,20 @@ export const dbOperations = {
   // 获取所有画布
   async getAllCanvases(): Promise<CanvasDB[]> {
     try {
-      const canvases = await db.canvases.toArray();
-      if (canvases.length > 0) {
-        logWithDedup(
-          `🎨 从数据库加载 ${canvases.length} 个画布:`,
-          canvases.map((canvas) => ({
-            id: canvas.id.slice(-8),
-            name: canvas.name,
-            isDefault: canvas.isDefault,
-          }))
-        );
-      }
-      return canvases;
+      return await withDbRetry(async () => {
+        const canvases = await db.canvases.toArray();
+        if (canvases.length > 0) {
+          logWithDedup(
+            `🎨 从数据库加载 ${canvases.length} 个画布:`,
+            canvases.map((canvas) => ({
+              id: canvas.id.slice(-8),
+              name: canvas.name,
+              isDefault: canvas.isDefault,
+            }))
+          );
+        }
+        return canvases;
+      });
     } catch (error) {
       console.error("❌ Failed to get all canvases:", error);
       throw new Error(
@@ -352,7 +391,7 @@ export const dbOperations = {
     try {
       const defaultCanvas = await db.canvases
         .where("isDefault")
-        .equals(true)
+        .equals(1 as any)
         .first();
       if (defaultCanvas) {
         console.log(`✅ Default canvas found: ${defaultCanvas.id}`);
@@ -394,6 +433,71 @@ export const dbOperations = {
           error instanceof Error ? error.message : "未知错误"
         }`
       );
+    }
+  },
+
+  // 清理重复的默认画布，确保只有一个默认画布
+  async cleanupDefaultCanvases(): Promise<void> {
+    try {
+      const allCanvases = await db.canvases.toArray();
+      const defaultCanvases = allCanvases.filter((canvas) => canvas.isDefault);
+      const fixedIdCanvas = allCanvases.find(
+        (canvas) => canvas.id === "canvas_default"
+      );
+
+      if (defaultCanvases.length > 1) {
+        console.log(
+          `🧹 发现 ${defaultCanvases.length} 个默认画布，开始清理...`
+        );
+
+        // 如果存在固定ID的默认画布，保留它，将其他的设为非默认
+        if (fixedIdCanvas && fixedIdCanvas.isDefault) {
+          for (const canvas of defaultCanvases) {
+            if (canvas.id !== "canvas_default") {
+              await db.canvases.update(canvas.id, { isDefault: false });
+              console.log(`🧹 将画布 ${canvas.id.slice(-8)} 设为非默认`);
+            }
+          }
+          console.log(`✅ 清理完成，保留固定ID默认画布: canvas_default`);
+        } else {
+          // 如果没有固定ID的默认画布，只保留最早创建的一个，其他设为非默认
+          const sortedDefaults = defaultCanvases.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+
+          // 保留第一个，其他的设为非默认
+          for (let i = 1; i < sortedDefaults.length; i++) {
+            await db.canvases.update(sortedDefaults[i].id, {
+              isDefault: false,
+            });
+            console.log(
+              `🧹 将画布 ${sortedDefaults[i].id.slice(-8)} 设为非默认`
+            );
+          }
+
+          console.log(
+            `✅ 清理完成，保留默认画布: ${sortedDefaults[0].id.slice(-8)}`
+          );
+        }
+      } else if (defaultCanvases.length === 1) {
+        // 如果只有一个默认画布，检查ID是否正确
+        const singleDefault = defaultCanvases[0];
+        if (singleDefault.id !== "canvas_default") {
+          console.log(
+            `🧹 发现默认画布ID不是固定ID: ${singleDefault.id.slice(-8)}`
+          );
+          // 不进行迁移，避免竞态条件，让初始化逻辑处理
+        } else {
+          console.log("✅ 默认画布ID正确");
+        }
+      } else {
+        console.log("⚠️ 没有找到默认画布");
+      }
+    } catch (error) {
+      console.error("❌ Failed to cleanup default canvases:", error);
+      // 清理失败不抛出错误，避免阻止初始化
+      console.warn("⚠️ 清理默认画布失败，继续初始化流程");
     }
   },
 

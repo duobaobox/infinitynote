@@ -10,6 +10,7 @@ export const cssVariables = {
     "--color-success": "#52c41a",
     "--color-warning": "#faad14",
     "--color-error": "#ff4d4f",
+    "--color-error-hover": "#ff7875",
     "--color-info": "#1890ff",
 
     // 背景色
@@ -83,6 +84,7 @@ export const cssVariables = {
     "--color-success": "#49aa19",
     "--color-warning": "#d89614",
     "--color-error": "#a61d24",
+    "--color-error-hover": "#d32029",
     "--color-info": "#177ddc",
 
     // 背景色

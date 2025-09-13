@@ -28,6 +28,7 @@ import {
   Card, // 用于便签项的容器
   Space, // 用于操作按钮组的间距控制
   Splitter, // 用于分隔画布列表和便签列表区域
+  App, // 用于提供Context
 } from "antd";
 // 引入CSS模块样式
 import styles from "./index.module.css";
@@ -72,23 +73,37 @@ const Main: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   // 控制设置弹窗状态
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // 控制初始化状态，防止重复初始化
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 获取App Context中的modal实例
+  const { modal } = App.useApp();
 
   // 状态管理
-  const { createNote, notes, getNotesByCanvas, initialize } = useNoteStore();
-  const { activeCanvasId, viewport, canvases } = useCanvasStore();
+  const { createNote, getNotesByCanvas, initialize } = useNoteStore();
+  const {
+    activeCanvasId,
+    viewport,
+    canvases,
+    setActiveCanvas,
+    createCanvas,
+    deleteCanvas,
+  } = useCanvasStore();
 
   // 主题状态
   const { isDark } = useTheme();
 
   // 初始化应用数据
   useEffect(() => {
-    let isInitialized = false;
-
     const initializeApp = async () => {
-      if (isInitialized) return; // 防止重复初始化
-      isInitialized = true;
+      if (isInitialized) {
+        logWithDedup("🔄 应用已初始化，跳过重复初始化");
+        return; // 防止重复初始化
+      }
 
       try {
+        setIsInitialized(true);
+
         // 先初始化画布（画布数据需要先加载，便签依赖画布ID）
         await initializeDefaultCanvas();
 
@@ -98,12 +113,13 @@ const Main: React.FC = () => {
         logWithDedup("🎉 应用启动完成");
       } catch (error) {
         console.error("❌ 应用初始化失败:", error);
-        // 即使初始化失败，也让应用继续运行
+        // 初始化失败时重置状态，允许重试
+        setIsInitialized(false);
       }
     };
 
     initializeApp();
-  }, [initialize]);
+  }, [initialize, isInitialized, setIsInitialized]);
 
   // 创建新便签
   const handleCreateNote = useCallback(
@@ -132,8 +148,178 @@ const Main: React.FC = () => {
     return getNotesByCanvas(canvasId).length;
   };
 
+  // 处理画布切换
+  const handleCanvasSwitch = useCallback(
+    (canvasId: string) => {
+      if (canvasId !== activeCanvasId) {
+        setActiveCanvas(canvasId);
+        logWithDedup(`🎨 切换到画布: ${canvasId.slice(-8)}`);
+      }
+    },
+    [activeCanvasId, setActiveCanvas]
+  );
+
+  // 处理添加画布
+  const handleAddCanvas = useCallback(async () => {
+    try {
+      const canvasName = `画布 ${canvases.length + 1}`;
+      const newCanvasId = await createCanvas(canvasName, false);
+
+      // 创建成功后自动切换到新画布
+      setActiveCanvas(newCanvasId);
+
+      logWithDedup(
+        `🎨 创建新画布: ${newCanvasId.slice(-8)} (${canvasName})，已自动切换`
+      );
+
+      // 可选：显示成功提示（如果需要的话）
+      // modal.success({
+      //   title: '画布创建成功',
+      //   content: `已创建并切换到 "${canvasName}"，您可以开始添加便签了！`,
+      //   duration: 2,
+      // });
+    } catch (error) {
+      console.error("❌ 创建画布失败:", error);
+
+      // 显示错误提示
+      modal.error({
+        title: "创建画布失败",
+        content: error instanceof Error ? error.message : "未知错误",
+      });
+    }
+  }, [canvases.length, createCanvas, setActiveCanvas, modal]);
+
+  // 处理删除画布
+  const handleDeleteCanvas = useCallback(
+    async (canvasId: string, canvasName: string, isDefault: boolean) => {
+      if (isDefault) {
+        logWithDedup("⚠️ 默认画布不能删除");
+        return;
+      }
+
+      // 获取该画布上的便签数量
+      const canvasNoteCount = getCurrentCanvasNoteCount(canvasId);
+
+      // 显示确认对话框
+      modal.confirm({
+        title: canvasNoteCount > 0 ? "确认删除画布及便签" : "确认删除画布",
+        content: (
+          <div style={{ lineHeight: "1.6" }}>
+            <div style={{ marginBottom: "16px" }}>
+              <p style={{ margin: "8px 0" }}>
+                <strong>画布名称：</strong>
+                <span style={{ color: "#1890ff" }}>{canvasName}</span>
+              </p>
+              <p style={{ margin: "8px 0" }}>
+                <strong>便签数量：</strong>
+                <span
+                  style={{ color: canvasNoteCount > 0 ? "#fa8c16" : "#52c41a" }}
+                >
+                  {canvasNoteCount} 个
+                </span>
+              </p>
+            </div>
+
+            {canvasNoteCount > 0 ? (
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#fff2f0",
+                  border: "1px solid #ffccc7",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                }}
+              >
+                <p
+                  style={{
+                    color: "#ff4d4f",
+                    margin: "0 0 8px 0",
+                    fontWeight: 600,
+                  }}
+                >
+                  ⚠️ 重要警告
+                </p>
+                <p style={{ color: "#ff4d4f", margin: "0" }}>
+                  删除画布将同时删除该画布上的所有{" "}
+                  <strong>{canvasNoteCount}</strong> 个便签！
+                </p>
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: "6px",
+                  marginBottom: "16px",
+                }}
+              >
+                <p
+                  style={{
+                    color: "#52c41a",
+                    margin: "0",
+                    fontWeight: 600,
+                  }}
+                >
+                  ✅ 该画布为空，删除不会影响任何便签
+                </p>
+              </div>
+            )}
+
+            <p
+              style={{
+                color: "#8c8c8c",
+                fontSize: "14px",
+                margin: "0",
+                fontStyle: "italic",
+              }}
+            >
+              💡 此操作不可逆，删除后无法恢复，请谨慎操作。
+            </p>
+          </div>
+        ),
+        icon: <DynamicIcon type="ExclamationCircleOutlined" />,
+        okText: "确认删除",
+        okType: "danger",
+        cancelText: "取消",
+        centered: true,
+        okButtonProps: {
+          style: {
+            backgroundColor: "#ff4d4f",
+            borderColor: "#ff4d4f",
+            color: "#ffffff",
+            fontWeight: 500,
+          },
+        },
+        onOk: async () => {
+          try {
+            await deleteCanvas(canvasId);
+            logWithDedup(
+              `🗑️ 删除画布: ${canvasId.slice(
+                -8
+              )} (${canvasName})，包含 ${canvasNoteCount} 个便签`
+            );
+          } catch (error) {
+            console.error("❌ 删除画布失败:", error);
+            // 可以在这里添加错误提示
+            modal.error({
+              title: "删除失败",
+              content: `删除画布失败：${
+                error instanceof Error ? error.message : "未知错误"
+              }`,
+            });
+          }
+        },
+        onCancel: () => {
+          logWithDedup(`📋 取消删除画布: ${canvasName}`);
+        },
+      });
+    },
+    [deleteCanvas, getCurrentCanvasNoteCount]
+  );
+
   // 渲染画布列表（使用真实数据）
-  const canvasItems = canvases.map((canvas, index) => (
+  const canvasItems = canvases.map((canvas) => (
     <div
       key={canvas.id}
       className={
@@ -141,6 +327,8 @@ const Main: React.FC = () => {
           ? styles.canvasItemActive
           : styles.canvasItem
       }
+      onClick={() => handleCanvasSwitch(canvas.id)}
+      style={{ cursor: "pointer" }}
     >
       <div className={styles.canvasItemHeader}>
         {/* 文件夹图标 */}
@@ -150,10 +338,30 @@ const Main: React.FC = () => {
           {/* 标题行 */}
           <div className={styles.canvasItemTitleRow}>
             <div className={styles.canvasTitle}>{canvas.name}</div>
-            {/* 星标图标（仅默认画布） */}
-            {canvas.isDefault && <div className={styles.starIcon}>★</div>}
-            {/* 空白占位符（非默认画布） */}
-            {!canvas.isDefault && <div></div>}
+            {/* 删除按钮或星标图标 */}
+            {canvas.isDefault ? (
+              // 默认画布显示星标（不可删除）
+              <div className={styles.starIcon} title="默认画布">
+                ★
+              </div>
+            ) : (
+              // 非默认画布显示删除按钮
+              <Button
+                type="text"
+                size="small"
+                icon={<DynamicIcon type="DeleteOutlined" />}
+                className={styles.deleteButton}
+                onClick={(e) => {
+                  e.stopPropagation(); // 阻止冒泡到画布切换事件
+                  handleDeleteCanvas(
+                    canvas.id,
+                    canvas.name,
+                    canvas.isDefault || false
+                  );
+                }}
+                title="删除画布"
+              />
+            )}
           </div>
           {/* 统计信息行 */}
           <div className={styles.canvasItemStatsRow}>
@@ -264,7 +472,7 @@ const Main: React.FC = () => {
               icon={<DynamicIcon type="PlusOutlined" />}
               size="small"
               className={styles.addButton}
-              disabled
+              onClick={handleAddCanvas}
             >
               添加画布
             </Button>

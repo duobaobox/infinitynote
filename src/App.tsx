@@ -4,6 +4,8 @@ import Main from "./pages/Main";
 import { ThemeProvider } from "./theme";
 // 引入错误边界组件
 import ErrorBoundary from "./components/ErrorBoundary";
+// 引入Ant Design App组件
+import { App as AntdApp } from "antd";
 // 引入全局样式
 import "./App.css";
 import "./theme/global.css";
@@ -45,7 +47,9 @@ function App() {
         >
           {/* 渲染主页面组件 */}
           <ErrorBoundary>
-            <Main />
+            <AntdApp>
+              <Main />
+            </AntdApp>
           </ErrorBoundary>
         </div>
       </ThemeProvider>
