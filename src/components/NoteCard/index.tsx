@@ -1,4 +1,5 @@
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useState, useRef } from "react";
+import { useDraggable } from "@dnd-kit/core";
 import type { Note } from "../../types";
 import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
@@ -13,41 +14,30 @@ interface NoteCardProps {
 
 export const NoteCard = memo<NoteCardProps>(
   ({ note, scale, onSelect, isSelected }) => {
-    const { moveNote, startDrag, endDrag } = useNoteStore();
     const { isDark } = useTheme();
     const [isDragging, setIsDragging] = useState(false);
 
-    const handleMouseDown = useCallback(
+    // 使用 dnd-kit 的拖拽功能
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      isDragging: dndIsDragging,
+    } = useDraggable({
+      id: note.id,
+      data: {
+        note,
+      },
+    });
+
+    // 处理点击选择（不影响拖拽）
+    const handleClick = useCallback(
       (e: React.MouseEvent) => {
-        e.preventDefault();
         e.stopPropagation();
         onSelect(note.id);
-        setIsDragging(true);
-        startDrag(note.id, note.position);
-
-        const startX = e.clientX;
-        const startY = e.clientY;
-
-        const handleMouseMove = (e: MouseEvent) => {
-          const deltaX = (e.clientX - startX) / scale;
-          const deltaY = (e.clientY - startY) / scale;
-          moveNote(note.id, {
-            x: note.position.x + deltaX,
-            y: note.position.y + deltaY,
-          });
-        };
-
-        const handleMouseUp = () => {
-          setIsDragging(false);
-          endDrag();
-          document.removeEventListener("mousemove", handleMouseMove);
-          document.removeEventListener("mouseup", handleMouseUp);
-        };
-
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleMouseUp);
       },
-      [note.id, note.position, scale, onSelect, startDrag, endDrag, moveNote]
+      [note.id, onSelect]
     );
 
     const getColorStyle = () => {
@@ -78,12 +68,20 @@ export const NoteCard = memo<NoteCardProps>(
       };
     };
 
+    // 计算拖拽时的样式
+    const dragStyle = transform
+      ? {
+          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        }
+      : {};
+
     return (
       <div
+        ref={setNodeRef}
         data-note-card
-        className={`${styles.noteCard} ${isDragging ? styles.dragging : ""} ${
-          isSelected ? styles.selected : ""
-        }`}
+        className={`${styles.noteCard} ${
+          dndIsDragging ? styles.dragging : ""
+        } ${isSelected ? styles.selected : ""}`}
         style={{
           left: note.position.x,
           top: note.position.y,
@@ -91,12 +89,11 @@ export const NoteCard = memo<NoteCardProps>(
           height: note.size.height,
           zIndex: note.zIndex,
           ...getColorStyle(),
+          ...dragStyle,
         }}
-        onMouseDown={handleMouseDown}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect(note.id);
-        }}
+        onClick={handleClick}
+        {...listeners}
+        {...attributes}
       >
         {isSelected && <div className={styles.selectionBorder} />}
 

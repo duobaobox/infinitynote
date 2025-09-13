@@ -7,6 +7,9 @@
   user-select: none;
   transition: box-shadow 0.2s ease;
   overflow: hidden;
+  /* 启用硬件加速 */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .noteCard:hover {
@@ -15,8 +18,11 @@
 
 .noteCard.dragging {
   cursor: grabbing;
-  transform: rotate(2deg);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  /* 拖拽时禁用过渡动画，提升性能 */
+  transition: none;
+  /* 提升层级，避免重绘 */
+  z-index: 9999 !important;
 }
 
 .noteCard.selected {

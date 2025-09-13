@@ -150,7 +150,7 @@ export const Canvas: React.FC = () => {
   );
 
   const handleDragMove = useCallback(() => {
-    // 可以在这里添加拖拽过程中的逻辑
+    // 拖拽过程中不需要额外处理，transform由dnd-kit自动处理
   }, []);
 
   const handleDragEnd = useCallback(
@@ -204,54 +204,101 @@ export const Canvas: React.FC = () => {
         // 中键或Ctrl+左键或Alt+左键
         e.preventDefault();
         e.stopPropagation();
-        setIsPanning(true);
-        setPanStart({ x: e.clientX, y: e.clientY });
+        panningRef.current = true;
+        panStartRef.current = { x: e.clientX, y: e.clientY };
+        setIsPanning(true); // 仅用于UI状态显示
       }
     }
   }, []);
 
+  // 使用 useRef 来避免频繁的状态更新
+  const panningRef = useRef(false);
+  const panStartRef = useRef<{ x: number; y: number } | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastUpdateTimeRef = useRef(0);
+
+  // 节流函数，限制更新频率
+  const throttledPanCanvas = useCallback(
+    (delta: { x: number; y: number }) => {
+      const now = performance.now();
+      // 限制更新频率为60fps (16.67ms)
+      if (now - lastUpdateTimeRef.current >= 16) {
+        panCanvas(delta);
+        lastUpdateTimeRef.current = now;
+      }
+    },
+    [panCanvas]
+  );
+
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (isPanning && panStart) {
+      if (panningRef.current && panStartRef.current) {
         e.preventDefault();
-        const deltaX = e.clientX - panStart.x;
-        const deltaY = e.clientY - panStart.y;
+        const deltaX = e.clientX - panStartRef.current.x;
+        const deltaY = e.clientY - panStartRef.current.y;
 
-        panCanvas({ x: deltaX, y: deltaY });
-        setPanStart({ x: e.clientX, y: e.clientY });
+        // 取消之前的动画帧
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+
+        // 使用 requestAnimationFrame 和节流优化性能
+        animationFrameRef.current = requestAnimationFrame(() => {
+          throttledPanCanvas({ x: deltaX, y: deltaY });
+          panStartRef.current = { x: e.clientX, y: e.clientY };
+        });
       }
     },
-    [isPanning, panStart, panCanvas]
+    [throttledPanCanvas]
   );
 
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent) => {
-      if (isPanning) {
-        e.preventDefault();
-        setIsPanning(false);
-        setPanStart(null);
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (panningRef.current) {
+      e.preventDefault();
+      panningRef.current = false;
+      panStartRef.current = null;
+      setIsPanning(false);
+
+      // 清理动画帧
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
-    },
-    [isPanning]
-  );
+    }
+  }, []);
 
   // 添加全局鼠标事件处理
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isPanning && panStart) {
+      if (panningRef.current && panStartRef.current) {
         e.preventDefault();
-        const deltaX = e.clientX - panStart.x;
-        const deltaY = e.clientY - panStart.y;
+        const deltaX = e.clientX - panStartRef.current.x;
+        const deltaY = e.clientY - panStartRef.current.y;
 
-        panCanvas({ x: deltaX, y: deltaY });
-        setPanStart({ x: e.clientX, y: e.clientY });
+        // 取消之前的动画帧
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+
+        // 使用 requestAnimationFrame 和节流优化性能
+        animationFrameRef.current = requestAnimationFrame(() => {
+          throttledPanCanvas({ x: deltaX, y: deltaY });
+          panStartRef.current = { x: e.clientX, y: e.clientY };
+        });
       }
     };
 
     const handleGlobalMouseUp = () => {
-      if (isPanning) {
+      if (panningRef.current) {
+        panningRef.current = false;
+        panStartRef.current = null;
         setIsPanning(false);
-        setPanStart(null);
+
+        // 清理动画帧
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
       }
     };
 
@@ -264,7 +311,7 @@ export const Canvas: React.FC = () => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
       document.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [isPanning, panStart, panCanvas]);
+  }, [isPanning, throttledPanCanvas]);
 
   // 触摸事件处理
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -370,6 +417,7 @@ export const Canvas: React.FC = () => {
       <div
         ref={canvasRef}
         className={styles.canvas}
+        data-panning={isPanning}
         onDoubleClick={handleCanvasDoubleClick}
         onClick={handleCanvasClick}
         onWheel={handleWheel}
@@ -392,13 +440,11 @@ export const Canvas: React.FC = () => {
           <div
             className={`${styles.canvasContent} canvasContent`}
             style={{
-              transform: `translate(${viewport.offset.x}px, ${viewport.offset.y}px) scale(${viewport.scale})`,
+              transform: `translate3d(${viewport.offset.x}px, ${viewport.offset.y}px, 0) scale(${viewport.scale})`,
               transformOrigin: "0 0",
-              // 根据设置控制平滑缩放动画
-              transition: displaySettings.smoothZoom
-                ? "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                : "none",
             }}
+            data-smooth-zoom={displaySettings.smoothZoom}
+            data-dragging={isPanning}
           >
             {/* 网格背景 - 根据设置控制显示 */}
             {displaySettings.showGrid && (

@@ -144,9 +144,14 @@
   cursor: crosshair;
 }
 
-/* 平滑过渡 */
+/* 平滑过渡 - 仅在非拖拽状态下启用 */
 .canvasContent {
-  transition: transform 0.1s ease-out;
+  transition: none; /* 默认禁用过渡，提升性能 */
+}
+
+/* 启用平滑缩放过渡（仅在缩放时） */
+.canvasContent[data-smooth-zoom="true"] {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 禁用过渡（在拖拽时） */
@@ -239,6 +244,27 @@
 .canvasContent {
   will-change: transform;
   transform: translateZ(0);
+  /* 启用硬件加速合成层 */
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 画布容器性能优化 */
+.canvas {
+  /* 启用硬件加速 */
+  transform: translateZ(0);
+  /* 优化重绘性能 */
+  contain: layout style paint;
+  /* 减少重排 */
+  overflow: hidden;
+}
+
+/* 拖拽状态下的性能优化 */
+.canvas[data-panning="true"] .canvasContent {
+  /* 拖拽时禁用所有过渡 */
+  transition: none !important;
+  /* 强制使用GPU合成 */
+  will-change: transform;
 }
 
 /* 防止文本选择 */
