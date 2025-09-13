@@ -9,7 +9,8 @@ import type {
 } from "@dnd-kit/core";
 import { VirtualizedNoteContainer } from "../../components/VirtualizedNoteContainer";
 import { useNoteStore } from "../../store/noteStore";
-import { useCanvasStore } from "../../store/tagStore";
+import { useCanvasStore } from "../../store/canvasStore";
+import { useTheme, canvasGridThemes } from "../../theme";
 import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
 import styles from "./index.module.css";
@@ -24,6 +25,10 @@ export const Canvas: React.FC = () => {
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(
     null
   );
+
+  // 主题状态
+  const { isDark } = useTheme();
+  const gridTheme = isDark ? canvasGridThemes.dark : canvasGridThemes.light;
 
   // 状态管理
   const {
@@ -369,7 +374,16 @@ export const Canvas: React.FC = () => {
             }}
           >
             {/* 网格背景 */}
-            <div className={`${styles.grid} grid`} />
+            <div
+              className={`${styles.grid} grid canvas-grid`}
+              style={
+                {
+                  "--grid-color": gridTheme.gridColor,
+                  "--grid-size": `${gridTheme.gridSize}px`,
+                  "--grid-opacity": gridTheme.gridOpacity,
+                } as React.CSSProperties
+              }
+            />
 
             {/* 便签列表 */}
             <VirtualizedNoteContainer

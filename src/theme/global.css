@@ -1,0 +1,239 @@
+/* 全局主题样式 */
+
+/* 重置样式 */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* 主题基础样式 */
+.theme-light {
+  color-scheme: light;
+}
+
+.theme-dark {
+  color-scheme: dark;
+}
+
+.theme-compact {
+  color-scheme: light;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-container);
+  border-radius: var(--border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* Firefox 滚动条样式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-bg-container);
+}
+
+/* 选择文本样式 */
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* 焦点样式 */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 画布网格背景 */
+.canvas-grid {
+  background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  opacity: var(--grid-opacity);
+}
+
+/* 便签卡片样式增强 */
+.note-card {
+  transition: all 0.2s ease;
+  box-shadow: var(--box-shadow);
+}
+
+.note-card:hover {
+  box-shadow: var(--box-shadow-secondary);
+  transform: translateY(-1px);
+}
+
+.note-card.selected {
+  box-shadow: var(--box-shadow-tertiary);
+  border: 2px solid var(--color-primary);
+}
+
+/* 工具栏样式增强 */
+.toolbar {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--box-shadow-secondary);
+  backdrop-filter: blur(8px);
+}
+
+.toolbar-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.toolbar-button:hover {
+  background: var(--color-bg-container);
+  color: var(--color-primary);
+}
+
+.toolbar-button:active {
+  transform: scale(0.95);
+}
+
+/* 拖拽状态样式 */
+.dragging {
+  opacity: 0.8;
+  transform: rotate(3deg) scale(1.05);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.drag-preview {
+  border: 2px dashed var(--color-primary);
+  background: transparent;
+  opacity: 0.5;
+}
+
+/* 动画增强 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  :root {
+    --spacing-xs: 6px;
+    --spacing-sm: 10px;
+    --spacing-md: 14px;
+    --spacing-lg: 20px;
+    --spacing-xl: 28px;
+  }
+
+  .toolbar {
+    padding: var(--spacing-sm);
+  }
+
+  .note-card {
+    min-width: 120px;
+    min-height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar {
+    flex-direction: column;
+    width: 50px;
+  }
+
+  .toolbar-button {
+    margin: 2px 0;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .toolbar,
+  .theme-toggle {
+    display: none !important;
+  }
+
+  .note-card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: #000000;
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .theme-dark {
+    --color-border: #ffffff;
+    --color-text: #ffffff;
+    --color-bg-container: #000000;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

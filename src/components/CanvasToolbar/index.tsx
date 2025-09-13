@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, Space, Tooltip } from "antd";
-import { useCanvasStore } from "../../store/tagStore";
+import { useCanvasStore } from "../../store/canvasStore";
+import { ThemeToggle } from "../../theme";
 import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
 import type { Position } from "../../types";
@@ -82,6 +83,21 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
             </div>
             <div className={styles.zoomUnit}>%</div>
           </div>
+        </Tooltip>
+
+        {/* 分隔线 */}
+        <div
+          style={{
+            width: "20px",
+            height: "1px",
+            background: "var(--color-border)",
+            margin: "4px 0",
+          }}
+        />
+
+        {/* 主题切换按钮 */}
+        <Tooltip title="切换主题" placement="left">
+          <ThemeToggle size="small" className={styles.toolbarButton} />
         </Tooltip>
       </Space>
     </div>

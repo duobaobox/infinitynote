@@ -108,5 +108,7 @@ export enum NoteColor {
   GRAY = "#F0F0F0",
 }
 
-// 重新导出常量
-export { NOTE_DEFAULT_SIZE, NOTE_MIN_SIZE, NOTE_MAX_SIZE } from "./constants";
+// 便签尺寸常量
+export const NOTE_DEFAULT_SIZE = { width: 200, height: 150 };
+export const NOTE_MIN_SIZE = { width: 100, height: 80 };
+export const NOTE_MAX_SIZE = { width: 800, height: 600 };

@@ -1,0 +1,164 @@
+// CSS 变量定义 - 与 Ant Design 主题保持一致
+export const cssVariables = {
+  light: {
+    // 主色调
+    "--color-primary": "#1890ff",
+    "--color-primary-hover": "#40a9ff",
+    "--color-primary-active": "#096dd9",
+
+    // 功能色
+    "--color-success": "#52c41a",
+    "--color-warning": "#faad14",
+    "--color-error": "#ff4d4f",
+    "--color-info": "#1890ff",
+
+    // 背景色
+    "--color-bg-base": "#ffffff",
+    "--color-bg-container": "#ffffff",
+    "--color-bg-elevated": "#ffffff",
+    "--color-bg-layout": "#f5f5f5",
+    "--color-bg-canvas": "#fafafa",
+
+    // 文本色
+    "--color-text": "#262626",
+    "--color-text-secondary": "#8c8c8c",
+    "--color-text-tertiary": "#bfbfbf",
+    "--color-text-quaternary": "#d9d9d9",
+
+    // 边框色
+    "--color-border": "#d9d9d9",
+    "--color-border-secondary": "#f0f0f0",
+
+    // 链接色
+    "--color-link": "#1890ff",
+    "--color-link-hover": "#40a9ff",
+    "--color-link-active": "#096dd9",
+
+    // 阴影
+    "--box-shadow": "0 2px 8px rgba(0, 0, 0, 0.08)",
+    "--box-shadow-secondary": "0 4px 12px rgba(0, 0, 0, 0.12)",
+    "--box-shadow-tertiary": "0 6px 16px rgba(0, 0, 0, 0.16)",
+
+    // 圆角
+    "--border-radius": "8px",
+    "--border-radius-sm": "4px",
+    "--border-radius-lg": "12px",
+
+    // 间距
+    "--spacing-xs": "8px",
+    "--spacing-sm": "12px",
+    "--spacing-md": "16px",
+    "--spacing-lg": "24px",
+    "--spacing-xl": "32px",
+  },
+
+  dark: {
+    // 主色调
+    "--color-primary": "#177ddc",
+    "--color-primary-hover": "#3c9ae8",
+    "--color-primary-active": "#0c5aa6",
+
+    // 功能色
+    "--color-success": "#49aa19",
+    "--color-warning": "#d89614",
+    "--color-error": "#a61d24",
+    "--color-info": "#177ddc",
+
+    // 背景色
+    "--color-bg-base": "#000000",
+    "--color-bg-container": "#141414",
+    "--color-bg-elevated": "#1f1f1f",
+    "--color-bg-layout": "#000000",
+    "--color-bg-canvas": "#0a0a0a",
+
+    // 文本色
+    "--color-text": "#ffffff",
+    "--color-text-secondary": "#a6a6a6",
+    "--color-text-tertiary": "#737373",
+    "--color-text-quaternary": "#525252",
+
+    // 边框色
+    "--color-border": "#434343",
+    "--color-border-secondary": "#303030",
+
+    // 链接色
+    "--color-link": "#177ddc",
+    "--color-link-hover": "#3c9ae8",
+    "--color-link-active": "#0c5aa6",
+
+    // 阴影
+    "--box-shadow": "0 2px 8px rgba(0, 0, 0, 0.3)",
+    "--box-shadow-secondary": "0 4px 12px rgba(0, 0, 0, 0.4)",
+    "--box-shadow-tertiary": "0 6px 16px rgba(0, 0, 0, 0.5)",
+
+    // 圆角 (与明亮主题相同)
+    "--border-radius": "8px",
+    "--border-radius-sm": "4px",
+    "--border-radius-lg": "12px",
+
+    // 间距 (与明亮主题相同)
+    "--spacing-xs": "8px",
+    "--spacing-sm": "12px",
+    "--spacing-md": "16px",
+    "--spacing-lg": "24px",
+    "--spacing-xl": "32px",
+  },
+};
+
+// 应用 CSS 变量到文档根元素
+export const applyCSSVariables = (theme: "light" | "dark") => {
+  const root = document.documentElement;
+  const variables = cssVariables[theme];
+
+  Object.entries(variables).forEach(([key, value]) => {
+    root.style.setProperty(key, value);
+  });
+};
+
+// 便签颜色主题
+export const noteColorThemes = {
+  light: {
+    yellow: "#FFF2CC",
+    pink: "#FFE6E6",
+    blue: "#E6F3FF",
+    green: "#E6FFE6",
+    purple: "#F0E6FF",
+    orange: "#FFE6CC",
+    red: "#FFD6D6",
+    gray: "#F0F0F0",
+    lightBlue: "#E6F7FF",
+    lightGreen: "#F6FFED",
+    lightPink: "#FFF0F6",
+    lightYellow: "#FFFBE6",
+  },
+  dark: {
+    yellow: "#3D3B00",
+    pink: "#3D1A1A",
+    blue: "#1A2B3D",
+    green: "#1A3D1A",
+    purple: "#2B1A3D",
+    orange: "#3D2B1A",
+    red: "#3D1A1A",
+    gray: "#2D2D2D",
+    lightBlue: "#1A3D3D",
+    lightGreen: "#2B3D1A",
+    lightPink: "#3D1A2B",
+    lightYellow: "#3D3B1A",
+  },
+};
+
+// 画布网格主题
+export const canvasGridThemes = {
+  light: {
+    backgroundColor: "#fafafa",
+    gridColor: "#f0f0f0",
+    gridSize: 20,
+    gridOpacity: 0.5,
+  },
+  dark: {
+    backgroundColor: "#0a0a0a",
+    gridColor: "#262626",
+    gridSize: 20,
+    gridOpacity: 0.3,
+  },
+};

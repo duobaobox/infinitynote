@@ -4,7 +4,10 @@ import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
 // 引入状态管理
 import { useNoteStore } from "../../store/noteStore";
-import { useCanvasStore, initializeDefaultCanvas } from "../../store/tagStore";
+import {
+  useCanvasStore,
+  initializeDefaultCanvas,
+} from "../../store/canvasStore";
 import { NoteColor } from "../../types";
 import type { Position } from "../../types";
 // 引入画布组件

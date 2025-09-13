@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useState } from "react";
 import type { Note } from "../../types";
 import { useNoteStore } from "../../store/noteStore";
+import { useTheme, noteColorThemes } from "../../theme";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -13,6 +14,7 @@ interface NoteCardProps {
 export const NoteCard = memo<NoteCardProps>(
   ({ note, scale, onSelect, isSelected }) => {
     const { moveNote, startDrag, endDrag } = useNoteStore();
+    const { isDark } = useTheme();
     const [isDragging, setIsDragging] = useState(false);
 
     const handleMouseDown = useCallback(
@@ -49,17 +51,21 @@ export const NoteCard = memo<NoteCardProps>(
     );
 
     const getColorStyle = () => {
-      const colorMap: Record<string, string> = {
-        yellow: "#fff9c4",
-        blue: "#dbeafe",
-        green: "#dcfce7",
-        pink: "#fce7f3",
-        purple: "#f3e8ff",
-        orange: "#fed7aa",
-        red: "#fee2e2",
-        gray: "#f3f4f6",
+      // 根据主题选择颜色映射
+      const themeColors = isDark ? noteColorThemes.dark : noteColorThemes.light;
+
+      // 颜色映射，将便签颜色字符串映射到实际颜色值
+      const colorKey = note.color
+        .toLowerCase()
+        .replace(/[^a-z]/g, "") as keyof typeof themeColors;
+      const backgroundColor = themeColors[colorKey] || themeColors.yellow;
+
+      return {
+        backgroundColor,
+        // 在暗黑主题下调整边框和文字颜色
+        border: isDark ? `1px solid ${backgroundColor}` : "none",
+        color: isDark ? "var(--color-text)" : "#262626",
       };
-      return { backgroundColor: colorMap[note.color] || colorMap.yellow };
     };
 
     return (
