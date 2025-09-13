@@ -16,7 +16,7 @@ export const exportNotes = async (): Promise<void> => {
       exportDate: new Date().toISOString(),
       notes: notes.map((note) => ({
         ...note,
-        id: note.id?.toString() || "",
+        id: note.id || "", // ID已经是字符串，无需转换
       })),
     };
 

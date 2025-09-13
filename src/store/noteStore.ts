@@ -6,6 +6,7 @@ import { devtools } from "zustand/middleware";
 import type { Note, Position, Size, DragState } from "../types";
 import { NOTE_DEFAULT_SIZE, NoteColor } from "../types";
 import { dbOperations } from "../utils/db";
+import { noteStoreEvents, storeEventBus } from "./storeEvents";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -145,7 +146,11 @@ export const useNoteStore = create<NoteStore>()(
           // 同步到数据库
           const dbId = await dbOperations.addNote(newNote);
 
-          // 移除创建成功的日志，减少噪音
+          console.log(`✅ 便签创建成功，ID: ${tempId}`);
+
+          // 发送便签创建事件
+          noteStoreEvents.notifyNoteCreated(tempId, canvasId);
+
           return dbId;
         } catch (error) {
           // 如果数据库操作失败，回滚内存状态
@@ -183,6 +188,12 @@ export const useNoteStore = create<NoteStore>()(
           await dbOperations.updateNote(id, updatesWithTime);
 
           console.log(`✅ 便签更新成功，ID: ${id}`);
+
+          // 发送便签更新事件
+          const note = get().notes.find((n) => n.id === id);
+          if (note) {
+            noteStoreEvents.notifyNoteUpdated(id, note.canvasId);
+          }
         } catch (error) {
           console.error("❌ 更新便签失败:", error);
           // 可以选择重新加载数据或显示错误提示
@@ -197,6 +208,10 @@ export const useNoteStore = create<NoteStore>()(
       // 删除便签
       deleteNote: async (id: string) => {
         try {
+          // 获取便签信息用于事件通知
+          const noteToDelete = get().notes.find((note) => note.id === id);
+          const canvasId = noteToDelete?.canvasId;
+
           // 先更新内存状态
           set((state) => ({
             notes: state.notes.filter((note) => note.id !== id),
@@ -209,6 +224,11 @@ export const useNoteStore = create<NoteStore>()(
           await dbOperations.deleteNote(id);
 
           console.log(`✅ 便签删除成功，ID: ${id}`);
+
+          // 发送便签删除事件
+          if (canvasId) {
+            noteStoreEvents.notifyNoteDeleted(id, canvasId);
+          }
         } catch (error) {
           console.error("❌ 删除便签失败:", error);
           // 重新加载数据以恢复状态
@@ -513,10 +533,41 @@ export const useNoteStore = create<NoteStore>()(
   )
 );
 
-// 暴露重新加载方法到全局，供画布Store调用
+// 设置Store事件监听器
 if (typeof window !== "undefined") {
-  (window as any).noteStoreReload = () => {
+  // 监听便签重新加载请求
+  storeEventBus.on("notes:reload", ({ canvasId }) => {
     const store = useNoteStore.getState();
-    store.loadNotesFromDB();
-  };
+    if (canvasId) {
+      // 如果指定了画布ID，只重新加载该画布的便签
+      store.loadNotesFromDB();
+    } else {
+      // 重新加载所有便签
+      store.loadNotesFromDB();
+    }
+  });
+
+  // 监听画布删除事件，清理相关便签
+  storeEventBus.on("canvas:deleted", ({ canvasId }) => {
+    const store = useNoteStore.getState();
+    const canvasNotes = store.notes.filter(
+      (note) => note.canvasId === canvasId
+    );
+
+    // 从内存中移除该画布的便签
+    store.set((state) => ({
+      notes: state.notes.filter((note) => note.canvasId !== canvasId),
+      selectedNoteIds: state.selectedNoteIds.filter(
+        (id) => !canvasNotes.some((note) => note.id === id)
+      ),
+    }));
+  });
+
+  // 监听数据同步请求
+  storeEventBus.on("data:sync-required", ({ type }) => {
+    if (type === "notes" || type === "all") {
+      const store = useNoteStore.getState();
+      store.loadNotesFromDB();
+    }
+  });
 }

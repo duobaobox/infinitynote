@@ -1,5 +1,10 @@
 import Dexie, { type Table } from "dexie";
 import type { Note, Canvas } from "../types";
+import {
+  handleDatabaseError,
+  withErrorHandling,
+  logError,
+} from "./errorHandler";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -13,12 +18,22 @@ const logWithDedup = (message: string, ...args: any[]) => {
   }
 };
 
+/**
+ * 数据库便签接口
+ * 确保与应用层Note接口完全一致，统一使用字符串ID
+ */
 export interface NoteDB extends Note {
-  // 使用完整的 Note 接口，包括 id 字段
+  // 继承Note接口的所有字段，确保类型一致性
+  id: string; // 明确指定ID为字符串类型
 }
 
+/**
+ * 数据库画布接口
+ * 确保与应用层Canvas接口完全一致，统一使用字符串ID
+ */
 export interface CanvasDB extends Canvas {
-  // 使用完整的 Canvas 接口，包括 id 字段
+  // 继承Canvas接口的所有字段，确保类型一致性
+  id: string; // 明确指定ID为字符串类型
 }
 
 class InfinityNoteDatabase extends Dexie {
@@ -106,18 +121,17 @@ const withDbRetry = async <T>(operation: () => Promise<T>): Promise<T> => {
 export const dbOperations = {
   // 添加便签
   async addNote(note: NoteDB): Promise<string> {
-    try {
-      return await withDbRetry(async () => {
-        await db.notes.add(note);
-        console.log(`✅ Note added successfully with ID: ${note.id}`);
-        return note.id;
-      });
-    } catch (error) {
-      console.error("❌ Failed to add note:", error);
-      throw new Error(
-        `添加便签失败: ${error instanceof Error ? error.message : "未知错误"}`
-      );
-    }
+    return await withErrorHandling(
+      async () => {
+        return await withDbRetry(async () => {
+          await db.notes.add(note);
+          console.log(`✅ Note added successfully with ID: ${note.id}`);
+          return note.id;
+        });
+      },
+      "addNote",
+      { noteId: note.id, canvasId: note.canvasId }
+    );
   },
 
   // 更新便签

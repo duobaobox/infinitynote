@@ -14,7 +14,7 @@ export const useNoteDatabase = () => {
     try {
       const dbNotes = await dbOperations.getAllNotes();
       const formattedNotes: Note[] = dbNotes.map((note) => ({
-        id: note.id?.toString() || "",
+        id: note.id || "", // ID已经是字符串，无需转换
         title: note.title,
         content: note.content,
         color: note.color,
@@ -55,8 +55,9 @@ export const useNoteDatabase = () => {
   // 更新便签
   const updateNote = async (id: string, changes: Partial<Note>) => {
     try {
-      const { id, ...updateData } = changes;
-      await dbOperations.updateNote(parseInt(id), {
+      const { id: _, ...updateData } = changes; // 移除id字段，使用字符串ID
+      await dbOperations.updateNote(id, {
+        // 直接使用字符串ID
         ...updateData,
         updatedAt: new Date(),
       });
@@ -70,7 +71,7 @@ export const useNoteDatabase = () => {
   // 删除便签
   const deleteNote = async (id: string) => {
     try {
-      await dbOperations.deleteNote(parseInt(id));
+      await dbOperations.deleteNote(id); // 直接使用字符串ID
       await loadNotes();
     } catch (err) {
       setError(err instanceof Error ? err.message : "删除便签失败");

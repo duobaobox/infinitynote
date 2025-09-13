@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { Canvas, Position, CanvasViewport } from "../types";
 import { dbOperations } from "../utils/db";
+import { canvasStoreEvents, storeEventBus } from "./storeEvents";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -187,6 +188,10 @@ export const useCanvasStore = create<CanvasStore>()(
           });
 
           console.log(`✅ 画布创建成功，ID: ${id}`);
+
+          // 发送画布创建事件
+          canvasStoreEvents.notifyCanvasCreated(id);
+
           return id;
         } catch (error) {
           console.error("❌ 创建画布失败:", error);
@@ -319,14 +324,8 @@ export const useCanvasStore = create<CanvasStore>()(
             `✅ 画布删除成功，ID: ${id}，同时删除了 ${notesToDelete.length} 个便签`
           );
 
-          // 通知便签Store重新加载数据（删除便签后需要同步状态）
-          // 这里我们通过重新加载来确保数据一致性
-          if (
-            typeof window !== "undefined" &&
-            (window as any).noteStoreReload
-          ) {
-            (window as any).noteStoreReload();
-          }
+          // 发送画布删除事件，通知其他Store清理相关数据
+          canvasStoreEvents.notifyCanvasDeleted(id);
         } catch (error) {
           // 如果数据库操作失败，恢复内存状态
           set({ canvases, activeCanvasId });
@@ -342,6 +341,7 @@ export const useCanvasStore = create<CanvasStore>()(
 
       // 设置激活画布
       setActiveCanvas: (id: string) => {
+        const { activeCanvasId: currentActiveCanvasId } = get();
         const canvas = get().canvases.find((c) => c.id === id);
         if (canvas) {
           set({
@@ -352,6 +352,9 @@ export const useCanvasStore = create<CanvasStore>()(
               offset: canvas.offset,
             },
           });
+
+          // 发送画布切换事件
+          canvasStoreEvents.notifyCanvasSwitched(currentActiveCanvasId, id);
         }
       },
 
