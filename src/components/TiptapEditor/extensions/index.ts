@@ -3,15 +3,12 @@
  * 提供动态扩展加载和配置管理
  */
 
-import { Extension, Mark, Node } from "@tiptap/core";
+import { Extension } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import { ListItem } from "@tiptap/extension-list-item";
 import { TextAlign } from "@tiptap/extension-text-align";
-
-// 扩展类型联合
-type AnyExtension = Extension<any, any> | Mark<any, any> | Node<any, any>;
 
 // 扩展配置接口
 interface ExtensionConfig {

@@ -246,6 +246,23 @@
   min-height: 0 !important;
 }
 
+/* 便签中的分割线样式 - 隐藏或淡化 */
+.noteCard .tiptap-editor-prose hr {
+  display: none !important;
+}
+
+/* 隐藏工具栏分割线 */
+.noteCard .toolbar-divider {
+  display: none !important;
+}
+
+/* 如果需要保留分割线，可以用这个更淡的样式 */
+.noteCard .tiptap-editor-prose hr.visible {
+  border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+  margin: 8px 0 !important;
+  display: block !important;
+}
+
 .noteCard .tiptap-editor-prose p {
   margin: 0 0 4px 0 !important;
   font-size: inherit !important;
@@ -291,4 +308,99 @@
     bottom: 2px;
     right: 2px;
   }
+}
+
+/* 隐藏TiptapEditor中的hr元素和工具栏分隔线 */
+.noteCard .tiptap-editor-prose hr {
+  display: none !important;
+}
+
+.noteCard .toolbar-divider {
+  display: none !important;
+}
+
+/* 覆盖TiptapEditor的聚焦状态样式，确保便签卡片中不显示边框和阴影 */
+.noteCard .tiptap-editor-focused {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* 全面清除聚焦状态下的所有视觉效果 */
+.noteCard .tiptap-editor-container.tiptap-editor-focused {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  transition: none !important;
+}
+
+.noteCard .tiptap-editor-focused .tiptap-editor-content {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.noteCard .tiptap-editor-focused .ProseMirror {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* 确保所有TiptapEditor相关的边框都透明 */
+.noteCard .tiptap-editor,
+.noteCard .tiptap-editor-container,
+.noteCard .tiptap-editor-content {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 专门针对tiptap-editor-content去除所有阴影和边框效果 */
+.noteCard .tiptap-editor-content {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.noteCard .tiptap-editor-content .ProseMirror {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* 全面清除tiptap-editor-container和readonly状态的所有视觉效果 */
+.noteCard .tiptap-editor-container {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  transition: none !important;
+}
+
+.noteCard .tiptap-editor-readonly {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.noteCard .tiptap-editor-readonly .tiptap-editor-content {
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* 去除所有可能的伪元素效果 */
+.noteCard .tiptap-editor-container::before,
+.noteCard .tiptap-editor-container::after,
+.noteCard .tiptap-editor-content::before,
+.noteCard .tiptap-editor-content::after {
+  display: none !important;
 }

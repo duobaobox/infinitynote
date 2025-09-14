@@ -104,12 +104,6 @@
   padding: 0;
 }
 
-/* 编辑器聚焦状态 */
-.tiptap-editor-focused {
-  border-color: var(--color-primary, #1677ff);
-  box-shadow: 0 0 0 2px var(--color-primary-bg, rgba(22, 119, 255, 0.1));
-}
-
 /* 只读模式 */
 .tiptap-editor-readonly {
   background: transparent;
