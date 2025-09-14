@@ -1,42 +1,7 @@
 /**
- * Tiptap 扩展管理器
+ * @deprecated 请使用 ./extensions/index.ts 中的 ExtensionManager
+ * 这个文件保留用于向后兼容，建议迁移到新的扩展管理系统
  */
 
-import StarterKit from "@tiptap/starter-kit";
-import type { Extension } from "@tiptap/core";
-
-export class ExtensionManager {
-  private extensions: Extension[] = [];
-
-  constructor() {
-    this.initializeDefaultExtensions();
-  }
-
-  private initializeDefaultExtensions(): void {
-    this.extensions = [
-      StarterKit.configure({
-        paragraph: {
-          HTMLAttributes: {
-            class: "tiptap-paragraph",
-          },
-        },
-      }),
-    ];
-  }
-
-  getExtensions(): Extension[] {
-    return [...this.extensions];
-  }
-
-  addExtension(extension: Extension): void {
-    this.extensions.push(extension);
-  }
-
-  removeExtension(name: string): void {
-    this.extensions = this.extensions.filter((ext) => ext.name !== name);
-  }
-
-  hasExtension(name: string): boolean {
-    return this.extensions.some((ext) => ext.name === name);
-  }
-}
+// 重新导出新的扩展管理器
+export { ExtensionManager, defaultExtensionManager } from "./extensions/index";

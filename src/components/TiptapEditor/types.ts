@@ -25,9 +25,9 @@ export interface TiptapEditorProps {
   /** 自定义类名 */
   className?: string;
   /** 失去焦点时的回调 */
-  onBlur?: () => void;
+  onBlur?: (editor?: Editor, event?: FocusEvent) => void;
   /** 获得焦点时的回调 */
-  onFocus?: () => void;
+  onFocus?: (editor?: Editor) => void;
   /** 按下 Enter 键的回调 */
   onEnter?: () => void;
   /** 按下 Escape 键的回调 */

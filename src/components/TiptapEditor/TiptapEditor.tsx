@@ -13,7 +13,7 @@ import {
   generateEditorId,
 } from "./utils";
 import { useTheme } from "../../theme";
-import { ExtensionManager } from "./extensions";
+import { ExtensionManager } from "./extensions/index";
 import { Toolbar, DEFAULT_TOOLBAR_CONFIG } from "./toolbar/Toolbar";
 import type { ToolbarConfig } from "./toolbar/Toolbar";
 import { useOptimizedDebounce } from "./performance";
@@ -104,8 +104,8 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       content: content || "",
       editable: !readonly,
       autofocus: autoFocus,
-      // 阻止SSR渲染问题
-      immediatelyRender: false,
+      // TipTap v3.4+ 最佳实践：控制事务重渲染
+      shouldRerenderOnTransaction: false,
       onCreate: ({ editor }) => {
         onEditorReady?.(editor);
       },
@@ -118,12 +118,12 @@ export const TiptapEditor = memo<TiptapEditorProps>(
         // 强制重新渲染以更新按钮激活状态
         setToolbarUpdateKey((prev) => prev + 1);
       },
-      onFocus: () => {
-        onFocus?.();
+      onFocus: ({ editor }) => {
+        onFocus?.(editor);
       },
-      onBlur: ({ event }) => {
-        // 传递原生事件给上层组件，以便进行更精确的焦点管理
-        onBlur?.(event);
+      onBlur: ({ editor, event }) => {
+        // TipTap 最佳实践：传递 editor 实例和原生事件
+        onBlur?.(editor, event);
       },
       editorProps: {
         attributes: {
