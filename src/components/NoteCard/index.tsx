@@ -69,17 +69,95 @@ export const NoteCard = memo<NoteCardProps>(
       disabled: isResizing || isEditing,
     });
 
-    // 处理点击选择（避免与拖拽冲突）
-    const handleMouseUp = useCallback(
+    // 拖拽状态跟踪
+    const dragStateRef = useRef({
+      isDragging: false,
+      hasMoved: false,
+      startX: 0,
+      startY: 0,
+    });
+
+    // 监控拖拽状态变化
+    useEffect(() => {
+      if (dndIsDragging) {
+        dragStateRef.current.isDragging = true;
+        dragStateRef.current.hasMoved = true;
+      } else {
+        // 拖拽结束后短暂延迟重置状态，防止立即触发点击
+        setTimeout(() => {
+          dragStateRef.current = {
+            isDragging: false,
+            hasMoved: false,
+            startX: 0,
+            startY: 0,
+          };
+        }, 100);
+      }
+    }, [dndIsDragging]);
+
+    // 处理鼠标按下
+    const handleMouseDown = useCallback(
       (e: React.MouseEvent) => {
-        // 在鼠标释放时处理点击选择（避免与dnd-kit拖拽冲突）
-        if (e.button === 0) {
-          // 左键点击
-          e.stopPropagation();
+        const target = e.target as HTMLElement;
+
+        // 如果点击的是缩放控件，不处理
+        if (
+          target.closest(`.${styles.resizeHandle}`) ||
+          target.classList.contains(styles.resizeHandle)
+        ) {
+          return;
+        }
+
+        // 选中便签
+        if (!note.isSelected) {
           onSelect(note.id);
         }
+
+        // 如果已经在编辑模式，直接返回让编辑器处理
+        if (isEditing) {
+          return;
+        }
+
+        // 记录开始位置
+        dragStateRef.current = {
+          isDragging: false,
+          hasMoved: false,
+          startX: e.clientX,
+          startY: e.clientY,
+        };
       },
-      [note.id, onSelect]
+      [note.id, note.isSelected, onSelect, isEditing]
+    );
+
+    // 处理点击编辑
+    const handleMouseUp = useCallback(
+      (e: React.MouseEvent) => {
+        // 只处理左键单击
+        if (e.button !== 0) return;
+
+        const target = e.target as HTMLElement;
+
+        // 如果点击的是缩放控件，不进入编辑模式
+        if (
+          target.closest(`.${styles.resizeHandle}`) ||
+          target.classList.contains(styles.resizeHandle)
+        ) {
+          return;
+        }
+
+        // 检查是否有拖拽行为
+        const hasMoved =
+          Math.abs(e.clientX - dragStateRef.current.startX) > 5 ||
+          Math.abs(e.clientY - dragStateRef.current.startY) > 5;
+
+        // 只有在没有拖拽且不在缩放状态时才进入编辑模式
+        if (!hasMoved && !isResizing && !isEditing) {
+          e.stopPropagation();
+          console.log("✍️ 单击进入编辑模式");
+          setIsEditing(true);
+        }
+      },
+      [note.id, onSelect, isSelected, isResizing, isEditing]
     );
 
     // 处理内容变化
@@ -90,7 +168,9 @@ export const NoteCard = memo<NoteCardProps>(
       [note.id, updateNote]
     );
 
-    // 处理双击进入编辑
+    // 删除这个函数，合并到 handleMouseUp 中
+
+    // 处理双击进入编辑（保留作为备用）
     const handleDoubleClick = useCallback(
       (e: React.MouseEvent) => {
         e.preventDefault();
@@ -113,8 +193,14 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [isEditing]);
 
-    // 处理编辑器失去焦点 - 遵循Tiptap官方最佳实践
-    const handleEditorBlur = useCallback((event?: FocusEvent) => {
+    // 优化的失焦处理 - 更加智能的编辑模式退出
+    const handleEditorBlur = useCallback(
+      (_editor?: any, _event?: FocusEvent) => {
+        // 立即返回，让用户通过ESC或点击外部明确退出
+        return;
+
+        // 以下代码暂时禁用，改为手动退出模式
+        /*
       // 检查焦点是否转移到了相关的编辑器元素（如工具栏）
       if (event?.relatedTarget) {
         const relatedElement = event.relatedTarget as HTMLElement;
@@ -145,12 +231,46 @@ export const NoteCard = memo<NoteCardProps>(
           setIsEditing(false);
         }, 100);
       });
-    }, []);
+      */
+      },
+      []
+    );
 
     // 处理ESC键退出编辑
     const handleEditorEscape = useCallback(() => {
       setIsEditing(false);
     }, []);
+
+    // 当前便签的引用
+    const currentNoteRef = useRef<HTMLDivElement>(null);
+
+    // 处理点击外部退出编辑模式
+    const handleClickOutside = useCallback(
+      (e: MouseEvent) => {
+        if (!isEditing) return;
+
+        const target = e.target as HTMLElement;
+
+        // 检查点击是否在当前便签内部
+        if (
+          currentNoteRef.current &&
+          !currentNoteRef.current.contains(target)
+        ) {
+          setIsEditing(false);
+        }
+      },
+      [isEditing]
+    );
+
+    // 管理点击外部事件监听
+    useEffect(() => {
+      if (isEditing) {
+        document.addEventListener("mousedown", handleClickOutside, true);
+        return () => {
+          document.removeEventListener("mousedown", handleClickOutside, true);
+        };
+      }
+    }, [isEditing, handleClickOutside]);
 
     // 缩放开始处理 - 使用useRef避免闭包问题
     const handleResizeStart = useCallback(
@@ -366,7 +486,10 @@ export const NoteCard = memo<NoteCardProps>(
 
     return (
       <div
-        ref={setNodeRef}
+        ref={(node) => {
+          setNodeRef(node);
+          currentNoteRef.current = node;
+        }}
         data-note-card
         className={`${styles.noteCard} ${
           dndIsDragging ? styles.dragging : ""
@@ -382,12 +505,14 @@ export const NoteCard = memo<NoteCardProps>(
           ...getColorStyle(),
           ...dragStyle,
         }}
+        // 只在非编辑状态下应用 dnd-kit 的监听器
+        {...(!isEditing && !isResizing ? listeners : {})}
+        {...(!isEditing && !isResizing ? attributes : {})}
+        onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onDoubleClick={handleDoubleClick}
-        {...(isResizing || isEditing ? {} : listeners)}
-        {...(isResizing || isEditing ? {} : attributes)}
       >
         {isSelected && <div className={styles.selectionBorder} />}
 
@@ -396,7 +521,7 @@ export const NoteCard = memo<NoteCardProps>(
           <TiptapEditor
             content={note.content || ""}
             onContentChange={handleContentChange}
-            placeholder="双击编辑便签内容..."
+            placeholder={isSelected ? "开始输入内容..." : "点击编辑便签内容..."}
             height="100%"
             className={styles.noteText}
             autoFocus={isEditing}

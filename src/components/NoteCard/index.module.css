@@ -137,8 +137,26 @@
   /* 提升层级，确保在最顶层 */
   z-index: 1000 !important;
   /* 编辑状态的视觉反馈 */
-  border-color: #52c41a !important;
-  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2) !important;
+  outline: 2px solid var(--color-primary, #1677ff);
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(22, 119, 255, 0.3);
+}
+
+/* 编辑模式下的提示文本 */
+.noteCard.editing::after {
+  content: "✍️ 编辑中 - 点击外部或按ESC退出";
+  position: absolute;
+  top: -28px;
+  left: 0;
+  background: var(--color-primary, #1677ff);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1001;
+  animation: fadeIn 0.3s ease forwards;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .noteCard.resizing .resizeHandle {
