@@ -57,32 +57,6 @@ const debouncedSaveNote = (
 };
 
 /**
- * 立即保存便签状态到数据库（清除防抖并立即执行）
- * @param noteId 便签ID
- * @param updates 要更新的便签数据
- */
-const flushSaveNote = async (
-  noteId: string,
-  updates: Partial<Omit<Note, "id" | "createdAt">>
-) => {
-  // 清除防抖定时器
-  const existingTimeout = saveNoteTimeouts.get(noteId);
-  if (existingTimeout) {
-    clearTimeout(existingTimeout);
-    saveNoteTimeouts.delete(noteId);
-  }
-
-  // 立即保存
-  try {
-    const updatesWithTime = { ...updates, updatedAt: new Date() };
-    await dbOperations.updateNote(noteId, updatesWithTime);
-  } catch (error) {
-    console.error("❌ 立即保存便签状态失败:", error);
-    throw error;
-  }
-};
-
-/**
  * 便签状态接口
  */
 interface NoteState {
@@ -147,6 +121,10 @@ interface NoteActions {
   moveNotes: (noteIds: string[], deltaPosition: Position) => Promise<void>;
   /** 从数据库加载所有便签 */
   loadNotesFromDB: () => Promise<void>;
+  /** 获取最大支持的便签数量 */
+  getMaxSupportedNotes: () => number;
+  /** 检查便签数量限制 */
+  checkNoteCountLimit: () => void;
   /** 初始化数据 */
   initialize: () => Promise<void>;
 
@@ -156,7 +134,7 @@ interface NoteActions {
   readonly MIN_Z_INDEX: number;
 
   // 内部状态（不对外暴露）
-  readonly _debouncedBringToFrontMap: Map<string, NodeJS.Timeout>;
+  readonly _debouncedBringToFrontMap: Map<string, number>;
 }
 
 type NoteStore = NoteState & NoteActions;
@@ -569,7 +547,7 @@ export const useNoteStore = create<NoteStore>()(
       },
 
       // 防抖置顶操作的映射表
-      _debouncedBringToFrontMap: new Map<string, NodeJS.Timeout>(),
+      _debouncedBringToFrontMap: new Map<string, number>(),
 
       // 带防抖的数据库同步方法（只处理数据库操作）
       debouncedBringToFront: (id: string, delay = 100) => {
@@ -882,10 +860,10 @@ if (typeof window !== "undefined") {
     );
 
     // 从内存中移除该画布的便签
-    store.set((state) => ({
-      notes: state.notes.filter((note) => note.canvasId !== canvasId),
+    useNoteStore.setState((state: NoteState) => ({
+      notes: state.notes.filter((note: Note) => note.canvasId !== canvasId),
       selectedNoteIds: state.selectedNoteIds.filter(
-        (id) => !canvasNotes.some((note) => note.id === id)
+        (id: string) => !canvasNotes.some((note: Note) => note.id === id)
       ),
     }));
   });

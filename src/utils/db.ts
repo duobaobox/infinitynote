@@ -1,10 +1,6 @@
 import Dexie, { type Table } from "dexie";
 import type { Note, Canvas } from "../types";
-import {
-  handleDatabaseError,
-  withErrorHandling,
-  logError,
-} from "./errorHandler";
+import { withErrorHandling } from "./errorHandler";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
