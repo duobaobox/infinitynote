@@ -103,6 +103,40 @@ const DEFAULT_VIEWPORT: CanvasViewport = {
 };
 
 /**
+ * 画布状态持久化工具
+ */
+const CANVAS_STORAGE_KEY = "infinitynote_active_canvas";
+
+const saveActiveCanvasId = (canvasId: string | null) => {
+  try {
+    if (canvasId) {
+      localStorage.setItem(CANVAS_STORAGE_KEY, canvasId);
+    } else {
+      localStorage.removeItem(CANVAS_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.warn("⚠️ 保存活跃画布ID失败:", error);
+  }
+};
+
+const loadActiveCanvasId = (): string | null => {
+  try {
+    return localStorage.getItem(CANVAS_STORAGE_KEY);
+  } catch (error) {
+    console.warn("⚠️ 加载活跃画布ID失败:", error);
+    return null;
+  }
+};
+
+const clearActiveCanvasId = () => {
+  try {
+    localStorage.removeItem(CANVAS_STORAGE_KEY);
+  } catch (error) {
+    console.warn("⚠️ 清理活跃画布ID失败:", error);
+  }
+};
+
+/**
  * 画布状态管理
  */
 export const useCanvasStore = create<CanvasStore>()(
@@ -408,16 +442,22 @@ export const useCanvasStore = create<CanvasStore>()(
           const filteredCanvases = canvases.filter(
             (canvas) => canvas.id !== id
           );
+          const newActiveCanvasId =
+            activeCanvasId === id
+              ? filteredCanvases.length > 0
+                ? filteredCanvases[0].id
+                : null
+              : activeCanvasId;
+
           set({
             canvases: filteredCanvases,
-            // 如果删除的是当前激活画布，则切换到第一个画布
-            activeCanvasId:
-              activeCanvasId === id
-                ? filteredCanvases.length > 0
-                  ? filteredCanvases[0].id
-                  : null
-                : activeCanvasId,
+            activeCanvasId: newActiveCanvasId,
           });
+
+          // 如果删除的是当前激活画布，更新持久化存储
+          if (activeCanvasId === id) {
+            saveActiveCanvasId(newActiveCanvasId);
+          }
 
           // 同步到数据库
           await dbOperations.deleteCanvas(id);
@@ -454,6 +494,9 @@ export const useCanvasStore = create<CanvasStore>()(
               offset: canvas.offset,
             },
           });
+
+          // 持久化保存活跃画布ID
+          saveActiveCanvasId(id);
 
           // 发送画布切换事件
           canvasStoreEvents.notifyCanvasSwitched(currentActiveCanvasId, id);
@@ -597,11 +640,37 @@ export const useCanvasStore = create<CanvasStore>()(
             isDefault: canvas.isDefault || false,
           }));
 
-          // 找到默认画布或第一个画布作为激活画布
-          const defaultCanvas = formattedCanvases.find((c) => c.isDefault);
-          const activeCanvasId =
-            defaultCanvas?.id ||
-            (formattedCanvases.length > 0 ? formattedCanvases[0].id : null);
+          // 智能选择活跃画布：优先恢复用户上下文
+          let activeCanvasId: string | null = null;
+
+          // 1. 尝试恢复用户刷新前的画布
+          const savedCanvasId = loadActiveCanvasId();
+          if (
+            savedCanvasId &&
+            formattedCanvases.find((c) => c.id === savedCanvasId)
+          ) {
+            activeCanvasId = savedCanvasId;
+            console.log(
+              `🎨 恢复用户上下文，切换到画布: ${savedCanvasId.slice(-8)}`
+            );
+          } else {
+            // 2. 降级处理：选择默认画布或第一个画布
+            const defaultCanvas = formattedCanvases.find((c) => c.isDefault);
+            activeCanvasId =
+              defaultCanvas?.id ||
+              (formattedCanvases.length > 0 ? formattedCanvases[0].id : null);
+
+            if (
+              savedCanvasId &&
+              !formattedCanvases.find((c) => c.id === savedCanvasId)
+            ) {
+              console.warn(
+                `⚠️ 保存的画布 ${savedCanvasId.slice(
+                  -8
+                )} 不存在，回退到默认画布`
+              );
+            }
+          }
 
           // 使用去重逻辑确保不会有重复的画布
           set((state) => {
@@ -669,6 +738,8 @@ export const useCanvasStore = create<CanvasStore>()(
           if (isDataClearing) {
             // 如果正在清除数据，清除标记并确保创建全新的默认画布
             sessionStorage.removeItem("isDataClearing");
+            // 清理持久化的画布状态
+            clearActiveCanvasId();
             console.log("🎨 检测到数据清除操作，执行全新初始化");
           }
 
@@ -713,11 +784,18 @@ export const useCanvasStore = create<CanvasStore>()(
             console.log(`🎨 创建默认画布完成，ID: ${createdCanvasId}`);
           } else {
             console.log(`🎨 默认画布已存在，ID: ${DEFAULT_CANVAS_ID}`);
-            // 确保默认画布被设为活动画布
+            // 确保默认画布被设为活动画布（如果没有其他活跃画布）
             if (!get().activeCanvasId) {
               set({ activeCanvasId: DEFAULT_CANVAS_ID });
+              saveActiveCanvasId(DEFAULT_CANVAS_ID);
               console.log(`🎨 设置默认画布为活动画布: ${DEFAULT_CANVAS_ID}`);
             }
+          }
+
+          // 确保当前活跃画布ID已持久化
+          const currentActiveCanvasId = get().activeCanvasId;
+          if (currentActiveCanvasId) {
+            saveActiveCanvasId(currentActiveCanvasId);
           }
         } catch (error) {
           console.error("❌ 画布初始化失败:", error);
@@ -746,6 +824,9 @@ export const useCanvasStore = create<CanvasStore>()(
               canvases: [defaultCanvasObj],
               activeCanvasId: DEFAULT_CANVAS_ID,
             });
+
+            // 保存到持久化存储
+            saveActiveCanvasId(DEFAULT_CANVAS_ID);
 
             console.log(
               `🎨 内存模式创建默认画布完成，ID: ${DEFAULT_CANVAS_ID}`

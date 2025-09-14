@@ -104,14 +104,6 @@ export interface DisplaySettings {
   showGrid: boolean;
   /** 平滑缩放 */
   smoothZoom: boolean;
-  /** 工具栏位置 */
-  toolbarPosition: "left" | "right" | "top" | "bottom";
-  /** 缩放显示位置 */
-  zoomControlPosition:
-    | "bottom-right"
-    | "bottom-left"
-    | "top-right"
-    | "top-left";
 }
 
 /**

@@ -160,6 +160,9 @@ export const useNoteStore = create<NoteStore>()(
 
           console.log(`✅ 便签创建成功，ID: ${tempId}`);
 
+          // 检查便签数量是否接近上限
+          get().checkNoteCountLimit();
+
           // 发送便签创建事件
           noteStoreEvents.notifyNoteCreated(tempId, canvasId);
 
@@ -298,17 +301,47 @@ export const useNoteStore = create<NoteStore>()(
         await get().updateNote(id, { zIndex: newZIndex });
       },
 
-      // 层级管理常量
+      // 层级管理常量（优化后的安全范围）
       LAYER_STEP: 10,
-      MAX_Z_INDEX: 999999,
+      MAX_Z_INDEX: 10000, // 降低到安全范围，支持1000个便签
       MIN_Z_INDEX: 1,
+
+      // 获取当前可支持的最大便签数量
+      getMaxSupportedNotes: () => {
+        const { MAX_Z_INDEX, MIN_Z_INDEX, LAYER_STEP } = get();
+        return Math.floor((MAX_Z_INDEX - MIN_Z_INDEX) / LAYER_STEP) + 1;
+      },
+
+      // 检查是否接近便签数量上限
+      checkNoteCountLimit: () => {
+        const { notes } = get();
+        const maxSupported = get().getMaxSupportedNotes();
+        const currentCount = notes.length;
+        const usagePercent = (currentCount / maxSupported) * 100;
+
+        if (usagePercent >= 90) {
+          console.warn(
+            `⚠️ 便签数量接近上限: ${currentCount}/${maxSupported} (${usagePercent.toFixed(
+              1
+            )}%)`
+          );
+        } else if (usagePercent >= 75) {
+          console.log(
+            `📊 便签数量统计: ${currentCount}/${maxSupported} (${usagePercent.toFixed(
+              1
+            )}%)`
+          );
+        }
+
+        return { currentCount, maxSupported, usagePercent };
+      },
 
       // 重平衡所有便签的 zIndex，避免数值过大
       rebalanceZIndexes: async () => {
-        const { notes } = get();
+        const { notes, LAYER_STEP, MIN_Z_INDEX } = get();
         if (notes.length === 0) return;
 
-        console.log("🔄 开始重平衡便签层级...");
+        console.log(`🔄 开始重平衡 ${notes.length} 个便签的层级...`);
 
         try {
           // 按当前 zIndex 排序
@@ -317,16 +350,20 @@ export const useNoteStore = create<NoteStore>()(
 
           // 重新分配 zIndex，从 MIN_Z_INDEX 开始，每个便签间隔 LAYER_STEP
           sortedNotes.forEach((note, index) => {
-            const newZIndex = get().MIN_Z_INDEX + index * get().LAYER_STEP;
+            const newZIndex = MIN_Z_INDEX + index * LAYER_STEP;
             if (note.zIndex !== newZIndex) {
               updates.push({ id: note.id, zIndex: newZIndex });
             }
           });
 
           if (updates.length === 0) {
-            console.log("✅ 层级已平衡，无需调整");
+            console.log("✅ 层级已经是最优状态，无需重平衡");
             return;
           }
+
+          // 计算新的maxZIndex
+          const newMaxZIndex =
+            MIN_Z_INDEX + (sortedNotes.length - 1) * LAYER_STEP;
 
           // 批量更新内存状态
           set((state) => ({
@@ -336,8 +373,7 @@ export const useNoteStore = create<NoteStore>()(
                 ? { ...note, zIndex: update.zIndex, updatedAt: new Date() }
                 : note;
             }),
-            maxZIndex:
-              get().MIN_Z_INDEX + (sortedNotes.length - 1) * get().LAYER_STEP,
+            maxZIndex: newMaxZIndex,
           }));
 
           // 批量更新数据库
@@ -347,6 +383,7 @@ export const useNoteStore = create<NoteStore>()(
           await Promise.all(dbUpdates);
 
           console.log(`✅ 层级重平衡完成，更新了 ${updates.length} 个便签`);
+          console.log(`📊 新的层级范围: ${MIN_Z_INDEX} - ${newMaxZIndex}`);
         } catch (error) {
           console.error("❌ 层级重平衡失败:", error);
           // 重新加载数据以恢复状态
@@ -479,9 +516,9 @@ export const useNoteStore = create<NoteStore>()(
         _debouncedBringToFrontMap.set(id, timer);
       },
 
-      // 选中便签（支持自动置顶）
-      selectNote: (id: string, multi = false) => {
-        const { notes, maxZIndex, LAYER_STEP } = get();
+      // 选中便签（支持自动置顶，带重平衡检查）
+      selectNote: async (id: string, multi = false) => {
+        const { notes, maxZIndex, LAYER_STEP, MAX_Z_INDEX } = get();
         const targetNote = notes.find((note) => note.id === id);
 
         if (multi) {
@@ -505,8 +542,15 @@ export const useNoteStore = create<NoteStore>()(
           // 立即更新选中状态
           set({ selectedNoteIds: [id] });
 
+          // 检查是否需要重平衡
+          if (maxZIndex >= MAX_Z_INDEX - LAYER_STEP) {
+            console.log("🔄 zIndex 接近上限，执行重平衡...");
+            await get().rebalanceZIndexes();
+          }
+
           // 自动置顶：将便签置顶到最上层
-          const newZIndex = maxZIndex + LAYER_STEP;
+          const currentMaxZIndex = get().maxZIndex; // 重平衡后可能已更新
+          const newZIndex = currentMaxZIndex + LAYER_STEP;
 
           // 立即更新内存状态，提供即时视觉反馈
           set((state) => ({

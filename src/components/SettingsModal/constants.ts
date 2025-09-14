@@ -11,8 +11,6 @@
  * - MODEL_OPTIONS: 模型选择选项
  * - LANGUAGE_OPTIONS: 语言选择选项
  * - THEME_OPTIONS: 主题选择选项
- * - TOOLBAR_POSITION_OPTIONS: 工具栏位置选项
- * - ZOOM_POSITION_OPTIONS: 缩放控制位置选项
  * - EDIT_SHORTCUTS: 编辑快捷键列表
  * - VIEW_SHORTCUTS: 视图快捷键列表
  * - DEFAULT_*_SETTINGS: 各模块默认设置值
@@ -106,26 +104,6 @@ export const THEME_OPTIONS = [
   { value: "light", label: "浅色模式" },
   { value: "dark", label: "深色模式" },
   { value: "auto", label: "跟随系统" },
-] as const;
-
-/**
- * 工具栏位置选项
- */
-export const TOOLBAR_POSITION_OPTIONS = [
-  { value: "left", label: "左侧" },
-  { value: "right", label: "右侧" },
-  { value: "top", label: "顶部" },
-  { value: "bottom", label: "底部" },
-] as const;
-
-/**
- * 缩放控制位置选项
- */
-export const ZOOM_POSITION_OPTIONS = [
-  { value: "bottom-right", label: "右下角" },
-  { value: "bottom-left", label: "左下角" },
-  { value: "top-right", label: "右上角" },
-  { value: "top-left", label: "左上角" },
 ] as const;
 
 // ==================== 快捷键配置 ====================
@@ -224,9 +202,7 @@ export const DEFAULT_GENERAL_SETTINGS = {
 export const DEFAULT_DISPLAY_SETTINGS = {
   theme: "light" as const,
   showGrid: true,
-  smoothZoom: true,
-  toolbarPosition: "right" as const,
-  zoomControlPosition: "bottom-right" as const,
+  smoothZoom: false, // 默认关闭平滑缩放
 };
 
 /**

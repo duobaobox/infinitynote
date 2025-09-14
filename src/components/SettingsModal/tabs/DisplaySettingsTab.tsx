@@ -2,7 +2,7 @@
  * DisplaySettingsTab - 显示设置选项卡组件
  *
  * 功能说明：
- * 提供应用程序的界面显示配置，包括主题切换、界面布局、视觉效果等
+ * 提供应用程序的界面显示配置，包括主题切换、视觉效果等
  * 个性化设置。与主题系统深度集成，支持实时预览效果。
  *
  * 主要功能：
@@ -12,11 +12,6 @@
  * - 📐 显示网格：在画布上显示辅助网格线
  * - 🔄 平滑缩放：启用画布平滑缩放动画效果
  *
- * 🖥️ 界面布局：
- * - 🛠️ 工具栏位置：左侧/右侧/顶部/底部四种位置选择
- * - 🔍 缩放控制位置：四个角落的位置选择
- * - 📱 响应式适配：不同屏幕尺寸的布局优化
- *
  * 技术特性：
  * - 🔄 实时生效：设置修改后立即应用到界面
  * - 🎯 主题集成：与 ThemeProvider 深度集成
@@ -25,7 +20,7 @@
  *
  * @author InfinityNote Team
  * @since v1.5.7
- * @lastModified 2024-12-13
+ * @lastModified 2024-12-14
  */
 
 import React, { useEffect } from "react";
@@ -33,11 +28,7 @@ import { Divider, Switch, Select, Space, Typography } from "antd";
 import { EyeOutlined } from "@ant-design/icons";
 import { useTheme } from "../../../theme";
 import type { DisplaySettings } from "../types";
-import {
-  THEME_OPTIONS,
-  TOOLBAR_POSITION_OPTIONS,
-  ZOOM_POSITION_OPTIONS,
-} from "../constants";
+import { THEME_OPTIONS } from "../constants";
 import styles from "../index.module.css";
 
 const { Title, Text } = Typography;
@@ -115,33 +106,6 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
             <Switch
               checked={settings.smoothZoom}
               onChange={(checked) => onSettingChange("smoothZoom", checked)}
-            />
-          </div>
-        </Space>
-      </div>
-
-      <div className={styles.settingGroup}>
-        <Title level={4}>界面布局</Title>
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <div className={styles.settingItem}>
-            <Text strong>工具栏位置</Text>
-            <Select
-              style={{ width: 200, marginTop: 8 }}
-              value={settings.toolbarPosition}
-              onChange={(value) => onSettingChange("toolbarPosition", value)}
-              options={[...TOOLBAR_POSITION_OPTIONS]}
-            />
-          </div>
-
-          <div className={styles.settingItem}>
-            <Text strong>缩放显示位置</Text>
-            <Select
-              style={{ width: 200, marginTop: 8 }}
-              value={settings.zoomControlPosition}
-              onChange={(value) =>
-                onSettingChange("zoomControlPosition", value)
-              }
-              options={[...ZOOM_POSITION_OPTIONS]}
             />
           </div>
         </Space>
