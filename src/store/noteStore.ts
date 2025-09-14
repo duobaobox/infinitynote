@@ -20,6 +20,68 @@ const logWithDedup = (message: string, ...args: any[]) => {
   }
 };
 
+// 防抖保存便签状态的超时引用映射
+const saveNoteTimeouts = new Map<string, number>();
+
+/**
+ * 防抖保存便签状态到数据库
+ * @param noteId 便签ID
+ * @param updates 要更新的便签数据
+ * @param delay 防抖延迟时间（毫秒）
+ */
+const debouncedSaveNote = (
+  noteId: string,
+  updates: Partial<Omit<Note, "id" | "createdAt">>,
+  delay = 500
+) => {
+  // 清除之前的定时器
+  const existingTimeout = saveNoteTimeouts.get(noteId);
+  if (existingTimeout) {
+    clearTimeout(existingTimeout);
+  }
+
+  // 设置新的定时器
+  const timeoutId = window.setTimeout(async () => {
+    try {
+      const updatesWithTime = { ...updates, updatedAt: new Date() };
+      await dbOperations.updateNote(noteId, updatesWithTime);
+      // 只在成功保存后输出日志，避免频繁打印
+      logWithDedup(`✅ 便签状态已保存，ID: ${noteId}`);
+    } catch (error) {
+      console.error("❌ 防抖保存便签状态失败:", error);
+    }
+    saveNoteTimeouts.delete(noteId);
+  }, delay);
+
+  saveNoteTimeouts.set(noteId, timeoutId);
+};
+
+/**
+ * 立即保存便签状态到数据库（清除防抖并立即执行）
+ * @param noteId 便签ID
+ * @param updates 要更新的便签数据
+ */
+const flushSaveNote = async (
+  noteId: string,
+  updates: Partial<Omit<Note, "id" | "createdAt">>
+) => {
+  // 清除防抖定时器
+  const existingTimeout = saveNoteTimeouts.get(noteId);
+  if (existingTimeout) {
+    clearTimeout(existingTimeout);
+    saveNoteTimeouts.delete(noteId);
+  }
+
+  // 立即保存
+  try {
+    const updatesWithTime = { ...updates, updatedAt: new Date() };
+    await dbOperations.updateNote(noteId, updatesWithTime);
+  } catch (error) {
+    console.error("❌ 立即保存便签状态失败:", error);
+    throw error;
+  }
+};
+
 /**
  * 便签状态接口
  */
@@ -202,7 +264,8 @@ export const useNoteStore = create<NoteStore>()(
           // 同步到数据库
           await dbOperations.updateNote(id, updatesWithTime);
 
-          console.log(`✅ 便签更新成功，ID: ${id}`);
+          // 去掉频繁的日志输出，避免控制台污染
+          // console.log(`✅ 便签更新成功，ID: ${id}`);
 
           // 发送便签更新事件
           const note = get().notes.find((n) => n.id === id);
@@ -286,12 +349,46 @@ export const useNoteStore = create<NoteStore>()(
 
       // 移动便签位置
       moveNote: async (id: string, position: Position) => {
-        await get().updateNote(id, { position });
+        // 优化性能：使用函数式更新，只更新目标便签
+        set((state) => {
+          const noteIndex = state.notes.findIndex((note) => note.id === id);
+          if (noteIndex === -1) return state;
+
+          // 创建新的数组副本，只更新目标便签
+          const newNotes = [...state.notes];
+          newNotes[noteIndex] = {
+            ...newNotes[noteIndex],
+            position,
+            updatedAt: new Date(),
+          };
+
+          return { notes: newNotes };
+        });
+
+        // 使用防抖保存，避免拖动时频繁更新数据库
+        debouncedSaveNote(id, { position });
       },
 
       // 调整便签大小
       resizeNote: async (id: string, size: Size) => {
-        await get().updateNote(id, { size });
+        // 优化性能：使用函数式更新，只更新目标便签
+        set((state) => {
+          const noteIndex = state.notes.findIndex((note) => note.id === id);
+          if (noteIndex === -1) return state;
+
+          // 创建新的数组副本，只更新目标便签
+          const newNotes = [...state.notes];
+          newNotes[noteIndex] = {
+            ...newNotes[noteIndex],
+            size,
+            updatedAt: new Date(),
+          };
+
+          return { notes: newNotes };
+        });
+
+        // 使用防抖保存，避免调整大小时频繁更新数据库
+        debouncedSaveNote(id, { size });
       },
 
       // 设置便签层级
@@ -491,11 +588,12 @@ export const useNoteStore = create<NoteStore>()(
             const targetNote = notes.find((note) => note.id === id);
 
             if (targetNote) {
-              console.log(
-                `💾 防抖数据库同步: ${id.slice(-8)}, zIndex: ${
-                  targetNote.zIndex
-                }`
-              );
+              // 去掉频繁的日志输出，避免控制台污染
+              // console.log(
+              //   `💾 防抖数据库同步: ${id.slice(-8)}, zIndex: ${
+              //     targetNote.zIndex
+              //   }`
+              // );
 
               // 只同步到数据库，不更新内存状态（内存状态已经在selectNote中更新）
               await dbOperations.updateNote(id, {
@@ -503,7 +601,7 @@ export const useNoteStore = create<NoteStore>()(
                 updatedAt: targetNote.updatedAt,
               });
 
-              console.log(`✅ 数据库同步成功: ${id.slice(-8)}`);
+              // console.log(`✅ 数据库同步成功: ${id.slice(-8)}`);
             }
           } catch (error) {
             console.error("❌ 防抖数据库同步失败:", error);

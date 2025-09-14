@@ -37,6 +37,7 @@ export const NoteCard = memo<NoteCardProps>(
 
     // 缩放状态
     const [isResizing, setIsResizing] = useState(false);
+    const [resizeSize, setResizeSize] = useState<Size | null>(null);
     const resizeDataRef = useRef<{
       isActive: boolean;
       direction: string;
@@ -87,9 +88,9 @@ export const NoteCard = memo<NoteCardProps>(
           e.nativeEvent.stopImmediatePropagation();
         }
 
-        console.log(
-          `🔧 开始缩放便签 ${noteIdRef.current.slice(-8)}, 方向: ${direction}`
-        );
+        // console.log(
+        //   `🔧 开始缩放便签 ${noteIdRef.current.slice(-8)}, 方向: ${direction}`
+        // );
 
         // 确保便签被选中
         if (!isSelected) {
@@ -164,14 +165,10 @@ export const NoteCard = memo<NoteCardProps>(
         resizeData.currentWidth = finalWidth;
         resizeData.currentHeight = finalHeight;
 
-        // 实时更新便签大小 - 使用最新的函数引用
-        const newSize: Size = { width: finalWidth, height: finalHeight };
-        resizeNoteRef.current(noteIdRef.current, newSize);
+        // 只更新本地视觉状态，避免频繁触发全局状态更新
+        setResizeSize({ width: finalWidth, height: finalHeight });
 
-        // 如果有外部回调，也调用它
-        onResizeRef.current?.(noteIdRef.current, newSize);
-
-        console.log(`📏 缩放中: ${finalWidth}x${finalHeight}`);
+        // console.log(`📏 缩放中: ${finalWidth}x${finalHeight}`);
       }
     }, []);
 
@@ -180,11 +177,12 @@ export const NoteCard = memo<NoteCardProps>(
       const resizeData = resizeDataRef.current;
       if (!resizeData || !resizeData.isActive) return;
 
-      console.log("🔚 缩放结束");
+      // console.log("🔚 缩放结束");
 
       // 设置为非活动状态
       resizeData.isActive = false;
       setIsResizing(false);
+      setResizeSize(null); // 清除本地调整状态
 
       // 移除全局事件监听器
       document.removeEventListener("mousemove", handleResizeMove);
@@ -208,7 +206,7 @@ export const NoteCard = memo<NoteCardProps>(
         };
         resizeNoteRef.current(noteIdRef.current, finalSize);
         onResizeRef.current?.(noteIdRef.current, finalSize);
-        console.log(`💾 保存最终尺寸: ${finalSize.width}x${finalSize.height}`);
+        // console.log(`💾 保存最终尺寸: ${finalSize.width}x${finalSize.height}`);
       }
     }, [handleResizeMove]);
 
@@ -304,8 +302,8 @@ export const NoteCard = memo<NoteCardProps>(
         style={{
           left: note.position.x,
           top: note.position.y,
-          width: note.size.width,
-          height: note.size.height,
+          width: resizeSize?.width ?? note.size.width,
+          height: resizeSize?.height ?? note.size.height,
           zIndex: note.zIndex,
           ...getColorStyle(),
           ...dragStyle,

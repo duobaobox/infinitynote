@@ -144,7 +144,8 @@ export const dbOperations = {
       if (result === 0) {
         throw new Error(`便签 ID ${id} 不存在`);
       }
-      console.log(`✅ Note updated successfully: ${id}`);
+      // 去掉频繁的成功日志，避免控制台污染
+      // console.log(`✅ Note updated successfully: ${id}`);
       return result;
     } catch (error) {
       console.error(`❌ Failed to update note ${id}:`, error);
@@ -331,7 +332,8 @@ export const dbOperations = {
         if (result === 0) {
           throw new Error(`画布 ID ${id} 不存在`);
         }
-        console.log(`✅ Canvas updated successfully: ${id}`);
+        // 去掉频繁的成功日志，避免控制台污染
+        // console.log(`✅ Canvas updated successfully: ${id}`);
         return result;
       });
     } catch (error) {

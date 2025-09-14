@@ -107,6 +107,9 @@ const DEFAULT_VIEWPORT: CanvasViewport = {
  */
 const CANVAS_STORAGE_KEY = "infinitynote_active_canvas";
 
+// 防抖保存画布状态的超时引用
+let saveCanvasTimeout: number | null = null;
+
 const saveActiveCanvasId = (canvasId: string | null) => {
   try {
     if (canvasId) {
@@ -117,6 +120,36 @@ const saveActiveCanvasId = (canvasId: string | null) => {
   } catch (error) {
     console.warn("⚠️ 保存活跃画布ID失败:", error);
   }
+};
+
+/**
+ * 防抖保存画布状态到数据库
+ * @param canvasId 画布ID
+ * @param updates 要更新的画布数据
+ * @param delay 防抖延迟时间（毫秒）
+ */
+const debouncedSaveCanvas = (
+  canvasId: string,
+  updates: Partial<Omit<Canvas, "id" | "createdAt">>,
+  delay = 500
+) => {
+  // 清除之前的定时器
+  if (saveCanvasTimeout) {
+    clearTimeout(saveCanvasTimeout);
+  }
+
+  // 设置新的定时器
+  saveCanvasTimeout = window.setTimeout(async () => {
+    try {
+      const updatesWithTime = { ...updates, updatedAt: new Date() };
+      await dbOperations.updateCanvas(canvasId, updatesWithTime);
+      // 只在成功保存后输出日志，避免频繁打印
+      logWithDedup(`✅ 画布状态已保存，ID: ${canvasId}`);
+    } catch (error) {
+      console.error("❌ 防抖保存画布状态失败:", error);
+    }
+    saveCanvasTimeout = null;
+  }, delay);
 };
 
 const loadActiveCanvasId = (): string | null => {
@@ -396,7 +429,8 @@ export const useCanvasStore = create<CanvasStore>()(
           // 同步到数据库
           await dbOperations.updateCanvas(id, updatesWithTime);
 
-          console.log(`✅ 画布更新成功，ID: ${id}`);
+          // 去掉频繁的日志输出，避免控制台污染
+          // console.log(`✅ 画布更新成功，ID: ${id}`);
         } catch (error) {
           // 如果数据库操作失败，重新加载数据
           console.error("❌ 更新画布失败:", error);
@@ -520,9 +554,9 @@ export const useCanvasStore = create<CanvasStore>()(
         set((state) => {
           const newViewport = { ...state.viewport, scale: clampedScale };
 
-          // 同时更新当前激活画布的缩放
+          // 使用防抖保存，避免缩放时频繁更新数据库
           if (state.activeCanvasId) {
-            get().updateCanvas(state.activeCanvasId, { scale: clampedScale });
+            debouncedSaveCanvas(state.activeCanvasId, { scale: clampedScale });
           }
 
           return { viewport: newViewport };
@@ -534,9 +568,9 @@ export const useCanvasStore = create<CanvasStore>()(
         set((state) => {
           const newViewport = { ...state.viewport, offset };
 
-          // 同时更新当前激活画布的偏移
+          // 使用防抖保存，避免拖动时频繁更新数据库
           if (state.activeCanvasId) {
-            get().updateCanvas(state.activeCanvasId, { offset });
+            debouncedSaveCanvas(state.activeCanvasId, { offset });
           }
 
           return { viewport: newViewport };
@@ -548,8 +582,13 @@ export const useCanvasStore = create<CanvasStore>()(
         const resetViewport = { ...DEFAULT_VIEWPORT };
 
         set((state) => {
-          // 同时重置当前激活画布的视图状态
+          // 重置视图时立即保存，因为这是用户主动操作
           if (state.activeCanvasId) {
+            // 清除防抖定时器，立即保存
+            if (saveCanvasTimeout) {
+              clearTimeout(saveCanvasTimeout);
+              saveCanvasTimeout = null;
+            }
             get().updateCanvas(state.activeCanvasId, {
               scale: resetViewport.scale,
               offset: resetViewport.offset,

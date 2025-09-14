@@ -102,10 +102,13 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     panCanvas,
   } = useCanvasStore();
 
-  // 获取当前画布的便签（响应式计算）
+  // 获取当前画布的便签（响应式计算）- 优化版本
   const canvasNotes = useMemo(() => {
     if (!activeCanvasId) return [];
-    return notes.filter((note) => note.canvasId === activeCanvasId);
+    const filteredNotes = notes.filter(
+      (note) => note.canvasId === activeCanvasId
+    );
+    return filteredNotes;
   }, [notes, activeCanvasId]);
 
   // 详细的调试信息但去重
@@ -535,10 +538,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
               onNoteClick={(e, note) =>
                 selectNote(note.id, e.ctrlKey || e.metaKey)
               }
-              onNoteResize={(noteId, size) => {
+              onNoteResize={() => {
                 // 缩放回调已经在NoteCard内部通过resizeNote处理了
                 // 这里可以添加额外的逻辑，比如记录操作日志
-                console.log(`便签 ${noteId.slice(-8)} 调整大小:`, size);
               }}
             />
           </div>
