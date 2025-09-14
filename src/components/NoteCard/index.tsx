@@ -113,12 +113,38 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [isEditing]);
 
-    // 处理编辑器失去焦点
-    const handleEditorBlur = useCallback(() => {
-      // 延迟处理，允许用户在编辑器内部点击（如工具栏）
-      setTimeout(() => {
-        setIsEditing(false);
-      }, 150);
+    // 处理编辑器失去焦点 - 遵循Tiptap官方最佳实践
+    const handleEditorBlur = useCallback((event?: FocusEvent) => {
+      // 检查焦点是否转移到了相关的编辑器元素（如工具栏）
+      if (event?.relatedTarget) {
+        const relatedElement = event.relatedTarget as HTMLElement;
+
+        // 如果焦点转移到了工具栏按钮或其他编辑器相关元素，不要退出编辑模式
+        if (
+          relatedElement.closest(".tiptap-toolbar") ||
+          relatedElement.closest(".tiptap-editor-container") ||
+          relatedElement.classList.contains("tiptap-toolbar-button")
+        ) {
+          return;
+        }
+      }
+
+      // 使用requestAnimationFrame + setTimeout确保在工具栏点击处理完成后再检查
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          // 双重检查：如果当前焦点在编辑器相关元素上，不要退出编辑模式
+          const activeElement = document.activeElement as HTMLElement;
+          if (
+            activeElement &&
+            (activeElement.closest(".tiptap-toolbar") ||
+              activeElement.closest(".tiptap-editor-container") ||
+              activeElement.classList.contains("tiptap-toolbar-button"))
+          ) {
+            return;
+          }
+          setIsEditing(false);
+        }, 100);
+      });
     }, []);
 
     // 处理ESC键退出编辑

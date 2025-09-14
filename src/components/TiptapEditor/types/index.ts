@@ -136,7 +136,7 @@ export interface TiptapEditorProps {
   /** 是否启用快捷键 */
   enableShortcuts?: boolean;
   /** 失去焦点时的回调 */
-  onBlur?: () => void;
+  onBlur?: (event?: FocusEvent) => void;
   /** 获得焦点时的回调 */
   onFocus?: () => void;
   /** 按下 Enter 键的回调 */

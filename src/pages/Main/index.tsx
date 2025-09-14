@@ -133,41 +133,99 @@ const Main: React.FC = () => {
     initializeApp();
   }, [initialize, isInitialized, setIsInitialized]);
 
-  // 键盘快捷键处理
+  // 键盘快捷键处理 - 使用新的统一键盘事件管理器
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // 如果焦点在输入框中，不处理快捷键
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.contentEditable === "true"
-      ) {
-        return;
-      }
+    const keyboardManager = (window as any).globalKeyboardManager;
 
-      switch (e.key) {
-        case "d":
-        case "D":
-          // D键切换拖动模式
-          if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (!keyboardManager) {
+      console.warn("全局键盘事件管理器未初始化，使用旧版本处理");
+
+      // 保留原有逻辑作为后备
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // 如果焦点在输入框或编辑器中，不处理快捷键
+        const target = e.target as HTMLElement;
+        if (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.contentEditable === "true" ||
+          target.isContentEditable ||
+          target.closest("[contenteditable='true']") ||
+          target.closest(".tiptap") ||
+          target.closest(".tiptap-editor-content")
+        ) {
+          return;
+        }
+
+        switch (e.key) {
+          case "d":
+          case "D":
+            // D键切换拖动模式
+            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+              e.preventDefault();
+              setIsDragMode(!isDragMode);
+            }
+            break;
+          case "Escape":
+            // ESC键退出拖动模式
+            if (isDragMode) {
+              e.preventDefault();
+              setIsDragMode(false);
+            }
+            break;
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+
+    // 使用新的键盘事件管理器
+    const handlers = [
+      {
+        key: "main-drag-toggle",
+        priority: 85,
+        handler: (e: KeyboardEvent) => {
+          if (
+            (e.key === "d" || e.key === "D") &&
+            !e.ctrlKey &&
+            !e.metaKey &&
+            !e.altKey
+          ) {
             e.preventDefault();
             setIsDragMode(!isDragMode);
+            return true;
           }
-          break;
-        case "Escape":
-          // ESC键退出拖动模式
-          if (isDragMode) {
+          return false;
+        },
+        context: "global" as const,
+      },
+      {
+        key: "main-drag-exit",
+        priority: 85,
+        handler: (e: KeyboardEvent) => {
+          if (e.key === "Escape" && isDragMode) {
             e.preventDefault();
             setIsDragMode(false);
+            return true;
           }
-          break;
-      }
-    };
+          return false;
+        },
+        context: "global" as const,
+      },
+    ];
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isDragMode]);
+    // 注册所有处理器
+    handlers.forEach((handler) => {
+      keyboardManager.registerHandler(handler.key, handler);
+    });
+
+    // 清理函数
+    return () => {
+      handlers.forEach((handler) => {
+        keyboardManager.unregisterHandler(handler.key);
+      });
+    };
+  }, [isDragMode, setIsDragMode]);
 
   // 创建新便签
   const handleCreateNote = useCallback(

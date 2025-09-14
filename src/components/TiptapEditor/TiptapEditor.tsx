@@ -2,7 +2,7 @@
  * Tiptap 编辑器主组件
  */
 
-import React, { memo, useEffect, useRef, useMemo } from "react";
+import React, { memo, useEffect, useRef, useMemo, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { TiptapEditorProps } from "./types/index";
 import { DEFAULT_CONFIG, CSS_CLASSES } from "./constants";
@@ -49,6 +49,9 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     const { isDark } = useTheme();
     const editorId = useRef(generateEditorId());
     const lastValidContent = useRef(content);
+
+    // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
+    const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
 
     // 创建扩展管理器实例
     const extensionManager = useMemo(() => new ExtensionManager(), []);
@@ -110,11 +113,17 @@ export const TiptapEditor = memo<TiptapEditorProps>(
         const html = editor.getHTML();
         debouncedContentChange(html);
       },
+      onSelectionUpdate: () => {
+        // 触发工具栏按钮状态更新 - 这是激活状态正确显示的关键！
+        // 强制重新渲染以更新按钮激活状态
+        setToolbarUpdateKey((prev) => prev + 1);
+      },
       onFocus: () => {
         onFocus?.();
       },
-      onBlur: () => {
-        onBlur?.();
+      onBlur: ({ event }) => {
+        // 传递原生事件给上层组件，以便进行更精确的焦点管理
+        onBlur?.(event);
       },
       editorProps: {
         attributes: {
@@ -123,26 +132,23 @@ export const TiptapEditor = memo<TiptapEditorProps>(
           "data-editor-id": editorId.current,
         },
         handleKeyDown: (_view, event) => {
+          // 只处理必要的快捷键，让其他所有按键（包括空格）正常工作
           if (!enableShortcuts) return false;
 
-          // 处理自定义快捷键
-          if (event.key === "Enter" && event.shiftKey) {
-            // Shift+Enter 换行
-            return false; // 让默认行为处理
-          }
-
-          if (event.key === "Enter" && !event.shiftKey) {
-            // 单独的 Enter 键
-            onEnter?.();
-            return false;
-          }
-
+          // 只处理 Escape 键，其他所有按键都让 Tiptap 处理
           if (event.key === "Escape") {
             event.preventDefault();
             onEscape?.();
             return true;
           }
 
+          // 处理 Enter 键，但不阻止默认行为
+          if (event.key === "Enter" && !event.shiftKey) {
+            onEnter?.();
+            // 不阻止默认行为，让 Tiptap 正常处理 Enter
+          }
+
+          // 对所有其他按键（包括空格、字母、数字等）返回 false，让 Tiptap 处理
           return false;
         },
       },
@@ -215,7 +221,13 @@ export const TiptapEditor = memo<TiptapEditorProps>(
           <EditorContent editor={editor} className="tiptap-editor-content" />
 
           {/* 底部工具栏 */}
-          {editor && <Toolbar editor={editor} config={toolbarConfig} />}
+          {editor && (
+            <Toolbar
+              key={toolbarUpdateKey}
+              editor={editor}
+              config={toolbarConfig}
+            />
+          )}
 
           {/* 字符计数显示 */}
           {showCharacterCount && (

@@ -108,7 +108,7 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
     icon: "↶",
     title: "撤销 (Ctrl+Z)",
     group: "history",
-    disabled: (editor) => !editor.can().undo(),
+    disabled: (editor) => !editor.can().chain().focus().undo().run(),
     onClick: (editor) => editor.chain().focus().undo().run(),
   },
   {
@@ -116,7 +116,7 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
     icon: "↷",
     title: "重做 (Ctrl+Y)",
     group: "history",
-    disabled: (editor) => !editor.can().redo(),
+    disabled: (editor) => !editor.can().chain().focus().redo().run(),
     onClick: (editor) => editor.chain().focus().redo().run(),
   },
 ];
@@ -173,7 +173,7 @@ interface ToolbarProps {
 }
 
 /**
- * 工具栏按钮组件
+ * 工具栏按钮组件 - 完全遵循Tiptap官方标准
  */
 const ToolbarButton = memo<{
   button: ToolbarButton;
@@ -181,12 +181,31 @@ const ToolbarButton = memo<{
   compact?: boolean;
 }>(({ button, editor, compact }) => {
   const isActive = button.isActive?.(editor) || false;
+
+  // 检测按钮是否可用 - 遵循官方标准
   const isDisabled = button.disabled?.(editor) || false;
 
   const handleClick = () => {
     if (!isDisabled) {
       button.onClick(editor);
+      // 确保在命令执行后立即更新按钮状态
+      // 使用微任务来确保编辑器状态已经更新
+      queueMicrotask(() => {
+        // 触发选择更新事件，强制重新渲染工具栏
+        editor.emit("selectionUpdate", {
+          editor,
+          transaction: editor.state.tr,
+        });
+      });
     }
+  };
+
+  // 阻止mousedown事件，防止编辑器失去焦点 - 这是Tiptap官方的标准做法
+  const handleMouseDown = (event: React.MouseEvent) => {
+    // 阻止默认行为，防止编辑器失去焦点
+    event.preventDefault();
+    // 阻止事件冒泡，确保不会触发父级的焦点处理
+    event.stopPropagation();
   };
 
   return (
@@ -198,6 +217,11 @@ const ToolbarButton = memo<{
       title={button.title}
       disabled={isDisabled}
       onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      // Accessibility 属性 - 遵循官方标准
+      aria-pressed={isActive}
+      aria-label={button.title.split(" (")[0]} // 移除快捷键部分，只保留按钮名称
+      tabIndex={-1} // 允许键盘导航但不作为默认焦点
       data-testid={`toolbar-${button.id}`}
     >
       {button.icon}
@@ -262,6 +286,11 @@ export const Toolbar = memo<ToolbarProps>(
         } ${config.position || "top"}`}
         role="toolbar"
         aria-label="文本编辑工具栏"
+        onMouseDown={(e) => {
+          // 防止整个工具栏的mousedown事件导致编辑器失焦
+          e.preventDefault();
+          e.stopPropagation();
+        }}
       >
         {sortedGroups.map(([groupName, buttons], groupIndex) => (
           <React.Fragment key={groupName}>

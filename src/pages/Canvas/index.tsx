@@ -416,14 +416,32 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     setLastTouchDistance(null);
   }, []);
 
-  // 键盘快捷键
+  // 键盘快捷键 - 使用新的统一键盘事件管理器
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.target &&
-        (e.target as HTMLElement).tagName !== "INPUT" &&
-        (e.target as HTMLElement).tagName !== "TEXTAREA"
-      ) {
+    const keyboardManager = (window as any).globalKeyboardManager;
+
+    if (!keyboardManager) {
+      console.warn("全局键盘事件管理器未初始化，使用旧版本处理");
+
+      // 保留原有逻辑作为后备
+      const handleKeyDown = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+
+        // 排除所有输入相关的元素：INPUT、TEXTAREA、contentEditable元素
+        if (
+          target &&
+          (target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
+            target.contentEditable === "true" ||
+            target.isContentEditable ||
+            target.closest("[contenteditable='true']") ||
+            target.closest(".tiptap") || // 排除Tiptap编辑器
+            target.closest(".tiptap-editor-content")) // 排除Tiptap编辑器内容区域
+        ) {
+          return; // 在编辑元素中时，不处理任何快捷键
+        }
+
+        // 现在处理快捷键
         switch (e.key) {
           case "+":
           case "=":
@@ -454,19 +472,119 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
             clearSelection();
             break;
           case " ":
-            // 空格键临时切换到拖拽模式
+            // 空格键在非编辑状态下才处理（已经在上面检查过了）
             if (!isPanning) {
               e.preventDefault();
               // 这里可以添加空格键拖拽的逻辑
             }
             break;
         }
-      }
-    };
+      };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [zoomIn, zoomOut, resetViewport, handleCreateNote, clearSelection]);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+
+    // 使用新的键盘事件管理器
+    const handlers = [
+      {
+        key: "canvas-zoom-in",
+        priority: 80,
+        handler: (e: KeyboardEvent) => {
+          if ((e.key === "+" || e.key === "=") && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            zoomIn();
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
+      {
+        key: "canvas-zoom-out",
+        priority: 80,
+        handler: (e: KeyboardEvent) => {
+          if (e.key === "-" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            zoomOut();
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
+      {
+        key: "canvas-zoom-reset",
+        priority: 80,
+        handler: (e: KeyboardEvent) => {
+          if (e.key === "0" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            resetViewport();
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
+      {
+        key: "canvas-new-note",
+        priority: 80,
+        handler: (e: KeyboardEvent) => {
+          if (e.key === "n" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            handleCreateNote();
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
+      {
+        key: "canvas-clear-selection",
+        priority: 80,
+        handler: (e: KeyboardEvent) => {
+          if (e.key === "Escape") {
+            clearSelection();
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
+      {
+        key: "canvas-space-pan",
+        priority: 70, // 比编辑器优先级低
+        handler: (e: KeyboardEvent) => {
+          if (e.key === " " && !isPanning) {
+            e.preventDefault();
+            // 这里可以添加空格键拖拽的逻辑
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
+    ];
+
+    // 注册所有处理器
+    handlers.forEach((handler) => {
+      keyboardManager.registerHandler(handler.key, handler);
+    });
+
+    // 清理函数
+    return () => {
+      handlers.forEach((handler) => {
+        keyboardManager.unregisterHandler(handler.key);
+      });
+    };
+  }, [
+    zoomIn,
+    zoomOut,
+    resetViewport,
+    handleCreateNote,
+    clearSelection,
+    isPanning,
+  ]);
 
   return (
     <div
