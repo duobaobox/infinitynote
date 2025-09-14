@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Space, Tooltip } from "antd";
+import { Button, Space } from "antd";
 import { useCanvasStore } from "../../store/canvasStore";
 import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
@@ -14,13 +14,11 @@ const DynamicIcon = ({ type }: { type: IconType }) => {
 };
 
 interface CanvasToolbarProps {
-  onCreateNote: (position?: Position) => void;
   isDragMode?: boolean;
   onToggleDragMode?: (enabled: boolean) => void;
 }
 
 export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
-  onCreateNote,
   isDragMode = false,
   onToggleDragMode,
 }) => {
@@ -48,72 +46,49 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
     <div className={styles.canvasToolbar}>
       <Space direction="vertical" align="center" size={4}>
         {/* 拖动画布按钮 */}
-        <Tooltip
-          title={isDragMode ? "退出拖动模式 (ESC)" : "拖动画布模式 (D)"}
-          placement="left"
-        >
-          <Button
-            type={isDragMode ? "primary" : "text"}
-            shape="circle"
-            icon={<DynamicIcon type="DragOutlined" />}
-            onClick={handleToggleDragMode}
-            className={`${styles.toolbarButton} ${
-              isDragMode ? styles.activeButton : ""
-            }`}
-            style={buttonStyle}
-          />
-        </Tooltip>
+        <Button
+          type={isDragMode ? "primary" : "text"}
+          shape="circle"
+          icon={<DynamicIcon type="DragOutlined" />}
+          onClick={handleToggleDragMode}
+          className={`${styles.toolbarButton} ${
+            isDragMode ? styles.activeButton : ""
+          }`}
+          style={buttonStyle}
+        />
 
         {/* 分隔线 */}
         <div className={styles.divider} />
 
-        {/* 添加便签按钮 */}
-        <Tooltip title="添加便签 (Ctrl/Cmd + N)" placement="left">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<DynamicIcon type="PlusOutlined" />}
-            onClick={() => onCreateNote()}
-            className={styles.toolbarButton}
-            style={buttonStyle}
-          />
-        </Tooltip>
-
         {/* 放大按钮 */}
-        <Tooltip title="放大 (Ctrl/Cmd + +)" placement="left">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<DynamicIcon type="ZoomInOutlined" />}
-            onClick={zoomIn}
-            className={styles.toolbarButton}
-            style={buttonStyle}
-          />
-        </Tooltip>
+        <Button
+          type="text"
+          shape="circle"
+          icon={<DynamicIcon type="ZoomInOutlined" />}
+          onClick={zoomIn}
+          className={styles.toolbarButton}
+          style={buttonStyle}
+        />
 
         {/* 缩小按钮 */}
-        <Tooltip title="缩小 (Ctrl/Cmd + -)" placement="left">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<DynamicIcon type="ZoomOutOutlined" />}
-            onClick={zoomOut}
-            className={styles.toolbarButton}
-            style={buttonStyle}
-          />
-        </Tooltip>
+        <Button
+          type="text"
+          shape="circle"
+          icon={<DynamicIcon type="ZoomOutOutlined" />}
+          onClick={zoomOut}
+          className={styles.toolbarButton}
+          style={buttonStyle}
+        />
 
         {/* 重置视图按钮 */}
-        <Tooltip title="重置视图 (Ctrl/Cmd + 0)" placement="left">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<DynamicIcon type="RedoOutlined" />}
-            onClick={resetViewport}
-            className={styles.toolbarButton}
-            style={buttonStyle}
-          />
-        </Tooltip>
+        <Button
+          type="text"
+          shape="circle"
+          icon={<DynamicIcon type="RedoOutlined" />}
+          onClick={resetViewport}
+          className={styles.toolbarButton}
+          style={buttonStyle}
+        />
       </Space>
     </div>
   );

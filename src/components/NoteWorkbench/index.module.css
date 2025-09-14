@@ -1,0 +1,289 @@
+/**
+ * 便签工作台组件样式文件
+ * 提供AI生成便签和创建空白便签的工具栏界面
+ */
+
+/* 工作台容器 - 浮动在画布底部 */
+.consoleContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 24px; /* 药丸形状 */
+  box-shadow: var(--box-shadow-secondary);
+  backdrop-filter: blur(8px);
+  z-index: 1001;
+  min-height: 48px;
+  max-width: 400px;
+  width: auto;
+  transition: all 0.3s ease;
+}
+
+/* 输入框容器 */
+.consoleInputContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 280px;
+}
+
+/* 输入框样式 */
+.consoleInput {
+  width: 100%;
+  border-radius: 18px; /* 更圆润的边角 */
+  transition: all 0.2s ease;
+  font-size: 14px;
+  line-height: 1.5;
+  height: 36px;
+  border: 1px solid var(--color-border-secondary);
+}
+
+.consoleInput:focus {
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
+  border-color: var(--color-primary);
+}
+
+.consoleInput::placeholder {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+/* 外部按钮容器 */
+.consoleExternalButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 添加便签按钮 */
+.addExternalButton {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: var(--box-shadow);
+  transition: all 0.2s ease;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.addExternalButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--box-shadow-secondary);
+}
+
+.addExternalButton:active {
+  transform: translateY(0);
+  box-shadow: var(--box-shadow);
+}
+
+.addExternalButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--box-shadow);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .consoleContainer {
+    bottom: 16px;
+    padding: 10px 14px;
+    gap: 10px;
+    min-height: 44px;
+    max-width: 350px;
+  }
+
+  .consoleInputContainer {
+    min-width: 240px;
+  }
+
+  .consoleInput {
+    font-size: 13px;
+    height: 32px;
+  }
+
+  .addExternalButton {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .consoleContainer {
+    bottom: 12px;
+    padding: 8px 12px;
+    gap: 8px;
+    min-height: 40px;
+    max-width: 300px;
+  }
+
+  .consoleInputContainer {
+    min-width: 200px;
+  }
+
+  .consoleInput {
+    font-size: 12px;
+    height: 28px;
+  }
+
+  .addExternalButton {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    font-size: 10px;
+  }
+}
+
+/* 暗黑主题适配 */
+.consoleContainer {
+  /* 使用CSS变量，自动适配主题 */
+  background: var(--color-bg-elevated);
+  border-top-color: var(--color-border-secondary);
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .consoleContainer {
+    border-top: 2px solid var(--color-border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .addExternalButton {
+    border: 2px solid var(--color-primary);
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .consoleInput,
+  .addExternalButton {
+    transition: none;
+  }
+
+  .addExternalButton:hover {
+    transform: none;
+  }
+
+  .addExternalButton:active {
+    transform: none;
+  }
+}
+
+/* 打印模式隐藏工作台 */
+@media print {
+  .consoleContainer {
+    display: none;
+  }
+}
+
+/* 焦点可见性增强 */
+.addExternalButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 加载状态样式 */
+.consoleContainer[data-loading="true"] {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.consoleContainer[data-loading="true"] .addExternalButton {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* 成功状态动画 */
+.addExternalButton[data-success="true"] {
+  background-color: var(--color-success);
+  border-color: var(--color-success);
+  animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 错误状态样式 */
+.addExternalButton[data-error="true"] {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  animation: shake 0.5s ease-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+/* 工具提示样式增强 */
+.addExternalButton[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-text);
+  color: var(--color-bg-base);
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 4px;
+  opacity: 0;
+  animation: tooltipFadeIn 0.2s ease-out 0.5s forwards;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}

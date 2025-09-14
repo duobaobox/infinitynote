@@ -16,6 +16,8 @@ import type { Position, Note } from "../../types";
 import Canvas from "../Canvas";
 // 引入工具栏组件
 import { CanvasToolbar } from "../../components/CanvasToolbar";
+// 引入便签工作台组件
+import { NoteWorkbench } from "../../components/NoteWorkbench";
 // 引入设置弹窗组件
 import SettingsModal from "../../components/SettingsModal/index";
 // 引入Ant Design组件
@@ -613,9 +615,17 @@ const Main: React.FC = () => {
 
         {/* 画布工具栏 */}
         <CanvasToolbar
-          onCreateNote={handleCreateNote}
           isDragMode={isDragMode}
           onToggleDragMode={handleToggleDragMode}
+        />
+
+        {/* 便签工作台 - 浮动在画布底部 */}
+        <NoteWorkbench
+          onAddNote={(prompt) => {
+            // TODO: 实现AI生成便签或创建空白便签的逻辑
+            console.log("添加便签:", prompt ? `AI生成: ${prompt}` : "空白便签");
+            handleCreateNote();
+          }}
         />
       </Content>
 
