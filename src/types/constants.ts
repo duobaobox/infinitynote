@@ -17,9 +17,9 @@ export const NOTE_MIN_SIZE: Size = {
 };
 
 /**
- * 便签最大尺寸
+ * 便签最大尺寸 (无限制)
  */
 export const NOTE_MAX_SIZE: Size = {
-  width: 400,
-  height: 300,
+  width: Infinity,
+  height: Infinity,
 };

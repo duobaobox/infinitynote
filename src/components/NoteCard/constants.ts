@@ -48,9 +48,9 @@ export const DEFAULT_PERFORMANCE_CONFIG: Required<NotePerformanceConfig> = {
  */
 export const RESIZE_CONSTANTS = {
   /** 缩放控件大小 */
-  HANDLE_SIZE: 8,
+  HANDLE_SIZE: 12,
   /** 缩放控件悬浮检测区域 */
-  HANDLE_HOVER_SIZE: 12,
+  HANDLE_HOVER_SIZE: 20,
   /** 最小缩放增量 */
   MIN_RESIZE_DELTA: 5,
   /** 缩放平滑度 */

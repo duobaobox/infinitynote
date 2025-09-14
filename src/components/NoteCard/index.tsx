@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { Note, Size } from "../../types";
-import { NOTE_MIN_SIZE, NOTE_MAX_SIZE } from "../../types/constants";
+import { NOTE_MIN_SIZE } from "../../types/constants";
 import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import styles from "./index.module.css";
@@ -149,15 +149,9 @@ export const NoteCard = memo<NoteCardProps>(
         newHeight = resizeData.startHeight + deltaY;
       }
 
-      // 应用尺寸限制，确保在有效范围内
-      newWidth = Math.max(
-        NOTE_MIN_SIZE.width,
-        Math.min(NOTE_MAX_SIZE.width, newWidth)
-      );
-      newHeight = Math.max(
-        NOTE_MIN_SIZE.height,
-        Math.min(NOTE_MAX_SIZE.height, newHeight)
-      );
+      // 应用尺寸限制，只限制最小值，不限制最大值
+      newWidth = Math.max(NOTE_MIN_SIZE.width, newWidth);
+      newHeight = Math.max(NOTE_MIN_SIZE.height, newHeight);
 
       const finalWidth = Math.round(newWidth);
       const finalHeight = Math.round(newHeight);

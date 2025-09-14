@@ -6,7 +6,7 @@
 
 import type { Note, Size, Position } from "../../types";
 import type { ResizeDirection, ResizeData, DragData } from "./types";
-import { NOTE_MIN_SIZE, NOTE_MAX_SIZE } from "../../types/constants";
+import { NOTE_MIN_SIZE } from "../../types/constants";
 import { RESIZE_CONSTANTS, DRAG_CONSTANTS } from "./constants";
 
 /**
@@ -74,11 +74,12 @@ export const calculateResizeHandlePosition = (
   direction: ResizeDirection
 ): React.CSSProperties => {
   const { HANDLE_HOVER_SIZE } = RESIZE_CONSTANTS;
-  const hoverOffset = -HANDLE_HOVER_SIZE / 2;
+  // 将控件放在便签内部，距离边缘有一定间距
+  const insetOffset = 4;
 
   const positions: Record<ResizeDirection, React.CSSProperties> = {
     n: {
-      top: hoverOffset,
+      top: insetOffset,
       left: "50%",
       transform: "translateX(-50%)",
       width: HANDLE_HOVER_SIZE,
@@ -86,7 +87,7 @@ export const calculateResizeHandlePosition = (
       cursor: "n-resize",
     },
     s: {
-      bottom: hoverOffset,
+      bottom: insetOffset,
       left: "50%",
       transform: "translateX(-50%)",
       width: HANDLE_HOVER_SIZE,
@@ -94,7 +95,7 @@ export const calculateResizeHandlePosition = (
       cursor: "s-resize",
     },
     w: {
-      left: hoverOffset,
+      left: insetOffset,
       top: "50%",
       transform: "translateY(-50%)",
       width: HANDLE_HOVER_SIZE,
@@ -102,7 +103,7 @@ export const calculateResizeHandlePosition = (
       cursor: "w-resize",
     },
     e: {
-      right: hoverOffset,
+      right: insetOffset,
       top: "50%",
       transform: "translateY(-50%)",
       width: HANDLE_HOVER_SIZE,
@@ -110,29 +111,29 @@ export const calculateResizeHandlePosition = (
       cursor: "e-resize",
     },
     nw: {
-      top: hoverOffset,
-      left: hoverOffset,
+      top: insetOffset,
+      left: insetOffset,
       width: HANDLE_HOVER_SIZE,
       height: HANDLE_HOVER_SIZE,
       cursor: "nw-resize",
     },
     ne: {
-      top: hoverOffset,
-      right: hoverOffset,
+      top: insetOffset,
+      right: insetOffset,
       width: HANDLE_HOVER_SIZE,
       height: HANDLE_HOVER_SIZE,
       cursor: "ne-resize",
     },
     sw: {
-      bottom: hoverOffset,
-      left: hoverOffset,
+      bottom: insetOffset,
+      left: insetOffset,
       width: HANDLE_HOVER_SIZE,
       height: HANDLE_HOVER_SIZE,
       cursor: "sw-resize",
     },
     se: {
-      bottom: hoverOffset,
-      right: hoverOffset,
+      bottom: insetOffset,
+      right: insetOffset,
       width: HANDLE_HOVER_SIZE,
       height: HANDLE_HOVER_SIZE,
       cursor: "se-resize",
@@ -186,15 +187,9 @@ export const calculateResizedSize = (
       break;
   }
 
-  // 应用尺寸限制
-  newWidth = Math.max(
-    NOTE_MIN_SIZE.width,
-    Math.min(NOTE_MAX_SIZE.width, newWidth)
-  );
-  newHeight = Math.max(
-    NOTE_MIN_SIZE.height,
-    Math.min(NOTE_MAX_SIZE.height, newHeight)
-  );
+  // 应用尺寸限制（只限制最小值，不限制最大值）
+  newWidth = Math.max(NOTE_MIN_SIZE.width, newWidth);
+  newHeight = Math.max(NOTE_MIN_SIZE.height, newHeight);
 
   return {
     width: Math.round(newWidth),
