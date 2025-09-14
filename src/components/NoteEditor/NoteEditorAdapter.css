@@ -1,0 +1,122 @@
+/**
+ * 便签编辑器适配器样式
+ */
+
+.note-editor-adapter {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 60px;
+}
+
+/* 编辑模式 */
+.note-editor-editing {
+  position: relative;
+}
+
+/* 查看模式 */
+.note-editor-viewing {
+  cursor: text;
+}
+
+.note-editor-viewing:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* 只读模式 */
+.note-editor-readonly {
+  cursor: default;
+}
+
+.note-editor-readonly:hover {
+  background-color: transparent;
+}
+
+/* 显示内容区域 */
+.note-editor-display {
+  padding: 8px 12px;
+  height: 100%;
+  min-height: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text, #333);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.note-editor-display-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 空内容占位符 */
+.note-editor-empty-placeholder {
+  color: var(--color-text-quaternary, #bfbfbf);
+  font-style: italic;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 暗黑主题适配 */
+.note-editor-dark .note-editor-display {
+  color: var(--color-text, #ffffff);
+}
+
+.note-editor-dark .note-editor-viewing:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.note-editor-dark .note-editor-empty-placeholder {
+  color: var(--color-text-quaternary, #525252);
+}
+
+/* 主题过渡动画 */
+.note-editor-adapter * {
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .note-editor-display {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+}
+
+/* 动画过渡 */
+.note-editor-adapter {
+  transition: background-color 0.2s ease;
+}
+
+/* Tiptap 编辑器在便签中的样式覆盖 */
+.note-editor-adapter .tiptap-editor-container {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  height: 100%;
+}
+
+.note-editor-adapter .tiptap-editor-content {
+  min-height: inherit;
+}
+
+.note-editor-adapter .tiptap-editor-focused {
+  border: none;
+  box-shadow: none;
+}
+
+/* 字符计数在便签中的位置调整 */
+.note-editor-adapter .tiptap-editor-character-count {
+  bottom: 2px;
+  right: 4px;
+  font-size: 9px;
+  opacity: 0.6;
+}
+
+.note-editor-adapter:hover .tiptap-editor-character-count {
+  opacity: 0.8;
+}

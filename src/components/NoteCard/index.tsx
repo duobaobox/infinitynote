@@ -4,6 +4,7 @@ import type { Note, Size } from "../../types";
 import { NOTE_MIN_SIZE } from "../../types/constants";
 import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
+import { TiptapEditor } from "../TiptapEditor";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -30,10 +31,13 @@ interface NoteCardProps {
 export const NoteCard = memo<NoteCardProps>(
   ({ note, onSelect, isSelected, onResize }) => {
     const { isDark } = useTheme();
-    const { resizeNote } = useNoteStore();
+    const { resizeNote, updateNote } = useNoteStore();
 
     // 悬浮状态
     const [isHovered, setIsHovered] = useState(false);
+
+    // 编辑状态
+    const [isEditing, setIsEditing] = useState(false);
 
     // 缩放状态
     const [isResizing, setIsResizing] = useState(false);
@@ -61,8 +65,8 @@ export const NoteCard = memo<NoteCardProps>(
       data: {
         note,
       },
-      // 缩放时禁用拖拽
-      disabled: isResizing,
+      // 缩放或编辑时禁用拖拽
+      disabled: isResizing || isEditing,
     });
 
     // 处理点击选择（避免与拖拽冲突）
@@ -77,6 +81,50 @@ export const NoteCard = memo<NoteCardProps>(
       },
       [note.id, onSelect]
     );
+
+    // 处理内容变化
+    const handleContentChange = useCallback(
+      (newContent: string) => {
+        updateNote(note.id, { content: newContent });
+      },
+      [note.id, updateNote]
+    );
+
+    // 处理双击进入编辑
+    const handleDoubleClick = useCallback(
+      (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation(); // 阻止冒泡到画布
+        if (!isEditing) {
+          setIsEditing(true);
+          // 确保便签被选中
+          if (!isSelected) {
+            onSelect(note.id);
+          }
+        }
+      },
+      [isEditing, isSelected, onSelect, note.id]
+    );
+
+    // 处理编辑器获得焦点
+    const handleEditorFocus = useCallback(() => {
+      if (!isEditing) {
+        setIsEditing(true);
+      }
+    }, [isEditing]);
+
+    // 处理编辑器失去焦点
+    const handleEditorBlur = useCallback(() => {
+      // 延迟处理，允许用户在编辑器内部点击（如工具栏）
+      setTimeout(() => {
+        setIsEditing(false);
+      }, 150);
+    }, []);
+
+    // 处理ESC键退出编辑
+    const handleEditorEscape = useCallback(() => {
+      setIsEditing(false);
+    }, []);
 
     // 缩放开始处理 - 使用useRef避免闭包问题
     const handleResizeStart = useCallback(
@@ -298,7 +346,7 @@ export const NoteCard = memo<NoteCardProps>(
           dndIsDragging ? styles.dragging : ""
         } ${isSelected ? styles.selected : ""} ${
           isResizing ? styles.resizing : ""
-        }`}
+        } ${isEditing ? styles.editing : ""}`}
         style={{
           left: note.position.x,
           top: note.position.y,
@@ -311,14 +359,27 @@ export const NoteCard = memo<NoteCardProps>(
         onMouseUp={handleMouseUp}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        {...(isResizing ? {} : listeners)}
-        {...(isResizing ? {} : attributes)}
+        onDoubleClick={handleDoubleClick}
+        {...(isResizing || isEditing ? {} : listeners)}
+        {...(isResizing || isEditing ? {} : attributes)}
       >
         {isSelected && <div className={styles.selectionBorder} />}
 
         <div className={styles.noteContent}>
           <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
-          <div className={styles.noteText}>{note.content || "No content"}</div>
+          <TiptapEditor
+            content={note.content || ""}
+            onContentChange={handleContentChange}
+            placeholder="双击编辑便签内容..."
+            height="100%"
+            className={styles.noteText}
+            autoFocus={isEditing}
+            readonly={!isEditing}
+            onFocus={handleEditorFocus}
+            onBlur={handleEditorBlur}
+            onEscape={handleEditorEscape}
+            debounceDelay={300}
+          />
         </div>
 
         {/* 缩放控件 - 只显示右下角，悬浮或选中时显示 */}

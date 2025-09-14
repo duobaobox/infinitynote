@@ -31,7 +31,7 @@
 }
 
 .noteContent {
-  padding: 12px;
+  padding: 12px 0;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -53,6 +53,7 @@
   flex: 1;
   overflow: hidden;
   word-wrap: break-word;
+  min-height: 40px;
 }
 
 .selectionBorder {
@@ -129,6 +130,17 @@
   box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.3) !important;
 }
 
+/* 编辑状态的样式 */
+.noteCard.editing {
+  /* 编辑时禁用拖拽 */
+  cursor: default;
+  /* 提升层级，确保在最顶层 */
+  z-index: 1000 !important;
+  /* 编辑状态的视觉反馈 */
+  border-color: #52c41a !important;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2) !important;
+}
+
 .noteCard.resizing .resizeHandle {
   opacity: 1;
   background: transparent;
@@ -145,6 +157,126 @@
 .noteCard[data-theme="dark"] .resizeHandle:hover {
   background: transparent;
   border: none;
+}
+
+/* 编辑器在便签中的主题适配 */
+.noteCard .tiptap-editor-container {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* 只读模式的样式 */
+.noteCard .tiptap-editor-readonly {
+  cursor: pointer !important;
+  position: relative;
+}
+
+.noteCard .tiptap-editor-readonly .tiptap-editor-content {
+  cursor: pointer !important;
+}
+
+/* 悬浮时显示编辑提示 */
+.noteCard:hover .tiptap-editor-readonly::after {
+  content: "双击编辑";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* 如果便签有内容，则不显示编辑提示 */
+.noteCard:hover .tiptap-editor-readonly:not(:empty)::after {
+  display: none;
+}
+
+.noteCard .tiptap-editor-focused {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 编辑器工具栏在便签中的样式 */
+.noteCard .tiptap-toolbar {
+  background: transparent !important;
+  border: none !important;
+  padding: 2px 4px !important;
+  min-height: 28px !important;
+}
+
+/* 只读模式下隐藏工具栏 */
+.noteCard .tiptap-editor-readonly .tiptap-toolbar {
+  display: none !important;
+}
+
+/* 编辑器内容在便签中的样式 */
+.noteCard .tiptap-editor-content {
+  padding: 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  font-family: inherit !important;
+  flex: 1 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.noteCard .tiptap-editor-content .ProseMirror {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
+}
+
+.noteCard .tiptap-editor-prose p {
+  margin: 0 0 4px 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+}
+
+.noteCard .tiptap-editor-prose h1,
+.noteCard .tiptap-editor-prose h2,
+.noteCard .tiptap-editor-prose h3 {
+  margin: 4px 0 2px 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+}
+
+.noteCard .tiptap-editor-prose ul,
+.noteCard .tiptap-editor-prose ol {
+  margin: 2px 0 !important;
+  padding-left: 16px !important;
+}
+
+/* 编辑器字符计数在便签中的显示 */
+.noteCard .tiptap-editor-character-count {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 9px;
+  opacity: 0.6;
+  background: transparent;
+  color: inherit;
 }
 
 /* 响应式适配 - 移动端优化 */
