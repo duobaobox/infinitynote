@@ -24,6 +24,11 @@ interface VirtualizedNoteContainerProps {
   };
   /** 便签点击事件 */
   onNoteClick?: (e: React.MouseEvent, note: Note) => void;
+  /** 便签缩放事件 */
+  onNoteResize?: (
+    noteId: string,
+    size: { width: number; height: number }
+  ) => void;
 }
 
 /**
@@ -59,7 +64,14 @@ const isNoteInViewport = (
  */
 export const VirtualizedNoteContainer: React.FC<
   VirtualizedNoteContainerProps
-> = ({ notes, selectedNoteIds, scale, viewport, onNoteClick }) => {
+> = ({
+  notes,
+  selectedNoteIds,
+  scale,
+  viewport,
+  onNoteClick,
+  onNoteResize,
+}) => {
   // 计算需要渲染的便签
   const visibleNotes = useMemo(() => {
     // 如果便签数量不多，直接渲染所有便签
@@ -103,6 +115,7 @@ export const VirtualizedNoteContainer: React.FC<
           scale={scale}
           isSelected={selectedNoteIds.includes(note.id)}
           onSelect={handleNoteSelect}
+          onResize={onNoteResize}
         />
       ))}
     </>

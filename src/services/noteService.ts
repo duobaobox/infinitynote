@@ -1,14 +1,86 @@
-import type { Note } from "../types";
+import type { Note, Position, Size } from "../types";
+
 import { dbOperations } from "../utils/db";
 
 /**
- * 便签服务层
+ * 便签创建参数
+ */
+export interface CreateNoteParams {
+  canvasId: string;
+  position: Position;
+  title?: string;
+  content?: string;
+  color?: string;
+  size?: Size;
+  tags?: string[];
+  priority?: number;
+  templateId?: string | null;
+}
+
+/**
+ * 便签更新参数
+ */
+export interface UpdateNoteParams {
+  title?: string;
+  content?: string;
+  color?: string;
+  position?: Position;
+  size?: Size;
+  zIndex?: number;
+  tags?: string[];
+  priority?: number;
+  isPinned?: boolean;
+  isArchived?: boolean;
+  isFavorite?: boolean;
+  reminderAt?: Date | null;
+}
+
+/**
+ * 便签查询参数
+ */
+export interface QueryNotesParams {
+  canvasId?: string;
+  tags?: string[];
+  priority?: number;
+  isArchived?: boolean;
+  isFavorite?: boolean;
+  isPinned?: boolean;
+  searchText?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  sortBy?: "createdAt" | "updatedAt" | "title" | "priority";
+  sortOrder?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * 便签批量操作参数
+ */
+export interface BatchOperationParams {
+  noteIds: string[];
+  operation:
+    | "delete"
+    | "archive"
+    | "unarchive"
+    | "pin"
+    | "unpin"
+    | "favorite"
+    | "unfavorite";
+  updates?: Partial<UpdateNoteParams>;
+}
+
+/**
+ * 便签服务层 - 规范化版本
  *
  * 职责：
  * - 提供便签CRUD操作的高级接口
  * - 处理业务逻辑和数据转换
  * - 统一错误处理和日志记录
  * - 确保数据类型一致性
+ * - 支持高级查询和批量操作
  */
 export class NoteService {
   /**
@@ -21,13 +93,17 @@ export class NoteService {
   ): Promise<string> {
     try {
       const now = new Date();
-      const noteWithTimestamps = {
+      const noteId = `note_${Date.now()}_${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
+      const noteWithId = {
         ...noteData,
+        id: noteId,
         createdAt: now,
         updatedAt: now,
       };
 
-      const id = await dbOperations.addNote(noteWithTimestamps);
+      const id = await dbOperations.addNote(noteWithId);
       return id; // 数据库操作已经返回字符串ID，无需转换
     } catch (error) {
       console.error("❌ NoteService: 创建便签失败:", error);
