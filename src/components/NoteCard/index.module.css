@@ -10,6 +10,9 @@
   /* 启用硬件加速 */
   will-change: transform;
   transform: translateZ(0);
+  /* 使用flex布局分离头部和内容 */
+  display: flex;
+  flex-direction: column;
 }
 
 .noteCard:hover {
@@ -30,12 +33,46 @@
   box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
 }
 
+/* 便签头部区域样式 */
+.noteHeader {
+  padding: 8px 12px 4px 12px;
+  /* 默认状态下无背景和边框，保持原始外观 */
+  background: transparent;
+  border-bottom: none;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  /* 继承便签卡片的上方圆角 */
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* 编辑状态下头部可拖拽的视觉提示 */
+.noteCard.editing .noteHeader {
+  background: rgba(22, 119, 255, 0.1);
+  border-bottom: 1px solid rgba(22, 119, 255, 0.2);
+  backdrop-filter: blur(4px);
+  /* 确保圆角与便签卡片一致 */
+  border-top-left-radius: 7px; /* 略小于父容器，避免溢出 */
+  border-top-right-radius: 7px;
+}
+
+/* 拖拽时的视觉反馈 */
+.noteCard.editing .noteHeader:hover {
+  background: rgba(22, 119, 255, 0.15);
+  cursor: grab;
+}
+
+.noteCard.editing .noteHeader:active {
+  cursor: grabbing;
+}
+
 .noteContent {
-  padding: 12px 0;
-  height: 100%;
+  padding: 8px 12px 12px 12px;
+  flex: 1; /* 自动填充剩余空间 */
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0; /* 允许flex收缩 */
 }
 
 .noteTitle {
@@ -44,6 +81,11 @@
   color: #333;
   margin: 0;
   word-wrap: break-word;
+  cursor: inherit; /* 继承父容器的拖拽光标 */
+  user-select: none; /* 防止选中文字影响拖拽 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .noteText {
@@ -132,14 +174,22 @@
 
 /* 编辑状态的样式 */
 .noteCard.editing {
-  /* 编辑时禁用拖拽 */
+  /* 编辑时禁用主容器拖拽 */
   cursor: default;
-  /* 提升层级，确保在最顶层 */
-  z-index: 1000 !important;
+  /* 编辑状态应该在最高层级，高于拖拽状态 */
+  z-index: 10000 !important;
   /* 编辑状态的视觉反馈 */
   outline: 2px solid var(--color-primary, #1677ff);
   outline-offset: 2px;
   box-shadow: 0 0 10px rgba(22, 119, 255, 0.3);
+}
+
+/* 编辑状态下的拖拽 - 确保层级最高 */
+.noteCard.editing.dragging {
+  /* 编辑+拖拽状态的最高层级 */
+  z-index: 10001 !important;
+  /* 拖拽时的光标样式 */
+  cursor: grabbing;
 }
 
 /* 编辑模式下的提示文本 */
@@ -154,7 +204,7 @@
   border-radius: 4px;
   font-size: 11px;
   white-space: nowrap;
-  z-index: 1001;
+  z-index: 10001; /* 确保提示文本在编辑便签之上 */
   animation: fadeIn 0.3s ease forwards;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

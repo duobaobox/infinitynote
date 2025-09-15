@@ -65,8 +65,8 @@ export const NoteCard = memo<NoteCardProps>(
       data: {
         note,
       },
-      // 缩放或编辑时禁用拖拽
-      disabled: isResizing || isEditing,
+      // 只有在缩放时禁用拖拽，编辑时允许通过头部拖拽
+      disabled: isResizing,
     });
 
     // 拖拽状态跟踪
@@ -505,7 +505,7 @@ export const NoteCard = memo<NoteCardProps>(
           ...getColorStyle(),
           ...dragStyle,
         }}
-        // 只在非编辑状态下应用 dnd-kit 的监听器
+        // 非编辑状态：整个便签可拖拽
         {...(!isEditing && !isResizing ? listeners : {})}
         {...(!isEditing && !isResizing ? attributes : {})}
         onMouseDown={handleMouseDown}
@@ -516,8 +516,36 @@ export const NoteCard = memo<NoteCardProps>(
       >
         {isSelected && <div className={styles.selectionBorder} />}
 
-        <div className={styles.noteContent}>
+        {/* 
+          便签头部区域 - 统一拖拽管理
+          拖拽策略：
+          1. 非编辑状态：整个便签可拖拽（通过主容器的listeners）
+          2. 编辑状态：只有头部可拖拽（通过头部的listeners）
+          3. 缩放状态：禁用所有拖拽
+        */}
+        <div
+          className={styles.noteHeader}
+          // 编辑状态下应用拖拽监听器到头部
+          {...(isEditing && !isResizing ? listeners : {})}
+          {...(isEditing && !isResizing ? attributes : {})}
+          style={{
+            cursor: isEditing ? "grab" : "default",
+          }}
+          onMouseDown={(e) => {
+            if (isEditing) {
+              // 编辑状态下，阻止事件冒泡，确保只通过dnd-kit处理拖拽
+              e.stopPropagation();
+            } else {
+              // 非编辑状态下，正常处理点击（用于选择等操作）
+              handleMouseDown(e);
+            }
+          }}
+        >
           <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
+        </div>
+
+        {/* 便签内容区域 - 编辑器 */}
+        <div className={styles.noteContent}>
           <TiptapEditor
             content={note.content || ""}
             onContentChange={handleContentChange}
