@@ -602,7 +602,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         isDark ? styles.darkTheme : styles.lightTheme
       }`}
       style={{
-        backgroundColor: displaySettings.canvasColor || "#f0f2f5",
+        backgroundColor: isDark ? '#1a1a1a' : (displaySettings.canvasColor || "#f0f2f5"),
       }}
     >
       {/* 画布区域 */}
@@ -621,7 +621,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         onTouchEnd={handleTouchEnd}
         style={{
           cursor: isPanning ? "grabbing" : isDragMode ? "grab" : "default",
-          backgroundColor: displaySettings.canvasColor || "#f0f2f5",
+          backgroundColor: isDark ? '#1a1a1a' : (displaySettings.canvasColor || "#f0f2f5"),
         }}
       >
         <DndContext
