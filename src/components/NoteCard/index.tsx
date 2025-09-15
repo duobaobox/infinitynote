@@ -7,6 +7,7 @@ import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
 import type { ToolbarAction } from "../NoteToolbar/types";
+import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -33,7 +34,7 @@ interface NoteCardProps {
 export const NoteCard = memo<NoteCardProps>(
   ({ note, onSelect, isSelected, onResize }) => {
     const { isDark } = useTheme();
-    const { resizeNote, updateNote, deleteNote } = useNoteStore();
+    const { resizeNote, updateNote, deleteNote, moveNote } = useNoteStore();
 
     // 悬浮状态
     const [isHovered, setIsHovered] = useState(false);
@@ -55,10 +56,14 @@ export const NoteCard = memo<NoteCardProps>(
       startWidth: number;
       startHeight: number;
       currentWidth: number;
-      currentHeight: number;
-    } | null>(null);
+      currentHeight: number;    } | null>(null);
 
-    // 使用 dnd-kit 的拖拽功能
+    // 拖拽性能优化
+    const {
+      displayPosition,
+      updateDrag,
+      endDrag: endOptimizedDrag,
+    } = useOptimizedNoteDrag(note.id, note.position, moveNote);    // 使用 dnd-kit 的拖拽功能
     const {
       attributes,
       listeners,
@@ -72,9 +77,7 @@ export const NoteCard = memo<NoteCardProps>(
       },
       // 只有在缩放时禁用拖拽，编辑时允许通过头部拖拽
       disabled: isResizing,
-    });
-
-    // 拖拽状态跟踪
+    });    // 拖拽状态跟踪
     const dragStateRef = useRef({
       isDragging: false,
       hasMoved: false,
@@ -87,7 +90,15 @@ export const NoteCard = memo<NoteCardProps>(
       if (dndIsDragging) {
         dragStateRef.current.isDragging = true;
         dragStateRef.current.hasMoved = true;
+        
+        // 如果使用transform，更新优化的拖拽状态
+        if (transform) {
+          updateDrag({ x: transform.x, y: transform.y });
+        }
       } else {
+        // 拖拽结束时使用优化的结束逻辑
+        endOptimizedDrag();
+        
         // 拖拽结束后短暂延迟重置状态，防止立即触发点击
         setTimeout(() => {
           dragStateRef.current = {
@@ -98,7 +109,7 @@ export const NoteCard = memo<NoteCardProps>(
           };
         }, 100);
       }
-    }, [dndIsDragging]);
+    }, [dndIsDragging, transform, updateDrag, endOptimizedDrag]);
 
     // 处理鼠标按下
     const handleMouseDown = useCallback(
@@ -530,13 +541,12 @@ export const NoteCard = memo<NoteCardProps>(
       : {};
 
     return (
-      <>
-        {/* 便签容器包装器 - 统一管理便签和工具栏的布局 */}
+      <>        {/* 便签容器包装器 - 统一管理便签和工具栏的布局 */}
         <div
           className={styles.noteCardContainer}
           style={{
-            left: note.position.x,
-            top: note.position.y,
+            left: displayPosition.x,
+            top: displayPosition.y,
             zIndex: note.zIndex,
             ...dragStyle,
           }}

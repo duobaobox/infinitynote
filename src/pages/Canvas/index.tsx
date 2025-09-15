@@ -16,6 +16,7 @@ import { useCanvasStore } from "../../store/canvasStore";
 import { useTheme, canvasGridThemes } from "../../theme";
 import { loadSettingsFromStorage } from "../../components/SettingsModal/utils";
 import { iconRegistry } from "../../utils/iconRegistry";
+import { useOptimizedCanvasPan } from "../../utils/dragOptimization";
 import type { IconType } from "../../utils/iconRegistry";
 import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
@@ -50,7 +51,6 @@ interface CanvasProps {
 export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
-  const [] = useState<Position | null>(null);
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(
     null
   );
@@ -112,6 +112,19 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     panCanvas,
   } = useCanvasStore();
 
+  // 使用 useRef 来避免频繁的状态更新
+  const panningRef = useRef(false);
+  const panStartRef = useRef<{ x: number; y: number } | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  
+  // 使用优化的画布平移Hook
+  const {
+    localOffset,
+    startPan,
+    updatePan,
+    endPan,
+  } = useOptimizedCanvasPan(panCanvas);
+
   // 获取当前画布的便签（响应式计算）- 优化版本
   const canvasNotes = useMemo(() => {
     if (!activeCanvasId) return [];
@@ -134,6 +147,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       );
     }
   }, [activeCanvasId, canvasNotes]);
+
   // 创建新便签
   const handleCreateNote = useCallback(
     async (position?: Position) => {
@@ -168,6 +182,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     },
     [activeCanvasId, viewport, createNote, canvasNotes]
   );
+
   // 处理画布双击创建便签
   const handleCanvasDoubleClick = useCallback(
     async (e: React.MouseEvent) => {
@@ -293,29 +308,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           panningRef.current = true;
           panStartRef.current = { x: e.clientX, y: e.clientY };
           setIsPanning(true); // 仅用于UI状态显示
+          startPan(); // 开始优化的拖拽
         }
       }
     },
-    [isDragMode]
-  );
-
-  // 使用 useRef 来避免频繁的状态更新
-  const panningRef = useRef(false);
-  const panStartRef = useRef<{ x: number; y: number } | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const lastUpdateTimeRef = useRef(0);
-
-  // 节流函数，限制更新频率
-  const throttledPanCanvas = useCallback(
-    (delta: { x: number; y: number }) => {
-      const now = performance.now();
-      // 限制更新频率为60fps (16.67ms)
-      if (now - lastUpdateTimeRef.current >= 16) {
-        panCanvas(delta);
-        lastUpdateTimeRef.current = now;
-      }
-    },
-    [panCanvas]
+    [isDragMode, startPan]
   );
 
   const handleMouseMove = useCallback(
@@ -330,14 +327,14 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           cancelAnimationFrame(animationFrameRef.current);
         }
 
-        // 使用 requestAnimationFrame 和节流优化性能
+        // 使用优化的画布平移
         animationFrameRef.current = requestAnimationFrame(() => {
-          throttledPanCanvas({ x: deltaX, y: deltaY });
+          updatePan({ x: deltaX, y: deltaY });
           panStartRef.current = { x: e.clientX, y: e.clientY };
         });
       }
     },
-    [throttledPanCanvas]
+    [updatePan]
   );
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
@@ -352,8 +349,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
       }
+
+      // 使用优化的结束拖拽
+      endPan();
     }
-  }, []);
+  }, [endPan]);
 
   // 添加全局鼠标事件处理
   useEffect(() => {
@@ -370,7 +370,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
 
         // 使用 requestAnimationFrame 和节流优化性能
         animationFrameRef.current = requestAnimationFrame(() => {
-          throttledPanCanvas({ x: deltaX, y: deltaY });
+          updatePan({ x: deltaX, y: deltaY });
           panStartRef.current = { x: e.clientX, y: e.clientY };
         });
       }
@@ -387,6 +387,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           cancelAnimationFrame(animationFrameRef.current);
           animationFrameRef.current = null;
         }
+
+        // 结束优化拖拽
+        endPan();
       }
     };
 
@@ -399,7 +402,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
       document.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [isPanning, throttledPanCanvas]);
+  }, [isPanning, updatePan, endPan]);
 
   // 触摸事件处理
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -612,6 +615,13 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     clearSelection,
     isPanning,
   ]);
+  // 计算最终的画布偏移量：结合全局offset和本地优化offset
+  const finalOffset = useMemo(() => {
+    return {
+      x: viewport.offset.x + (localOffset?.x || 0),
+      y: viewport.offset.y + (localOffset?.y || 0),
+    };
+  }, [viewport.offset.x, viewport.offset.y, localOffset]);
 
   return (
     <div
@@ -650,7 +660,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           <div
             className={`${styles.canvasContent} canvasContent`}
             style={{
-              transform: `translate3d(${viewport.offset.x}px, ${viewport.offset.y}px, 0) scale(${viewport.scale})`,
+              transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0) scale(${viewport.scale})`,
               transformOrigin: "0 0",
             }}
             data-smooth-zoom={displaySettings.smoothZoom}
@@ -679,8 +689,8 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
               selectedNoteIds={selectedNoteIds}
               scale={viewport.scale}
               viewport={{
-                x: -viewport.offset.x,
-                y: -viewport.offset.y,
+                x: -finalOffset.x,
+                y: -finalOffset.y,
                 width: window.innerWidth,
                 height: window.innerHeight,
               }}
