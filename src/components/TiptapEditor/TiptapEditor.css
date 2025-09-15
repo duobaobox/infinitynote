@@ -175,7 +175,7 @@
 }
 
 .tiptap-editor-prose pre {
-  background: #2a2a2a; /* 浅黑色背景 */
+  background: #00000031; /* 浅黑色背景 */
   color: #ffffff; /* 白色文字 */
   padding: 12px;
   border-radius: 6px;

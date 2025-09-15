@@ -4,6 +4,11 @@
 
 import React, { memo, useEffect, useRef, useMemo, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { Color } from "@tiptap/extension-color";
+import { ListItem } from "@tiptap/extension-list-item";
+import { TextAlign } from "@tiptap/extension-text-align";
 import type { TiptapEditorProps } from "./types/index";
 import { DEFAULT_CONFIG, CSS_CLASSES } from "./constants";
 import {
@@ -13,7 +18,6 @@ import {
   generateEditorId,
 } from "./utils";
 import { useTheme } from "../../theme";
-import { ExtensionManager } from "./extensions/index";
 import { Toolbar, DEFAULT_TOOLBAR_CONFIG } from "./toolbar/Toolbar";
 import type { ToolbarConfig } from "./toolbar/Toolbar";
 import { useOptimizedDebounce } from "./performance";
@@ -53,13 +57,72 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
     const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
 
-    // 创建扩展管理器实例
-    const extensionManager = useMemo(() => new ExtensionManager(), []);
-
-    // 获取扩展列表
+    // TipTap 官方推荐的扩展配置方式 - 直接配置，简洁明了
     const extensions = useMemo(
-      () => extensionManager.getExtensions(),
-      [extensionManager]
+      () => [
+        StarterKit.configure({
+          // 配置 StarterKit 子扩展
+          blockquote: {
+            HTMLAttributes: {
+              class: "tiptap-blockquote",
+            },
+          },
+          bulletList: {
+            keepMarks: true,
+            keepAttributes: false,
+            HTMLAttributes: {
+              class: "tiptap-bullet-list",
+            },
+          },
+          orderedList: {
+            keepMarks: true,
+            keepAttributes: false,
+            HTMLAttributes: {
+              class: "tiptap-ordered-list",
+            },
+          },
+          listItem: {
+            HTMLAttributes: {
+              class: "tiptap-list-item",
+            },
+          },
+          codeBlock: {
+            HTMLAttributes: {
+              class: "tiptap-code-block",
+            },
+          },
+          code: {
+            HTMLAttributes: {
+              class: "tiptap-code",
+            },
+          },
+          heading: {
+            levels: [1, 2, 3, 4, 5, 6],
+            HTMLAttributes: {
+              class: "tiptap-heading",
+            },
+          },
+          paragraph: {
+            HTMLAttributes: {
+              class: "tiptap-paragraph",
+            },
+          },
+          dropcursor: {
+            color: "var(--color-primary, #1677ff)",
+            width: 2,
+          },
+        }),
+        TextStyle, // 文本样式支持
+        Color.configure({
+          types: [TextStyle.name, ListItem.name], // 支持文本和列表项颜色
+        }),
+        TextAlign.configure({
+          types: ["heading", "paragraph"], // 支持标题和段落对齐
+          alignments: ["left", "center", "right", "justify"],
+          defaultAlignment: "left",
+        }),
+      ],
+      []
     );
 
     // 工具栏配置
@@ -98,58 +161,72 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     // 性能监控 (预留接口)
     // const performanceMonitor = usePerformanceMonitor();
 
-    // 初始化编辑器
+    // TipTap 官方最佳实践：编辑器初始化配置
     const editor = useEditor({
       extensions,
       content: content || "",
       editable: !readonly,
       autofocus: autoFocus,
-      // TipTap v3.4+ 最佳实践：控制事务重渲染
-      shouldRerenderOnTransaction: false,
+
+      // 官方推荐的性能优化配置
+      shouldRerenderOnTransaction: false, // v3.4+ 推荐，避免不必要的重渲染
+
+      // 官方推荐的解析选项
+      parseOptions: {
+        preserveWhitespace: "full", // 保留空白字符，提升编辑体验
+      },
+
+      // 生命周期钩子
       onCreate: ({ editor }) => {
         onEditorReady?.(editor);
       },
+
       onUpdate: ({ editor }) => {
         const html = editor.getHTML();
         debouncedContentChange(html);
       },
+
       onSelectionUpdate: () => {
-        // 触发工具栏按钮状态更新 - 这是激活状态正确显示的关键！
-        // 强制重新渲染以更新按钮激活状态
+        // 工具栏按钮状态更新的关键
         setToolbarUpdateKey((prev) => prev + 1);
       },
+
       onFocus: () => {
         onFocus?.();
       },
+
       onBlur: () => {
-        // TipTap 最佳实践：在失焦时调用回调
         onBlur?.();
       },
+
+      // 官方推荐的编辑器属性配置
       editorProps: {
         attributes: {
           class: `${CSS_CLASSES.EDITOR_CONTENT} tiptap-editor-prose`,
+          role: "textbox", // 可访问性支持
+          "aria-multiline": "true", // 可访问性支持
+          "aria-label": "富文本编辑器", // 可访问性支持
           "data-placeholder": placeholder,
           "data-editor-id": editorId.current,
         },
+
+        // 简化的键盘事件处理 - 官方推荐方式
         handleKeyDown: (_view, event) => {
-          // 只处理必要的快捷键，让其他所有按键（包括空格）正常工作
           if (!enableShortcuts) return false;
 
-          // 只处理 Escape 键，其他所有按键都让 Tiptap 处理
-          if (event.key === "Escape") {
-            event.preventDefault();
-            onEscape?.();
-            return true;
+          // 只处理真正需要自定义的按键，让 TipTap 处理其他所有按键
+          switch (event.key) {
+            case "Escape":
+              onEscape?.();
+              break;
+            case "Enter":
+              if (!event.shiftKey) {
+                onEnter?.(); // 不阻止默认行为，让 TipTap 处理
+              }
+              break;
           }
 
-          // 处理 Enter 键，但不阻止默认行为
-          if (event.key === "Enter" && !event.shiftKey) {
-            onEnter?.();
-            // 不阻止默认行为，让 Tiptap 正常处理 Enter
-          }
-
-          // 对所有其他按键（包括空格、字母、数字等）返回 false，让 Tiptap 处理
-          return false;
+          return false; // 让 TipTap 处理所有按键的默认行为
         },
       },
     });
