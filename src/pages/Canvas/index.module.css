@@ -72,7 +72,8 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: var(--color-bg-canvas);
+  /* 使用 CSS 变量作为默认值，但允许内联样式覆盖 */
+  background: var(--color-bg-canvas, #f0f2f5);
   user-select: none;
 }
 

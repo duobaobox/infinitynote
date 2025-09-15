@@ -69,6 +69,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   useEffect(() => {
     const handleStorageChange = () => {
       const settings = loadSettingsFromStorage();
+      console.log("Canvas: 设置变化检测到", settings.display);
       setDisplaySettings(settings.display);
     };
 
@@ -79,6 +80,15 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       window.removeEventListener("settingsChanged", handleStorageChange);
     };
   }, []);
+
+  // 调试：监听displaySettings变化
+  useEffect(() => {
+    console.log("Canvas: displaySettings 更新", {
+      canvasColor: displaySettings.canvasColor,
+      showGrid: displaySettings.showGrid,
+      smoothZoom: displaySettings.smoothZoom,
+    });
+  }, [displaySettings]);
 
   // 状态管理
   const {
@@ -591,6 +601,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       className={`${styles.canvasContainer} ${
         isDark ? styles.darkTheme : styles.lightTheme
       }`}
+      style={{
+        backgroundColor: displaySettings.canvasColor || "#f0f2f5",
+      }}
     >
       {/* 画布区域 */}
       <div
@@ -608,6 +621,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         onTouchEnd={handleTouchEnd}
         style={{
           cursor: isPanning ? "grabbing" : isDragMode ? "grab" : "default",
+          backgroundColor: displaySettings.canvasColor || "#f0f2f5",
         }}
       >
         <DndContext

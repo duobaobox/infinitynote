@@ -106,6 +106,20 @@ export const THEME_OPTIONS = [
   { value: "auto", label: "跟随系统" },
 ] as const;
 
+/**
+ * 画布颜色预设配置
+ */
+export const CANVAS_COLOR_PRESETS = [
+  { name: "经典灰", value: "#f0f2f5", description: "默认淡雅灰色" },
+  { name: "纯净白", value: "#ffffff", description: "纯净白色背景" },
+  { name: "温暖米", value: "#faf8f5", description: "温暖米色调" },
+  { name: "薄荷绿", value: "#f0f9f4", description: "清新薄荷绿" },
+  { name: "天空蓝", value: "#f0f8ff", description: "清澈天空蓝" },
+  { name: "紫罗兰", value: "#f8f4ff", description: "优雅紫罗兰" },
+  { name: "桃花粉", value: "#fff0f6", description: "浪漫桃花粉" },
+  { name: "深邃黑", value: "#1a1a1a", description: "专注深色模式" },
+] as const;
+
 // ==================== 快捷键配置 ====================
 
 /**
@@ -203,6 +217,7 @@ export const DEFAULT_DISPLAY_SETTINGS = {
   theme: "light" as const,
   showGrid: true,
   smoothZoom: false, // 默认关闭平滑缩放
+  canvasColor: "#f0f2f5", // 默认画布颜色
 };
 
 /**

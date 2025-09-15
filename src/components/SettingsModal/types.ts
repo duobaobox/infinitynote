@@ -104,6 +104,8 @@ export interface DisplaySettings {
   showGrid: boolean;
   /** 平滑缩放 */
   smoothZoom: boolean;
+  /** 画布背景颜色 */
+  canvasColor: string;
 }
 
 /**
