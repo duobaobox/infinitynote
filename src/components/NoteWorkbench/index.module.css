@@ -219,19 +219,18 @@
   }
 }
 
-/* 成功状态动画 */
+/* 成功状态动画 - 移除绿色背景，保持原有蓝色 */
 .addExternalButton[data-success="true"] {
-  background-color: var(--color-success);
-  border-color: var(--color-success);
-  animation: successPulse 0.6s ease-out;
+  /* 移除背景色变化，只保留轻微的动画效果 */
+  animation: subtlePulse 0.3s ease-out;
 }
 
-@keyframes successPulse {
+@keyframes subtlePulse {
   0% {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
   100% {
     transform: scale(1);

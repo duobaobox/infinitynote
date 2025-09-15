@@ -47,19 +47,13 @@ import {
   Typography,
   Switch,
   List,
-  Card,
   Collapse,
-  Select,
-  Slider,
   message,
   Badge,
   Tooltip,
 } from "antd";
 import {
   RobotOutlined,
-  SearchOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined,
   SettingOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
@@ -122,18 +116,6 @@ interface ModelInfo {
 /**
  * 模型参数配置
  */
-interface ModelParameters {
-  /** 温度参数 (0-2) */
-  temperature: number;
-  /** 最大输出令牌数 */
-  maxOutputTokens: number;
-  /** Top-p 参数 */
-  topP: number;
-  /** 频率惩罚 */
-  frequencyPenalty: number;
-  /** 存在惩罚 */
-  presencePenalty: number;
-}
 
 export interface ModelSettingsTabProps {
   settings: ModelSettings;
@@ -173,138 +155,56 @@ const AI_PROVIDERS: AIProvider[] = [
     ],
   },
   {
-    id: "chainbase",
-    name: "链基流动",
+    id: "siliconflow",
+    name: "硅基流动",
     icon: <SettingOutlined style={{ color: "#52c41a" }} />,
     enabled: false,
     status: "disconnected",
     apiKey: "",
-    apiUrl: "https://api.chainbase.com",
-    models: [],
+    apiUrl: "https://api.siliconflow.cn",
+    description: "硅基流动提供多种开源模型服务",
+    models: [
+      {
+        id: "qwen-turbo",
+        name: "Qwen Turbo",
+        description: "快速响应的通用模型",
+        maxTokens: 8192,
+      },
+      {
+        id: "qwen-plus",
+        name: "Qwen Plus",
+        description: "平衡性能的高质量模型",
+        maxTokens: 32768,
+      },
+    ],
   },
   {
-    id: "openrouter",
-    name: "OpenRouter",
-    icon: <RobotOutlined style={{ color: "#722ed1" }} />,
+    id: "alibaba",
+    name: "阿里百炼",
+    icon: <RobotOutlined style={{ color: "#fa8c16" }} />,
     enabled: false,
     status: "disconnected",
     apiKey: "",
-    apiUrl: "https://openrouter.ai/api/v1",
-    models: [],
-  },
-  {
-    id: "ollama",
-    name: "Ollama",
-    icon: <SettingOutlined style={{ color: "#fa8c16" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "http://localhost:11434",
-    models: [],
-  },
-  {
-    id: "anthropic",
-    name: "Anthropic",
-    icon: <RobotOutlined style={{ color: "#eb2f96" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "https://api.anthropic.com",
-    models: [],
-  },
-  {
-    id: "baidu",
-    name: "百度云千帆",
-    icon: <SettingOutlined style={{ color: "#1890ff" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "https://aip.baidubce.com",
-    models: [],
-  },
-  {
-    id: "ppio",
-    name: "PPIO 派盾云",
-    icon: <RobotOutlined style={{ color: "#13c2c2" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
-  },
-  {
-    id: "ocoolai",
-    name: "ocoolAI",
-    icon: <SettingOutlined style={{ color: "#f5222d" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
-  },
-  {
-    id: "burncloud",
-    name: "BurnCloud",
-    icon: <RobotOutlined style={{ color: "#fa541c" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
-  },
-  {
-    id: "alaya",
-    name: "Alaya New",
-    icon: <SettingOutlined style={{ color: "#faad14" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
-  },
-  {
-    id: "wuwen",
-    name: "无问芯穹",
-    icon: <RobotOutlined style={{ color: "#722ed1" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
-  },
-  {
-    id: "cephalon",
-    name: "Cephalon",
-    icon: <SettingOutlined style={{ color: "#2f54eb" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
-  },
-  {
-    id: "ph8",
-    name: "PH8 大模型开放平台",
-    icon: <RobotOutlined style={{ color: "#52c41a" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
-  },
-  {
-    id: "302ai",
-    name: "302.AI",
-    icon: <SettingOutlined style={{ color: "#eb2f96" }} />,
-    enabled: false,
-    status: "disconnected",
-    apiKey: "",
-    apiUrl: "",
-    models: [],
+    apiUrl: "https://dashscope.aliyuncs.com",
+    description: "阿里云百炼大模型服务平台",
+    models: [
+      {
+        id: "qwen-max",
+        name: "Qwen Max",
+        description: "阿里云最强大的通用模型",
+        maxTokens: 8192,
+      },
+      {
+        id: "qwen-long",
+        name: "Qwen Long",
+        description: "支持长文本的专用模型",
+        maxTokens: 128000,
+      },
+    ],
   },
 ];
 
-const ModelSettingsTab: React.FC<ModelSettingsTabProps> = (props: ModelSettingsTabProps) => {
+const ModelSettingsTab: React.FC<ModelSettingsTabProps> = () => {
   // ==================== 状态管理 ====================
 
 
@@ -747,26 +647,13 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = (props: ModelSettingsT
   };
 
   // ==================== 主渲染 ====================
-
   return (
     <div className={styles.contentSection}>
       {/* 页面标题 */}
       <div style={{ marginBottom: "24px" }}>
         <Title level={3}>
-          <RobotOutlined /> 深度求索
+          <RobotOutlined /> 模型服务
         </Title>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Switch checked={true} style={{ marginRight: "8px" }} />
-          <Text type="secondary">
-            深度求索是一家专注于AI技术的公司，提供高质量的大语言模型服务
-          </Text>
-        </div>
       </div>
 
       <Divider />

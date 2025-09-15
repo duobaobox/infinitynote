@@ -47,7 +47,6 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     setInputValue(newValue);
     onChange?.(newValue);
   };
-
   /**
    * 处理添加便签按钮点击
    */
@@ -59,14 +58,13 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
 
     try {
       await onAddNote?.(prompt || undefined);
-      setStatus("success");
-
+      
       // 添加便签后清空输入框
       setInputValue("");
       onChange?.("");
 
-      // 短暂显示成功状态后重置
-      setTimeout(() => setStatus("idle"), 1000);
+      // 直接重置到idle状态，不显示绿色成功状态
+      setStatus("idle");
     } catch (error) {
       setStatus("error");
       console.error("添加便签失败:", error);

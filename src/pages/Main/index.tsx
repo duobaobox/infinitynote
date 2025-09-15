@@ -82,9 +82,8 @@ const Main: React.FC = () => {
 
   // 获取App Context中的modal实例
   const { modal } = App.useApp();
-
   // 状态管理
-  const { createNote, getNotesByCanvas, initialize, selectNote } =
+  const { notes, createNote, getNotesByCanvas, initialize, selectNote } =
     useNoteStore();
   const {
     activeCanvasId,
@@ -226,18 +225,28 @@ const Main: React.FC = () => {
       });
     };
   }, [isDragMode, setIsDragMode]);
-
   // 创建新便签
   const handleCreateNote = useCallback(
     async (position?: Position) => {
       if (!activeCanvasId) return;
 
       try {
-        // 计算在画布坐标系中的位置
-        const canvasPosition = position || {
-          x: (window.innerWidth / 2 - viewport.offset.x) / viewport.scale - 100,
-          y: (window.innerHeight / 2 - viewport.offset.y) / viewport.scale - 75,
-        };
+        let canvasPosition: Position;
+
+        if (position) {
+          // 如果指定了位置，直接使用
+          canvasPosition = position;
+        } else {          // 使用智能位置计算，避免重叠
+          const { generateSmartPosition } = await import("../../utils/notePositioning");
+          const currentCanvasNotes = notes.filter((note: Note) => note.canvasId === activeCanvasId);
+          
+          canvasPosition = generateSmartPosition(
+            viewport,
+            { width: window.innerWidth, height: window.innerHeight },
+            { width: 200, height: 150 }, // 默认便签尺寸
+            currentCanvasNotes
+          );
+        }
 
         await createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
         console.log("✅ 便签创建成功");
@@ -246,7 +255,7 @@ const Main: React.FC = () => {
         // 可以在这里添加用户提示
       }
     },
-    [activeCanvasId, viewport, createNote]
+    [activeCanvasId, viewport, createNote, notes]
   );
 
   // 获取当前画布的便签数量

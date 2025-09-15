@@ -134,7 +134,6 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       );
     }
   }, [activeCanvasId, canvasNotes]);
-
   // 创建新便签
   const handleCreateNote = useCallback(
     async (position?: Position) => {
@@ -144,11 +143,22 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       if (!canvasRect) return;
 
       try {
-        // 计算在画布坐标系中的位置
-        const canvasPosition = position || {
-          x: (canvasRect.width / 2 - viewport.offset.x) / viewport.scale - 100,
-          y: (canvasRect.height / 2 - viewport.offset.y) / viewport.scale - 75,
-        };
+        let canvasPosition: Position;
+
+        if (position) {
+          // 如果指定了位置，直接使用
+          canvasPosition = position;
+        } else {
+          // 使用智能位置计算，避免重叠
+          const { generateSmartPosition } = await import("../../utils/notePositioning");
+          
+          canvasPosition = generateSmartPosition(
+            viewport,
+            { width: canvasRect.width, height: canvasRect.height },
+            { width: 200, height: 150 }, // 默认便签尺寸
+            canvasNotes
+          );
+        }
 
         await createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
         console.log("✅ 画布便签创建成功");
@@ -156,12 +166,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         console.error("❌ 画布便签创建失败:", error);
       }
     },
-    [activeCanvasId, viewport, createNote]
+    [activeCanvasId, viewport, createNote, canvasNotes]
   );
-
   // 处理画布双击创建便签
   const handleCanvasDoubleClick = useCallback(
-    (e: React.MouseEvent) => {
+    async (e: React.MouseEvent) => {
       // 检查是否点击在空白区域（网格背景或画布本身）
       const target = e.target as Element;
       if (
@@ -170,7 +179,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         target.closest(`.${styles.canvasContent}`)
       ) {
         const canvasRect = canvasRef.current!.getBoundingClientRect();
-        const clickPosition = {
+        const baseClickPosition = {
           x:
             (e.clientX - canvasRect.left - viewport.offset.x) / viewport.scale -
             100,
@@ -179,10 +188,18 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
             75,
         };
 
+        // 使用智能位置避免重叠
+        const { getNonOverlappingPosition } = await import("../../utils/notePositioning");
+        const clickPosition = getNonOverlappingPosition(
+          baseClickPosition,
+          { width: 200, height: 150 }, // 默认便签尺寸
+          canvasNotes
+        );
+
         handleCreateNote(clickPosition);
       }
     },
-    [handleCreateNote, viewport]
+    [handleCreateNote, viewport, canvasNotes]
   );
 
   // 处理画布点击清空选择
