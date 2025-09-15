@@ -197,10 +197,14 @@
   cursor: default;
   /* 编辑状态应该在最高层级，高于拖拽状态 */
   z-index: 10000 !important;
-  /* 编辑状态的视觉反馈 */
-  outline: 2px solid var(--color-primary, #1677ff);
-  outline-offset: 2px;
-  box-shadow: 0 0 10px rgba(22, 119, 255, 0.3);
+  /* 使用与选中状态统一的外环，紧贴卡片边缘以避免视觉割裂 */
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary, #1677ff), 0 0 10px rgba(22, 119, 255, 0.3);
+}
+
+/* 编辑时隐藏额外的 selectionBorder，防止重复的外环造成间隙感 */
+.noteCard.editing .selectionBorder {
+  display: none !important;
 }
 
 /* 编辑状态下的拖拽 - 确保层级最高 */

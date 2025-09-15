@@ -304,14 +304,9 @@ const AI_PROVIDERS: AIProvider[] = [
   },
 ];
 
-const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
-  settings,
-  onSettingChange,
-}) => {
+const ModelSettingsTab: React.FC<ModelSettingsTabProps> = (props: ModelSettingsTabProps) => {
   // ==================== 状态管理 ====================
 
-  /** 搜索关键词 */
-  const [searchTerm, setSearchTerm] = useState("");
 
   /** 当前选中的服务提供商 */
   const [selectedProvider, setSelectedProvider] = useState<string>("deepseek");
@@ -411,10 +406,8 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
 
   // ==================== 数据处理 ====================
 
-  /** 过滤后的服务提供商列表 */
-  const filteredProviders = providers.filter((provider) =>
-    provider.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  /** 服务提供商列表（不再支持搜索） */
+  const filteredProviders = providers;
 
   /** 当前选中的服务提供商详情 */
   const currentProvider = providers.find((p) => p.id === selectedProvider);
@@ -441,16 +434,6 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
    */
   const renderProviderList = () => (
     <div style={{ width: "300px", borderRight: "1px solid #f0f0f0" }}>
-      {/* 搜索框 */}
-      <div style={{ padding: "16px", borderBottom: "1px solid #f0f0f0" }}>
-        <Input
-          placeholder="搜索模型服务..."
-          prefix={<SearchOutlined />}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          allowClear
-        />
-      </div>
 
       {/* 服务提供商列表 */}
       <List
@@ -493,7 +476,7 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                     onChange={(checked) =>
                       handleProviderToggle(provider.id, checked)
                     }
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(_, e) => e.stopPropagation()}
                   />
                 </div>
               }
