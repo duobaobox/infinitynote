@@ -44,6 +44,9 @@
   font-size: 12px;
   font-family: inherit;
   transition: all 0.2s ease;
+  /* 防止工具栏按钮获得焦点，保持编辑器焦点 */
+  outline: none;
+  user-select: none;
 }
 
 .tiptap-toolbar button:hover {

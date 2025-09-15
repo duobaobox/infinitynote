@@ -5,6 +5,8 @@ import { NOTE_MIN_SIZE } from "../../types/constants";
 import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
+import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
+import type { ToolbarAction } from "../NoteToolbar/types";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -31,13 +33,16 @@ interface NoteCardProps {
 export const NoteCard = memo<NoteCardProps>(
   ({ note, onSelect, isSelected, onResize }) => {
     const { isDark } = useTheme();
-    const { resizeNote, updateNote } = useNoteStore();
+    const { resizeNote, updateNote, deleteNote } = useNoteStore();
 
     // 悬浮状态
     const [isHovered, setIsHovered] = useState(false);
 
     // 编辑状态
     const [isEditing, setIsEditing] = useState(false);
+
+    // 工具栏显示状态
+    const [showToolbar, setShowToolbar] = useState(false);
 
     // 缩放状态
     const [isResizing, setIsResizing] = useState(false);
@@ -112,6 +117,9 @@ export const NoteCard = memo<NoteCardProps>(
         if (!note.isSelected) {
           onSelect(note.id);
         }
+
+        // 显示工具栏
+        setShowToolbar(true);
 
         // 如果已经在编辑模式，直接返回让编辑器处理
         if (isEditing) {
@@ -193,6 +201,37 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [isEditing]);
 
+    // 处理工具栏操作
+    const handleToolbarAction = useCallback(
+      (action: ToolbarAction, data?: any) => {
+        switch (action) {
+          case "color":
+            if (data?.color) {
+              updateNote(note.id, { color: data.color });
+            }
+            break;
+          case "delete":
+            deleteNote(note.id);
+            setShowToolbar(false);
+            break;
+          case "duplicate":
+            // TODO: 实现复制功能
+            console.log("Duplicate note:", note.id);
+            break;
+          case "pin":
+            // TODO: 实现置顶功能
+            console.log("Pin note:", note.id);
+            break;
+          default:
+            console.log("Unhandled action:", action);
+        }
+      },
+      [note.id, updateNote, deleteNote]
+    ); // 关闭工具栏
+    const handleCloseToolbar = useCallback(() => {
+      setShowToolbar(false);
+    }, []);
+
     // 优化的失焦处理 - 更加智能的编辑模式退出
     const handleEditorBlur = useCallback(
       (_editor?: any, _event?: FocusEvent) => {
@@ -244,33 +283,39 @@ export const NoteCard = memo<NoteCardProps>(
     // 当前便签的引用
     const currentNoteRef = useRef<HTMLDivElement>(null);
 
-    // 处理点击外部退出编辑模式
+    // 处理点击外部退出编辑模式和关闭工具栏
     const handleClickOutside = useCallback(
       (e: MouseEvent) => {
-        if (!isEditing) return;
-
         const target = e.target as HTMLElement;
 
-        // 检查点击是否在当前便签内部
-        if (
-          currentNoteRef.current &&
-          !currentNoteRef.current.contains(target)
-        ) {
-          setIsEditing(false);
+        // 检查点击是否在当前便签内部或工具栏内部
+        const isInNoteCard =
+          currentNoteRef.current && currentNoteRef.current.contains(target);
+        const isInToolbar =
+          target.closest("[data-note-toolbar]") ||
+          target.closest(".noteToolbar");
+
+        if (!isInNoteCard && !isInToolbar) {
+          if (isEditing) {
+            setIsEditing(false);
+          }
+          if (showToolbar) {
+            setShowToolbar(false);
+          }
         }
       },
-      [isEditing]
+      [isEditing, showToolbar]
     );
 
     // 管理点击外部事件监听
     useEffect(() => {
-      if (isEditing) {
+      if (isEditing || showToolbar) {
         document.addEventListener("mousedown", handleClickOutside, true);
         return () => {
           document.removeEventListener("mousedown", handleClickOutside, true);
         };
       }
-    }, [isEditing, handleClickOutside]);
+    }, [isEditing, showToolbar, handleClickOutside]);
 
     // 缩放开始处理 - 使用useRef避免闭包问题
     const handleResizeStart = useCallback(
@@ -485,95 +530,121 @@ export const NoteCard = memo<NoteCardProps>(
       : {};
 
     return (
-      <div
-        ref={(node) => {
-          setNodeRef(node);
-          currentNoteRef.current = node;
-        }}
-        data-note-card
-        className={`${styles.noteCard} ${
-          dndIsDragging ? styles.dragging : ""
-        } ${isSelected ? styles.selected : ""} ${
-          isResizing ? styles.resizing : ""
-        } ${isEditing ? styles.editing : ""}`}
-        style={{
-          left: note.position.x,
-          top: note.position.y,
-          width: resizeSize?.width ?? note.size.width,
-          height: resizeSize?.height ?? note.size.height,
-          zIndex: note.zIndex,
-          ...getColorStyle(),
-          ...dragStyle,
-        }}
-        // 非编辑状态：整个便签可拖拽
-        {...(!isEditing && !isResizing ? listeners : {})}
-        {...(!isEditing && !isResizing ? attributes : {})}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onDoubleClick={handleDoubleClick}
-      >
-        {isSelected && <div className={styles.selectionBorder} />}
-
-        {/* 
-          便签头部区域 - 统一拖拽管理
-          拖拽策略：
-          1. 非编辑状态：整个便签可拖拽（通过主容器的listeners）
-          2. 编辑状态：只有头部可拖拽（通过头部的listeners）
-          3. 缩放状态：禁用所有拖拽
-        */}
+      <>
+        {/* 便签容器包装器 - 统一管理便签和工具栏的布局 */}
         <div
-          className={styles.noteHeader}
-          // 编辑状态下应用拖拽监听器到头部
-          {...(isEditing && !isResizing ? listeners : {})}
-          {...(isEditing && !isResizing ? attributes : {})}
+          className={styles.noteCardContainer}
           style={{
-            cursor: isEditing ? "grab" : "default",
-          }}
-          onMouseDown={(e) => {
-            if (isEditing) {
-              // 编辑状态下，阻止事件冒泡，确保只通过dnd-kit处理拖拽
-              e.stopPropagation();
-            } else {
-              // 非编辑状态下，正常处理点击（用于选择等操作）
-              handleMouseDown(e);
-            }
+            left: note.position.x,
+            top: note.position.y,
+            zIndex: note.zIndex,
+            ...dragStyle,
           }}
         >
-          <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
-        </div>
-
-        {/* 便签内容区域 - 编辑器 */}
-        <div className={styles.noteContent}>
-          <TiptapEditor
-            content={note.content || ""}
-            onContentChange={handleContentChange}
-            placeholder={isSelected ? "开始输入内容..." : "点击编辑便签内容..."}
-            height="100%"
-            className={styles.noteText}
-            autoFocus={isEditing}
-            readonly={!isEditing}
-            onFocus={handleEditorFocus}
-            onBlur={handleEditorBlur}
-            onEscape={handleEditorEscape}
-            debounceDelay={300}
-          />
-        </div>
-
-        {/* 缩放控件 - 只显示右下角，悬浮或选中时显示 */}
-        {(isSelected || isHovered || isResizing) && (
+          {/* 便签主体 */}
           <div
-            className={`${styles.resizeHandle} ${styles["resize-se"]}`}
-            onMouseDown={(e) => handleResizeStart(e, "se")}
-            onPointerDown={(e) => {
-              // 阻止事件冒泡到拖拽监听器
-              e.stopPropagation();
+            ref={(node) => {
+              setNodeRef(node);
+              currentNoteRef.current = node;
             }}
-            title="拖拽调整便签大小"
-          />
-        )}
-      </div>
+            data-note-card
+            className={`${styles.noteCard} ${
+              dndIsDragging ? styles.dragging : ""
+            } ${isSelected ? styles.selected : ""} ${
+              isResizing ? styles.resizing : ""
+            } ${isEditing ? styles.editing : ""}`}
+            style={{
+              width: resizeSize?.width ?? note.size.width,
+              height: resizeSize?.height ?? note.size.height,
+              position: "relative", // 相对定位，不再需要left/top
+              ...getColorStyle(),
+            }}
+            // 非编辑状态：整个便签可拖拽
+            {...(!isEditing && !isResizing ? listeners : {})}
+            {...(!isEditing && !isResizing ? attributes : {})}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onDoubleClick={handleDoubleClick}
+          >
+            {isSelected && <div className={styles.selectionBorder} />}
+
+            {/* 
+              便签头部区域 - 统一拖拽管理
+              拖拽策略：
+              1. 非编辑状态：整个便签可拖拽（通过主容器的listeners）
+              2. 编辑状态：只有头部可拖拽（通过头部的listeners）
+              3. 缩放状态：禁用所有拖拽
+            */}
+            <div
+              className={styles.noteHeader}
+              // 编辑状态下应用拖拽监听器到头部
+              {...(isEditing && !isResizing ? listeners : {})}
+              {...(isEditing && !isResizing ? attributes : {})}
+              style={{
+                cursor: isEditing ? "grab" : "default",
+              }}
+              onMouseDown={(e) => {
+                if (isEditing) {
+                  // 编辑状态下，阻止事件冒泡，确保只通过dnd-kit处理拖拽
+                  e.stopPropagation();
+                } else {
+                  // 非编辑状态下，正常处理点击（用于选择等操作）
+                  handleMouseDown(e);
+                }
+              }}
+            >
+              <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
+            </div>
+
+            {/* 便签内容区域 - 编辑器 */}
+            <div className={styles.noteContent}>
+              <TiptapEditor
+                content={note.content || ""}
+                onContentChange={handleContentChange}
+                placeholder={
+                  isSelected ? "开始输入内容..." : "点击编辑便签内容..."
+                }
+                height="100%"
+                className={styles.noteText}
+                autoFocus={isEditing}
+                readonly={!isEditing}
+                onFocus={handleEditorFocus}
+                onBlur={handleEditorBlur}
+                onEscape={handleEditorEscape}
+                debounceDelay={300}
+              />
+            </div>
+
+            {/* 缩放控件 - 只显示右下角，悬浮或选中时显示 */}
+            {(isSelected || isHovered || isResizing) && (
+              <div
+                className={`${styles.resizeHandle} ${styles["resize-se"]}`}
+                onMouseDown={(e) => handleResizeStart(e, "se")}
+                onPointerDown={(e) => {
+                  // 阻止事件冒泡到拖拽监听器
+                  e.stopPropagation();
+                }}
+                title="拖拽调整便签大小"
+              />
+            )}
+          </div>
+
+          {/* 便签工具栏 - 使用CSS定位在便签右侧 */}
+          {showToolbar && isSelected && (
+            <div className={styles.noteToolbarWrapper}>
+              <NoteToolbar
+                noteId={note.id}
+                visible={true}
+                color={note.color}
+                onAction={handleToolbarAction}
+                onClose={handleCloseToolbar}
+              />
+            </div>
+          )}
+        </div>
+      </>
     );
   }
 );

@@ -184,11 +184,21 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       onUpdate: ({ editor }) => {
         const html = editor.getHTML();
         debouncedContentChange(html);
+        // 内容更新时也要更新工具栏状态
+        setToolbarUpdateKey((prev) => prev + 1);
       },
 
       onSelectionUpdate: () => {
         // 工具栏按钮状态更新的关键
         setToolbarUpdateKey((prev) => prev + 1);
+      },
+
+      onTransaction: ({ transaction }) => {
+        // 事务更新时也要更新工具栏状态（包括格式变更）
+        // 只有当事务真正改变了文档或选择时才更新，避免过度渲染
+        if (transaction.docChanged || transaction.selectionSet) {
+          setToolbarUpdateKey((prev) => prev + 1);
+        }
       },
 
       onFocus: () => {
@@ -303,6 +313,7 @@ export const TiptapEditor = memo<TiptapEditorProps>(
               key={toolbarUpdateKey}
               editor={editor}
               config={toolbarConfig}
+              updateKey={toolbarUpdateKey}
             />
           )}
 

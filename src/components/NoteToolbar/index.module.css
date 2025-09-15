@@ -1,0 +1,221 @@
+.noteToolbar {
+  background: var(--color-bg-container, #ffffff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 36px;
+  backdrop-filter: blur(8px);
+  animation: slideIn 0.2s ease-out;
+  user-select: none;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.noteToolbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.noteToolbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.noteToolbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.toolbarButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  position: relative;
+  padding: 0;
+  color: var(--color-text-secondary, #666);
+}
+
+.toolbarButton:hover {
+  background: var(--color-fill-secondary, #f0f0f0);
+  color: var(--color-primary, #1677ff);
+  transform: scale(1.1);
+}
+
+.toolbarButton:active {
+  transform: scale(0.95);
+}
+
+.toolbarButton.danger {
+  color: var(--color-error, #ff4d4f);
+}
+
+.toolbarButton.danger:hover {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
+.toolbarButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.toolbarButton:disabled:hover {
+  background: transparent;
+  transform: none;
+}
+
+/* 分隔线 */
+.separator {
+  height: 1px;
+  background: var(--color-border, #e0e0e0);
+  margin: 4px 0;
+  opacity: 0.5;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10003;
+}
+
+.toolbarButton:hover .tooltip {
+  opacity: 1;
+}
+
+/* 颜色选择器 */
+.colorPicker {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 0;
+  background: var(--color-bg-container, #ffffff);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 6px;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  min-width: 100px;
+  z-index: 20;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.colorOption {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.colorOption:hover {
+  border-color: var(--color-primary, #1677ff);
+  transform: scale(1.15);
+}
+
+.colorOption.active {
+  border-color: var(--color-primary, #1677ff);
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+  position: relative;
+}
+
+.colorOption.active::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #333;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+}
+
+/* 颜色选择器中的颜色圆点 - 移除::after伪元素，直接显示背景色 */
+
+/* 暗黑模式适配 */
+[data-theme="dark"] .noteToolbar {
+  background: var(--color-bg-container, #1f1f1f);
+  border-color: var(--color-border, #303030);
+}
+
+[data-theme="dark"] .toolbarButton:hover {
+  background: var(--color-fill-secondary, #303030);
+}
+
+[data-theme="dark"] .separator {
+  background: var(--color-border, #303030);
+}
+
+[data-theme="dark"] .colorPicker {
+  background: var(--color-bg-container, #1f1f1f);
+  border-color: var(--color-border, #303030);
+}
+
+[data-theme="dark"] .toolbarButton.danger:hover {
+  background: rgba(255, 77, 79, 0.1);
+  color: #ff7875;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .noteToolbar {
+    padding: 6px;
+    gap: 2px;
+  }
+
+  .toolbarButton {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .tooltip {
+    display: none; /* 移动端隐藏tooltip */
+  }
+}

@@ -287,6 +287,7 @@ interface ToolbarProps {
   editor: Editor;
   config: ToolbarConfig;
   className?: string;
+  updateKey?: number; // 添加更新键参数
 }
 
 /**
@@ -296,13 +297,19 @@ const ToolbarButtonComponent = memo<{
   button: ToolbarButton;
   editor: Editor;
   compact?: boolean;
-}>(({ button, editor, compact }) => {
+  updateKey?: number; // 添加更新键来强制重新渲染
+}>(({ button, editor, compact, updateKey }) => {
   const isActive = button.isActive?.(editor) || false;
   const isDisabled = button.disabled?.(editor) || false;
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    // 阻止默认行为但不阻止事件传播
+    event.preventDefault();
+
     if (!isDisabled) {
       button.onClick(editor);
+      // 立即强制更新按钮状态（虽然父组件也会更新，但这样更及时）
+      // 注意：这里不需要额外的 state 更新，因为父组件会处理
     }
   };
 
@@ -315,7 +322,13 @@ const ToolbarButtonComponent = memo<{
       title={button.title}
       disabled={isDisabled}
       onClick={handleClick}
+      onMouseDown={(e) => {
+        // 防止鼠标按下事件导致编辑器失去焦点
+        e.preventDefault();
+      }}
+      tabIndex={-1} // 防止通过 Tab 键获得焦点
       data-testid={`toolbar-${button.id}`}
+      data-update-key={updateKey} // 用于调试和强制更新
     >
       {button.icon}
     </button>
@@ -337,7 +350,7 @@ ToolbarDivider.displayName = "ToolbarDivider";
  * 工具栏主组件
  */
 export const Toolbar = memo<ToolbarProps>(
-  ({ editor, config, className = "" }) => {
+  ({ editor, config, className = "", updateKey }) => {
     if (!config.show || !editor) {
       return null;
     }
@@ -376,6 +389,7 @@ export const Toolbar = memo<ToolbarProps>(
                 button={button}
                 editor={editor}
                 compact={config.compact}
+                updateKey={updateKey}
               />
             </React.Fragment>
           );

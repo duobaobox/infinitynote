@@ -2,7 +2,7 @@
   position: absolute;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
   cursor: grab;
   user-select: none;
   transition: box-shadow 0.2s ease;
@@ -15,13 +15,30 @@
   flex-direction: column;
 }
 
+/* 工具栏容器 - 使用伪元素概念 */
+.noteCardContainer {
+  position: absolute;
+}
+
+.noteToolbarWrapper {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 8px); /* 便签右侧8px */
+  pointer-events: none; /* 不阻挡底层元素 */
+  z-index: 1;
+}
+
+.noteToolbarWrapper > * {
+  pointer-events: all; /* 工具栏内容可以交互 */
+}
+
 .noteCard:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), 0 0 0 2px #1677ff;
 }
 
 .noteCard.dragging {
   cursor: grabbing;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 0 0 2px #1677ff;
   /* 拖拽时禁用过渡动画，提升性能 */
   transition: none;
   /* 提升层级，避免重绘 */
@@ -30,7 +47,7 @@
 
 .noteCard.selected {
   border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 0 0 2px #1677ff;
 }
 
 /* 便签头部区域样式 */
@@ -46,23 +63,25 @@
   border-top-right-radius: 8px;
 }
 
-/* 编辑状态下头部可拖拽的视觉提示 */
+/* 编辑状态下头部可拖拽，但默认无颜色 */
 .noteCard.editing .noteHeader {
-  background: rgba(22, 119, 255, 0.1);
-  border-bottom: 1px solid rgba(22, 119, 255, 0.2);
-  backdrop-filter: blur(4px);
+  background: transparent;
+  border-bottom: none;
   /* 确保圆角与便签卡片一致 */
   border-top-left-radius: 7px; /* 略小于父容器，避免溢出 */
   border-top-right-radius: 7px;
 }
 
-/* 拖拽时的视觉反馈 */
+/* 只在悬浮时显示拖拽提示颜色 */
 .noteCard.editing .noteHeader:hover {
-  background: rgba(22, 119, 255, 0.15);
+  background: rgba(22, 119, 255, 0.1);
+  border-bottom: 1px solid rgba(22, 119, 255, 0.2);
+  backdrop-filter: blur(4px);
   cursor: grab;
 }
 
 .noteCard.editing .noteHeader:active {
+  background: rgba(22, 119, 255, 0.15);
   cursor: grabbing;
 }
 
