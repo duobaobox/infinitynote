@@ -118,12 +118,12 @@ export const TiptapEditor = memo<TiptapEditorProps>(
         // 强制重新渲染以更新按钮激活状态
         setToolbarUpdateKey((prev) => prev + 1);
       },
-      onFocus: ({ editor }) => {
-        onFocus?.(editor);
+      onFocus: () => {
+        onFocus?.();
       },
-      onBlur: ({ editor, event }) => {
-        // TipTap 最佳实践：传递 editor 实例和原生事件
-        onBlur?.(editor, event);
+      onBlur: () => {
+        // TipTap 最佳实践：在失焦时调用回调
+        onBlur?.();
       },
       editorProps: {
         attributes: {

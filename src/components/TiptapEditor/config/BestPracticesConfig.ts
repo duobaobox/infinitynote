@@ -11,7 +11,6 @@ import type { ExtensionConfig } from "../extensions/index";
  */
 export const TIPTAP_BEST_PRACTICES_CONFIG: Partial<EditorOptions> = {
   // 性能优化
-  shouldRerenderOnTransaction: false, // v3.4+ 推荐
   enableInputRules: true,
   enablePasteRules: true,
   enableCoreExtensions: true,
@@ -29,12 +28,12 @@ export const TIPTAP_BEST_PRACTICES_CONFIG: Partial<EditorOptions> = {
       "aria-label": "富文本编辑器",
     },
     // 拖放处理
-    handleDrop: (view, event, slice, moved) => {
+    handleDrop: (_view, _event, _slice, _moved) => {
       // 自定义拖放逻辑
       return false;
     },
     // 粘贴处理
-    handlePaste: (view, event, slice) => {
+    handlePaste: (_view, _event, _slice) => {
       // 自定义粘贴逻辑
       return false;
     },
@@ -45,12 +44,6 @@ export const TIPTAP_BEST_PRACTICES_CONFIG: Partial<EditorOptions> = {
  * 生产环境优化配置
  */
 export const PRODUCTION_OPTIMIZATIONS: Partial<EditorOptions> = {
-  // 禁用开发工具
-  enableDebugTools: false,
-
-  // 减少不必要的重渲染
-  shouldRerenderOnTransaction: false,
-
   // 优化解析选项
   parseOptions: {
     preserveWhitespace: false,
@@ -60,17 +53,24 @@ export const PRODUCTION_OPTIMIZATIONS: Partial<EditorOptions> = {
 /**
  * 开发环境调试配置
  */
+import type { Editor } from "@tiptap/core";
 export const DEVELOPMENT_CONFIG: Partial<EditorOptions> = {
-  // 启用调试工具
-  enableDebugTools: true,
+  // 开发环境下的解析选项
+  parseOptions: {
+    preserveWhitespace: "full",
+  },
+};
 
-  // 详细错误信息
-  onError: ({ error, editor, event }) => {
+/**
+ * 开发环境错误处理工具函数
+ */
+export const createDevelopmentErrorHandler = () => ({
+  onError: (error: unknown, editor?: Editor, event?: Event) => {
     console.error("TipTap Error:", error);
     console.error("Editor State:", editor?.state);
     console.error("Event:", event);
   },
-};
+});
 
 /**
  * 无障碍访问配置
@@ -90,14 +90,21 @@ export const ACCESSIBILITY_CONFIG: Partial<EditorOptions> = {
  * 协作编辑配置
  */
 export const COLLABORATION_CONFIG: Partial<EditorOptions> = {
-  // 协作相关配置
-  enableCollaboration: true,
-
-  // 冲突解决策略
-  onTransaction: ({ transaction, editor }) => {
-    // 处理协作事务
+  // 协作编辑的基础配置
+  parseOptions: {
+    preserveWhitespace: "full",
   },
 };
+
+/**
+ * 协作编辑事务处理工具函数
+ */
+export const createCollaborationHandler = () => ({
+  onTransaction: (transaction: any, editor: Editor) => {
+    // 处理协作事务
+    console.log("Collaboration transaction:", transaction, editor);
+  },
+});
 
 /**
  * 移动端优化配置
