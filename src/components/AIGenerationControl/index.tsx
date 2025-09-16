@@ -72,7 +72,7 @@ export const AIGenerationControl = memo<AIGenerationControlProps>(
     const abortControllerRef = useRef<AbortController | null>(null);
 
     // 获取AI设置
-    const aiSettings = aiService.getSettings();
+    const aiSettings = aiService.getSettingsSync();
 
     // 生成状态
     const [generationState, setGenerationState] = useState<GenerationState>({
@@ -152,7 +152,7 @@ export const AIGenerationControl = memo<AIGenerationControlProps>(
       }
 
       // 检查API密钥是否已配置（使用securityManager检查实际存储）
-      const apiKey = securityManager.getAPIKey(aiSettings.provider);
+      const apiKey = await securityManager.getAPIKey(aiSettings.provider);
       if (!apiKey) {
         message.error("请先配置AI服务的API密钥");
         return;

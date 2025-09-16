@@ -11,9 +11,10 @@ import type {
   AICustomProperties,
 } from "../types/ai";
 import { markdownConverter } from "../utils/markdownConverter";
+import { dbOperations, type AIConfigDB } from "../utils/db";
 
 /**
- * 安全管理器 - 处理API密钥存储
+ * 安全管理器 - 处理API密钥存储（使用IndexedDB）
  */
 class SecurityManager {
   private static instance: SecurityManager;
@@ -28,13 +29,22 @@ class SecurityManager {
   }
 
   /**
-   * 安全存储API密钥
+   * 安全存储API密钥（使用IndexedDB）
    */
-  setAPIKey(provider: string, key: string): void {
+  async setAPIKey(provider: string, key: string): Promise<void> {
     try {
       // 简单的本地加密（生产环境应使用更强的加密）
       const encrypted = btoa(key);
-      localStorage.setItem(`ai_${provider}_api_key`, encrypted);
+      const config: AIConfigDB = {
+        id: `api_key_${provider}`,
+        type: "api_key",
+        provider,
+        value: encrypted,
+        encrypted: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await dbOperations.saveAIConfig(config);
     } catch (error) {
       console.error("存储API密钥失败:", error);
       throw new Error("密钥存储失败");
@@ -42,13 +52,13 @@ class SecurityManager {
   }
 
   /**
-   * 安全获取API密钥
+   * 安全获取API密钥（从IndexedDB）
    */
-  getAPIKey(provider: string): string | null {
+  async getAPIKey(provider: string): Promise<string | null> {
     try {
-      const encrypted = localStorage.getItem(`ai_${provider}_api_key`);
-      if (!encrypted) return null;
-      return atob(encrypted);
+      const config = await dbOperations.getAIConfig(`api_key_${provider}`);
+      if (!config || !config.value) return null;
+      return atob(config.value);
     } catch (error) {
       console.error("获取API密钥失败:", error);
       return null;
@@ -70,10 +80,14 @@ class SecurityManager {
   }
 
   /**
-   * 清理API密钥
+   * 清理API密钥（从IndexedDB）
    */
-  clearAPIKey(provider: string): void {
-    localStorage.removeItem(`ai_${provider}_api_key`);
+  async clearAPIKey(provider: string): Promise<void> {
+    try {
+      await dbOperations.deleteAIConfig(`api_key_${provider}`);
+    } catch (error) {
+      console.error("清理API密钥失败:", error);
+    }
   }
 }
 
@@ -88,7 +102,7 @@ class ZhipuAIProvider implements AIProvider {
 
   async generateContent(options: AIGenerationOptions): Promise<void> {
     const securityManager = SecurityManager.getInstance();
-    const apiKey = securityManager.getAPIKey("zhipu");
+    const apiKey = await securityManager.getAPIKey("zhipu");
 
     if (!apiKey) {
       throw new Error("智谱AI API密钥未配置");
@@ -108,11 +122,6 @@ class ZhipuAIProvider implements AIProvider {
           body: JSON.stringify({
             model: options.model || "glm-4",
             messages: [
-              {
-                role: "system",
-                content:
-                  "你是一个专业的便签助手，请根据用户的提示词生成有用的便签内容。使用Markdown格式输出，内容要简洁明了，重点突出。",
-              },
               {
                 role: "user",
                 content: options.prompt,
@@ -278,7 +287,7 @@ class OpenAIProvider implements AIProvider {
 
   async generateContent(options: AIGenerationOptions): Promise<void> {
     const securityManager = SecurityManager.getInstance();
-    const apiKey = securityManager.getAPIKey("openai");
+    const apiKey = await securityManager.getAPIKey("openai");
 
     if (!apiKey) {
       throw new Error("OpenAI API密钥未配置");
@@ -297,11 +306,6 @@ class OpenAIProvider implements AIProvider {
           body: JSON.stringify({
             model: options.model || "gpt-3.5-turbo",
             messages: [
-              {
-                role: "system",
-                content:
-                  "你是一个专业的便签助手，请根据用户的提示词生成有用的便签内容。使用Markdown格式输出，内容要简洁明了，重点突出。",
-              },
               {
                 role: "user",
                 content: options.prompt,
@@ -399,7 +403,7 @@ class DeepSeekProvider implements AIProvider {
 
   async generateContent(options: AIGenerationOptions): Promise<void> {
     const securityManager = SecurityManager.getInstance();
-    const apiKey = securityManager.getAPIKey("deepseek");
+    const apiKey = await securityManager.getAPIKey("deepseek");
 
     if (!apiKey) {
       throw new Error("DeepSeek API密钥未配置");
@@ -417,11 +421,6 @@ class DeepSeekProvider implements AIProvider {
           body: JSON.stringify({
             model: options.model || "deepseek-chat",
             messages: [
-              {
-                role: "system",
-                content:
-                  "你是一个专业的便签助手，请根据用户的提示词生成有用的便签内容。使用Markdown格式输出，内容要简洁明了，重点突出。",
-              },
               {
                 role: "user",
                 content: options.prompt,
@@ -516,7 +515,10 @@ class AIService {
   constructor() {
     this.securityManager = SecurityManager.getInstance();
     this.initializeProviders();
-    this.loadUserSettings();
+    // 异步加载用户设置，不阻塞构造函数
+    this.loadUserSettings().catch((error: any) =>
+      console.error("初始化时加载AI设置失败:", error)
+    );
   }
 
   private initializeProviders() {
@@ -531,13 +533,17 @@ class AIService {
   }
 
   /**
-   * 加载用户保存的AI配置
+   * 加载用户保存的AI配置（从IndexedDB）
    */
-  private loadUserSettings() {
+  private async loadUserSettings(): Promise<void> {
     try {
-      const savedSettings = localStorage.getItem("ai_settings");
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
+      // 首先检查是否需要从localStorage迁移数据
+      await dbOperations.migrateAIConfigsFromLocalStorage();
+
+      // 从IndexedDB加载AI设置
+      const settingsConfig = await dbOperations.getAIConfig("ai_settings");
+      if (settingsConfig && settingsConfig.value) {
+        const parsed = JSON.parse(settingsConfig.value);
 
         // 加载用户配置的提供商
         if (parsed.provider && this.providers.has(parsed.provider)) {
@@ -610,17 +616,17 @@ class AIService {
   }
 
   /**
-   * 检查提供商是否配置完成
+   * 检查提供商是否配置完成（异步）
    */
-  isProviderConfigured(providerName: string): boolean {
-    const apiKey = this.securityManager.getAPIKey(providerName);
+  async isProviderConfigured(providerName: string): Promise<boolean> {
+    const apiKey = await this.securityManager.getAPIKey(providerName);
     return !!apiKey;
   }
 
   /**
-   * 配置提供商API密钥
+   * 配置提供商API密钥（异步）
    */
-  configureProvider(providerName: string, apiKey: string): void {
+  async configureProvider(providerName: string, apiKey: string): Promise<void> {
     if (!this.providers.has(providerName)) {
       throw new Error(`不支持的AI提供商: ${providerName}`);
     }
@@ -629,7 +635,7 @@ class AIService {
       throw new Error(`无效的API密钥格式: ${providerName}`);
     }
 
-    this.securityManager.setAPIKey(providerName, apiKey);
+    await this.securityManager.setAPIKey(providerName, apiKey);
     console.log(`✅ ${providerName} API密钥配置成功`);
   }
 
@@ -643,7 +649,7 @@ class AIService {
         throw new Error(`不支持的AI提供商: ${providerName}`);
       }
 
-      const apiKey = this.securityManager.getAPIKey(providerName);
+      const apiKey = await this.securityManager.getAPIKey(providerName);
       if (!apiKey) {
         throw new Error("API密钥未配置");
       }
@@ -710,9 +716,9 @@ class AIService {
   }
 
   /**
-   * 获取AI设置
+   * 获取AI设置（从IndexedDB异步加载）
    */
-  getSettings(): AISettings {
+  async getSettings(): Promise<AISettings> {
     const settings: AISettings = {
       provider: this.currentProvider,
       apiKeys: {},
@@ -724,11 +730,11 @@ class AIService {
       autoSave: true,
     };
 
-    // 从localStorage加载其他设置
+    // 从IndexedDB加载其他设置
     try {
-      const savedSettings = localStorage.getItem("ai_settings");
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
+      const settingsConfig = await dbOperations.getAIConfig("ai_settings");
+      if (settingsConfig && settingsConfig.value) {
+        const parsed = JSON.parse(settingsConfig.value);
         Object.assign(settings, parsed);
       }
     } catch (error) {
@@ -739,23 +745,49 @@ class AIService {
   }
 
   /**
-   * 保存AI设置
+   * 同步获取AI设置（基础版本，用于向后兼容）
    */
-  saveSettings(settings: Partial<AISettings>): void {
+  getSettingsSync(): AISettings {
+    return {
+      provider: this.currentProvider,
+      apiKeys: {},
+      defaultModel:
+        this.providers.get(this.currentProvider)?.supportedModels[0] || "",
+      temperature: 0.7,
+      maxTokens: 1000,
+      showThinking: true,
+      autoSave: true,
+    };
+  }
+
+  /**
+   * 保存AI设置（异步保存到IndexedDB）
+   */
+  async saveSettings(settings: Partial<AISettings>): Promise<void> {
     try {
       // 保存API密钥到独立存储
       if (settings.apiKeys) {
-        Object.entries(settings.apiKeys).forEach(([provider, key]) => {
+        for (const [provider, key] of Object.entries(settings.apiKeys)) {
           if (key) {
-            this.configureProvider(provider, key);
+            await this.configureProvider(provider, key);
           }
-        });
+        }
       }
 
       // 保存其他设置
       const settingsToSave = { ...settings };
       delete settingsToSave.apiKeys; // 不保存明文密钥
-      localStorage.setItem("ai_settings", JSON.stringify(settingsToSave));
+
+      const config: AIConfigDB = {
+        id: "ai_settings",
+        type: "settings",
+        value: JSON.stringify(settingsToSave),
+        encrypted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await dbOperations.saveAIConfig(config);
 
       // 更新当前提供商
       if (settings.provider && settings.provider !== this.currentProvider) {

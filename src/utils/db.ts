@@ -32,9 +32,23 @@ export interface CanvasDB extends Canvas {
   id: string; // 明确指定ID为字符串类型
 }
 
+/**
+ * AI配置数据库接口
+ */
+export interface AIConfigDB {
+  id: string; // 配置项唯一标识，如 'api_key_zhipu', 'ai_settings' 等
+  type: "api_key" | "settings" | "other"; // 配置类型
+  provider?: string; // AI提供商名称（仅对api_key类型有效）
+  value: string; // 配置值（JSON字符串或加密字符串）
+  encrypted: boolean; // 是否已加密
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 class InfinityNoteDatabase extends Dexie {
   notes!: Table<NoteDB>;
   canvases!: Table<CanvasDB>;
+  aiConfigs!: Table<AIConfigDB>;
 
   constructor() {
     super("InfinityNoteDatabase");
@@ -47,10 +61,19 @@ class InfinityNoteDatabase extends Dexie {
         "id, name, scale, backgroundColor, createdAt, updatedAt, isDefault, offset.x, offset.y",
     });
 
-    // 暂时注释版本2，避免数据库升级问题
+    // 版本2：添加AI配置表
+    this.version(2).stores({
+      notes:
+        "id, title, content, color, zIndex, canvasId, createdAt, updatedAt, position.x, position.y, size.width, size.height",
+      canvases:
+        "id, name, scale, backgroundColor, createdAt, updatedAt, isDefault, offset.x, offset.y",
+      aiConfigs: "id, type, provider, value, encrypted, createdAt, updatedAt",
+    });
+
+    // 暂时注释版本3，避免数据库升级问题
     // 当需要新字段时再启用
     /*
-    this.version(2)
+    this.version(3)
       .stores({
         notes:
           "++id, title, content, color, zIndex, canvasId, createdAt, updatedAt, position.x, position.y, size.width, size.height, tags, priority, reminderAt, isPinned, isArchived, isFavorite, contentType, permission, templateId, parentNoteId, lastAccessedAt, version, isDeleted, deletedAt",
@@ -523,6 +546,137 @@ export const dbOperations = {
       throw new Error(
         `清空画布失败: ${error instanceof Error ? error.message : "未知错误"}`
       );
+    }
+  },
+
+  // ==================== AI配置操作方法 ====================
+
+  // 保存AI配置
+  async saveAIConfig(config: AIConfigDB): Promise<void> {
+    try {
+      await withDbRetry(async () => {
+        await db.aiConfigs.put(config);
+        console.log(`✅ AI配置保存成功: ${config.id}`);
+      });
+    } catch (error) {
+      console.error(`❌ 保存AI配置失败 ${config.id}:`, error);
+      throw new Error(
+        `保存AI配置失败: ${error instanceof Error ? error.message : "未知错误"}`
+      );
+    }
+  },
+
+  // 获取AI配置
+  async getAIConfig(id: string): Promise<AIConfigDB | undefined> {
+    try {
+      return await withDbRetry(async () => {
+        return await db.aiConfigs.get(id);
+      });
+    } catch (error) {
+      console.error(`❌ 获取AI配置失败 ${id}:`, error);
+      return undefined;
+    }
+  },
+
+  // 获取所有AI配置
+  async getAllAIConfigs(): Promise<AIConfigDB[]> {
+    try {
+      return await withDbRetry(async () => {
+        return await db.aiConfigs.toArray();
+      });
+    } catch (error) {
+      console.error("❌ 获取AI配置列表失败:", error);
+      return [];
+    }
+  },
+
+  // 删除AI配置
+  async deleteAIConfig(id: string): Promise<void> {
+    try {
+      await withDbRetry(async () => {
+        await db.aiConfigs.delete(id);
+        console.log(`✅ AI配置删除成功: ${id}`);
+      });
+    } catch (error) {
+      console.error(`❌ 删除AI配置失败 ${id}:`, error);
+      throw new Error(
+        `删除AI配置失败: ${error instanceof Error ? error.message : "未知错误"}`
+      );
+    }
+  },
+
+  // 清空所有AI配置
+  async clearAllAIConfigs(): Promise<void> {
+    try {
+      await withDbRetry(async () => {
+        await db.aiConfigs.clear();
+        console.log("✅ 所有AI配置清空成功");
+      });
+    } catch (error) {
+      console.error("❌ 清空AI配置失败:", error);
+      throw new Error(
+        `清空AI配置失败: ${error instanceof Error ? error.message : "未知错误"}`
+      );
+    }
+  },
+
+  // 从localStorage迁移AI配置到IndexedDB
+  async migrateAIConfigsFromLocalStorage(): Promise<void> {
+    try {
+      console.log("🔄 开始从localStorage迁移AI配置到IndexedDB...");
+
+      const configs: AIConfigDB[] = [];
+      const now = new Date();
+
+      // 迁移API密钥
+      const providers = ["zhipu", "deepseek", "openai"];
+      for (const provider of providers) {
+        const key = localStorage.getItem(`ai_${provider}_api_key`);
+        if (key) {
+          configs.push({
+            id: `api_key_${provider}`,
+            type: "api_key",
+            provider,
+            value: key, // 已经是加密的
+            encrypted: true,
+            createdAt: now,
+            updatedAt: now,
+          });
+          // 迁移后删除localStorage中的数据
+          localStorage.removeItem(`ai_${provider}_api_key`);
+          console.log(`✅ 迁移API密钥: ${provider}`);
+        }
+      }
+
+      // 迁移AI设置
+      const aiSettings = localStorage.getItem("ai_settings");
+      if (aiSettings) {
+        configs.push({
+          id: "ai_settings",
+          type: "settings",
+          value: aiSettings,
+          encrypted: false,
+          createdAt: now,
+          updatedAt: now,
+        });
+        // 迁移后删除localStorage中的数据
+        localStorage.removeItem("ai_settings");
+        console.log("✅ 迁移AI设置");
+      }
+
+      // 批量保存到IndexedDB
+      if (configs.length > 0) {
+        await withDbRetry(async () => {
+          await db.aiConfigs.bulkPut(configs);
+        });
+        console.log(`✅ 成功迁移${configs.length}个AI配置到IndexedDB`);
+      } else {
+        console.log("📋 没有发现需要迁移的AI配置");
+      }
+    } catch (error) {
+      console.error("❌ AI配置迁移失败:", error);
+      // 迁移失败不抛出错误，避免阻止应用启动
+      console.warn("⚠️ AI配置迁移失败，将使用默认配置");
     }
   },
 };

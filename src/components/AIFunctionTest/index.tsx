@@ -48,7 +48,7 @@ export const AIFunctionTest = () => {
       return;
     }
 
-    const settings = aiService.getSettings();
+    const settings = aiService.getSettingsSync();
     if (!settings.apiKeys?.[settings.provider]) {
       message.error("请先配置AI服务的API密钥");
       return;
@@ -151,8 +151,8 @@ export const AIFunctionTest = () => {
           error={generationState.error || undefined}
           showThinking={true}
           thinkingSteps={generationState.thinkingSteps}
-          model={aiService.getSettings().defaultModel}
-          provider={aiService.getSettings().provider}
+          model={aiService.getSettingsSync().defaultModel}
+          provider={aiService.getSettingsSync().provider}
           startTime={generationState.startTime || undefined}
           onStop={stopGeneration}
           onRetry={startGeneration}
