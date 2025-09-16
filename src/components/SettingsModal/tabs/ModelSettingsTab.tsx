@@ -1,166 +1,367 @@
-/**
- * ModelSettingsTab - 模型服务设置选项卡组件
- *
- * 功能说明：
- * 提供 AI 模型服务的配置界面框架，采用左侧服务商列表的布局。
- * 当前为框架版本，具体功能待后续开发。
- *
- * 界面布局：
- * - 左侧：服务商列表框架
- * - 右侧：空白区域，待后续开发
- *
- * @author InfinityNote Team
- * @since v1.5.7
- * @lastModified 2024-12-13
- */
-
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Divider,
   Space,
   Typography,
   List,
+  Card,
+  Form,
+  Input,
+  Select,
+  Slider,
+  Switch,
+  Button,
+  message,
 } from "antd";
-import {
-  RobotOutlined,
-} from "@ant-design/icons";
+import { RobotOutlined, KeyOutlined, SettingOutlined } from "@ant-design/icons";
 import type { ModelSettings } from "../types";
+import { MODEL_OPTIONS_BY_PROVIDER } from "../constants";
+import { aiService } from "../../../services/aiService";
 import styles from "../index.module.css";
 
-const { Title, Text } = Typography;
-
-// ==================== 类型定义 ====================
-
-/**
- * AI服务提供商信息（简化版）
- */
-interface AIProvider {
-  /** 提供商唯一标识 */
-  id: string;
-  /** 显示名称 */
-  name: string;
-  /** 图标组件 */
-  icon: React.ReactNode;
-}
+const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
 
 export interface ModelSettingsTabProps {
   settings: ModelSettings;
-  onSettingChange: (key: keyof ModelSettings, value: string) => void;
+  onSettingChange: (key: keyof ModelSettings, value: any) => void;
 }
 
-// ==================== 常量数据 ====================
-
-/**
- * AI服务提供商配置数据（框架版本）
- */
-const AI_PROVIDERS: AIProvider[] = [
-  {
-    id: "deepseek",
-    name: "深度求索",
-    icon: <RobotOutlined style={{ color: "#1890ff" }} />,
-  },
-  {
-    id: "siliconflow", 
-    name: "硅基流动",
-    icon: <RobotOutlined style={{ color: "#52c41a" }} />,
-  },
-  {
-    id: "alibaba",
-    name: "阿里百炼",
-    icon: <RobotOutlined style={{ color: "#fa8c16" }} />,
-  },
-];
-
-const ModelSettingsTab: React.FC<ModelSettingsTabProps> = () => {
-  // ==================== 状态管理 ====================
-
-  /** 当前选中的服务提供商 */
-  const [selectedProvider, setSelectedProvider] = useState<string>("deepseek");
-
-  // ==================== 渲染函数 ====================
-
-  /**
-   * 渲染左侧服务提供商列表
-   */
-  const renderProviderList = () => (
-    <div style={{ width: "300px", borderRight: "1px solid #f0f0f0" }}>
-      {/* 服务提供商列表 */}
-      <List
-        dataSource={AI_PROVIDERS}
-        renderItem={(provider) => (
-          <List.Item
-            style={{
-              padding: "12px 16px",
-              cursor: "pointer",
-              backgroundColor:
-                selectedProvider === provider.id ? "#f6ffed" : "transparent",
-              borderLeft:
-                selectedProvider === provider.id
-                  ? "3px solid #52c41a"
-                  : "3px solid transparent",
-            }}
-            onClick={() => setSelectedProvider(provider.id)}
-          >
-            <List.Item.Meta
-              avatar={
-                <Space>
-                  {provider.icon}
-                </Space>
-              }
-              title={
-                <Text strong={selectedProvider === provider.id}>
-                  {provider.name}
-                </Text>
-              }
-            />
-          </List.Item>
-        )}
-      />
-    </div>
+const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
+  settings,
+  onSettingChange,
+}) => {
+  const [selectedProvider, setSelectedProvider] = useState<string>(
+    settings.provider || "zhipu"
+  );
+  const [connectionStatus, setConnectionStatus] = useState<{
+    [key: string]: "idle" | "testing" | "success" | "error";
+  }>({});
+  const [apiKeyInputs, setApiKeyInputs] = useState<{ [key: string]: string }>(
+    {}
   );
 
-  /**
-   * 渲染右侧空白区域
-   */
-  const renderEmptyContent = () => (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "#999",
-      }}
-    >
-      <Text type="secondary">功能正在开发中...</Text>
-    </div>
+  const [aiSettings, setAiSettings] = useState(() => aiService.getSettings());
+
+  useEffect(() => {
+    const currentSettings = aiService.getSettings();
+    setAiSettings(currentSettings);
+    setSelectedProvider(currentSettings.provider);
+
+    // 初始化API密钥输入框的值
+    const initialApiKeys: { [key: string]: string } = {};
+    Object.keys(currentSettings.apiKeys || {}).forEach((provider) => {
+      const savedKey = currentSettings.apiKeys?.[provider];
+      if (savedKey) {
+        initialApiKeys[provider] = savedKey;
+      }
+    });
+    setApiKeyInputs(initialApiKeys);
+  }, []);
+
+  const handleSettingChange = useCallback(
+    (key: string, value: any) => {
+      const newSettings = {
+        ...aiSettings,
+        [key]: value,
+      };
+
+      setAiSettings(newSettings);
+      aiService.saveSettings(newSettings);
+      onSettingChange(key as keyof ModelSettings, value);
+    },
+    [aiSettings, onSettingChange]
   );
 
-  // ==================== 主渲染 ====================
+  const handleApiKeyChange = useCallback(
+    (value: string) => {
+      setApiKeyInputs((prev) => ({
+        ...prev,
+        [selectedProvider]: value,
+      }));
+
+      // 重置连接状态
+      setConnectionStatus((prev) => ({
+        ...prev,
+        [selectedProvider]: "idle",
+      }));
+    },
+    [selectedProvider]
+  );
+
+  const saveApiKey = useCallback(async () => {
+    const apiKey = apiKeyInputs[selectedProvider];
+    if (!apiKey) {
+      message.warning("请输入API密钥");
+      return;
+    }
+
+    try {
+      const newSettings = {
+        ...aiSettings,
+        apiKeys: {
+          ...aiSettings.apiKeys,
+          [selectedProvider]: apiKey,
+        },
+      };
+
+      await aiService.saveSettings(newSettings);
+      setAiSettings(newSettings);
+      message.success("API密钥保存成功！");
+    } catch (error) {
+      message.error(
+        `保存失败: ${error instanceof Error ? error.message : "未知错误"}`
+      );
+    }
+  }, [aiSettings, selectedProvider, apiKeyInputs]);
+
+  const testConnection = async () => {
+    const apiKey = apiKeyInputs[selectedProvider];
+    if (!apiKey) {
+      message.warning("请先输入API密钥");
+      return;
+    }
+
+    setConnectionStatus((prev) => ({
+      ...prev,
+      [selectedProvider]: "testing",
+    }));
+
+    try {
+      // 先保存API密钥，再测试
+      const tempSettings = {
+        ...aiSettings,
+        apiKeys: {
+          ...aiSettings.apiKeys,
+          [selectedProvider]: apiKey,
+        },
+      };
+
+      await aiService.saveSettings(tempSettings);
+      const result = await aiService.testProvider(selectedProvider);
+
+      if (result) {
+        setConnectionStatus((prev) => ({
+          ...prev,
+          [selectedProvider]: "success",
+        }));
+        message.success("连接测试成功！模型可以使用");
+      } else {
+        setConnectionStatus((prev) => ({
+          ...prev,
+          [selectedProvider]: "error",
+        }));
+        message.error("连接测试失败，请检查API密钥是否正确");
+      }
+    } catch (error) {
+      setConnectionStatus((prev) => ({
+        ...prev,
+        [selectedProvider]: "error",
+      }));
+      message.error(
+        `连接测试失败: ${error instanceof Error ? error.message : "未知错误"}`
+      );
+    }
+  };
+
   return (
     <div className={styles.contentSection}>
-      {/* 页面标题 */}
       <div style={{ marginBottom: "24px" }}>
         <Title level={3}>
           <RobotOutlined /> 模型服务
         </Title>
+        <Paragraph type="secondary">
+          配置AI服务提供商和模型参数，开始使用AI功能生成便签内容。
+        </Paragraph>
       </div>
 
       <Divider />
 
-      {/* 主要内容区域 */}
-      <div
-        style={{
-          display: "flex",
-          height: "calc(100vh - 300px)",
-          minHeight: "500px",
-        }}
-      >
-        {/* 左侧服务提供商列表 */}
-        {renderProviderList()}
+      <div style={{ display: "flex", height: "400px" }}>
+        <div style={{ width: "250px", borderRight: "1px solid #f0f0f0" }}>
+          <div style={{ padding: "16px", borderBottom: "1px solid #f0f0f0" }}>
+            <Text strong>AI 服务提供商</Text>
+          </div>
+          <List
+            dataSource={[
+              {
+                id: "zhipu",
+                name: "智谱AI",
+                icon: <RobotOutlined style={{ color: "#1890ff" }} />,
+              },
+              {
+                id: "deepseek",
+                name: "深度求索",
+                icon: <RobotOutlined style={{ color: "#722ed1" }} />,
+              },
+              {
+                id: "openai",
+                name: "OpenAI",
+                icon: <RobotOutlined style={{ color: "#10a37f" }} />,
+              },
+            ]}
+            renderItem={(provider) => (
+              <List.Item
+                style={{
+                  padding: "12px 16px",
+                  cursor: "pointer",
+                  backgroundColor:
+                    selectedProvider === provider.id
+                      ? "#f6ffed"
+                      : "transparent",
+                }}
+                onClick={() => {
+                  setSelectedProvider(provider.id);
+                  handleSettingChange("provider", provider.id);
+                }}
+              >
+                <List.Item.Meta
+                  avatar={provider.icon}
+                  title={
+                    <Text strong={selectedProvider === provider.id}>
+                      {provider.name}
+                    </Text>
+                  }
+                />
+              </List.Item>
+            )}
+          />
+        </div>
 
-        {/* 右侧空白内容 */}
-        {renderEmptyContent()}
+        <div style={{ flex: 1, padding: "24px" }}>
+          <Form layout="vertical">
+            <Card
+              title={
+                <>
+                  <KeyOutlined /> API 密钥配置
+                </>
+              }
+              style={{ marginBottom: "16px" }}
+            >
+              <Form.Item
+                label="API Key"
+                help={
+                  connectionStatus[selectedProvider] === "success"
+                    ? "✅ 连接测试成功，模型可以使用"
+                    : connectionStatus[selectedProvider] === "error"
+                    ? "❌ 连接测试失败，请检查API密钥"
+                    : "请输入API密钥并测试连接"
+                }
+              >
+                <Space.Compact style={{ width: "100%" }}>
+                  <Input.Password
+                    placeholder={`输入 ${selectedProvider} 的 API Key`}
+                    value={apiKeyInputs[selectedProvider] || ""}
+                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                    style={{ flex: 1 }}
+                    status={
+                      connectionStatus[selectedProvider] === "success"
+                        ? ""
+                        : connectionStatus[selectedProvider] === "error"
+                        ? "error"
+                        : ""
+                    }
+                  />
+                  <Button onClick={saveApiKey} type="default">
+                    保存
+                  </Button>
+                  <Button
+                    onClick={testConnection}
+                    type="primary"
+                    loading={connectionStatus[selectedProvider] === "testing"}
+                    disabled={!apiKeyInputs[selectedProvider]}
+                  >
+                    {connectionStatus[selectedProvider] === "testing"
+                      ? "测试中..."
+                      : "测试连接"}
+                  </Button>
+                </Space.Compact>
+              </Form.Item>
+            </Card>
+
+            <Card
+              title={
+                <>
+                  <SettingOutlined /> 模型配置
+                </>
+              }
+            >
+              <Form.Item label="默认模型">
+                <Select
+                  value={aiSettings.defaultModel}
+                  onChange={(value) =>
+                    handleSettingChange("defaultModel", value)
+                  }
+                  style={{ width: "100%" }}
+                >
+                  {MODEL_OPTIONS_BY_PROVIDER[
+                    selectedProvider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
+                  ]?.map((model) => (
+                    <Option key={model.value} value={model.value}>
+                      {model.label}
+                    </Option>
+                  )) || null}
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="温度参数">
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={aiSettings.temperature}
+                  onChange={(value) =>
+                    handleSettingChange("temperature", value)
+                  }
+                  marks={{ 0: "精确", 0.5: "平衡", 1: "创意" }}
+                />
+              </Form.Item>
+
+              <Form.Item label="最大生成长度">
+                <Slider
+                  min={500}
+                  max={8000}
+                  step={500}
+                  value={aiSettings.maxTokens}
+                  onChange={(value) => handleSettingChange("maxTokens", value)}
+                  marks={{
+                    500: "简短",
+                    2000: "中等",
+                    4000: "详细",
+                    8000: "完整",
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <span>显示思维链</span>
+                    <Switch
+                      checked={aiSettings.showThinking}
+                      onChange={(value) =>
+                        handleSettingChange("showThinking", value)
+                      }
+                    />
+                  </div>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <span>自动保存</span>
+                    <Switch
+                      checked={aiSettings.autoSave}
+                      onChange={(value) =>
+                        handleSettingChange("autoSave", value)
+                      }
+                    />
+                  </div>
+                </Space>
+              </Form.Item>
+            </Card>
+          </Form>
+        </div>
       </div>
     </div>
   );

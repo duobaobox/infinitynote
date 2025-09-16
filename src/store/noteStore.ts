@@ -4,9 +4,11 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import type { Note, Position, Size, DragState } from "../types";
+import type { AICustomProperties } from "../types/ai";
 import { NOTE_DEFAULT_SIZE, NoteColor } from "../types";
 import { dbOperations } from "../utils/db";
 import { noteStoreEvents, storeEventBus } from "./storeEvents";
+import { aiService } from "../services/aiService";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -68,6 +70,14 @@ interface NoteState {
   dragState: DragState;
   /** 最大层级索引 */
   maxZIndex: number;
+
+  // === AI 相关状态 ===
+  /** 正在生成AI内容的便签ID映射 */
+  aiGenerating: Record<string, boolean>;
+  /** 流式生成的实时数据 */
+  aiStreamingData: Record<string, string | undefined>;
+  /** AI生成错误信息 */
+  aiErrors: Record<string, string | undefined>;
 }
 
 /**
@@ -128,6 +138,33 @@ interface NoteActions {
   /** 初始化数据 */
   initialize: () => Promise<void>;
 
+  // === AI 相关方法 ===
+  /** 开始AI生成 */
+  startAIGeneration: (noteId: string, prompt: string) => Promise<void>;
+  /** 更新流式生成内容 */
+  updateAIStreamingContent: (noteId: string, content: string) => void;
+  /** 完成AI生成 */
+  completeAIGeneration: (
+    noteId: string,
+    finalContent: string,
+    aiData: AICustomProperties["ai"]
+  ) => Promise<void>;
+  /** 取消AI生成 */
+  cancelAIGeneration: (noteId: string) => void;
+  /** 切换思维链显示 */
+  toggleThinkingChain: (noteId: string) => Promise<void>;
+  /** 保存AI生成的便签 */
+  saveAINote: (
+    noteData: Partial<Note>,
+    aiData: AICustomProperties["ai"]
+  ) => Promise<string>;
+  /** 从提示词生成便签 */
+  createAINoteFromPrompt: (
+    canvasId: string,
+    prompt: string,
+    position?: Position
+  ) => Promise<string>;
+
   // 层级管理常量
   readonly LAYER_STEP: number;
   readonly MAX_Z_INDEX: number;
@@ -164,6 +201,11 @@ export const useNoteStore = create<NoteStore>()(
         currentDragPosition: null,
       },
       maxZIndex: 1,
+
+      // === AI 相关状态初始化 ===
+      aiGenerating: {},
+      aiStreamingData: {},
+      aiErrors: {},
 
       // 创建便签
       createNote: async (
@@ -829,6 +871,182 @@ export const useNoteStore = create<NoteStore>()(
             maxZIndex: 1,
             selectedNoteIds: [],
           });
+        }
+      },
+
+      // === AI 相关方法实现 ===
+
+      // 开始AI生成
+      startAIGeneration: async (noteId: string, prompt: string) => {
+        try {
+          set((state) => ({
+            aiGenerating: { ...state.aiGenerating, [noteId]: true },
+            aiErrors: { ...state.aiErrors, [noteId]: undefined },
+            aiStreamingData: { ...state.aiStreamingData, [noteId]: "" },
+          }));
+
+          console.log(
+            `🤖 开始为便签 ${noteId.slice(-8)} 生成AI内容，提示: ${prompt.slice(
+              0,
+              50
+            )}...`
+          );
+
+          // 调用AI服务进行生成
+          await aiService.generateNote({
+            noteId,
+            prompt,
+            onStream: (content) => {
+              get().updateAIStreamingContent(noteId, content);
+            },
+            onComplete: (finalContent, aiData) => {
+              get().completeAIGeneration(noteId, finalContent, aiData);
+            },
+            onError: (error) => {
+              set((state) => ({
+                aiErrors: { ...state.aiErrors, [noteId]: error.message },
+                aiGenerating: { ...state.aiGenerating, [noteId]: false },
+              }));
+            },
+          });
+        } catch (error) {
+          console.error("AI生成启动失败:", error);
+          set((state) => ({
+            aiErrors: { ...state.aiErrors, [noteId]: (error as Error).message },
+            aiGenerating: { ...state.aiGenerating, [noteId]: false },
+          }));
+        }
+      },
+
+      // 更新流式内容
+      updateAIStreamingContent: (noteId: string, content: string) => {
+        set((state) => ({
+          aiStreamingData: { ...state.aiStreamingData, [noteId]: content },
+        }));
+      },
+
+      // 完成AI生成
+      completeAIGeneration: async (
+        noteId: string,
+        finalContent: string,
+        aiData: AICustomProperties["ai"]
+      ) => {
+        try {
+          // 更新便签内容和AI数据
+          await get().updateNote(noteId, {
+            content: finalContent,
+            customProperties: {
+              ...get().notes.find((n) => n.id === noteId)?.customProperties,
+              ai: aiData,
+            },
+          });
+
+          // 清理临时状态
+          set((state) => ({
+            aiGenerating: { ...state.aiGenerating, [noteId]: false },
+            aiStreamingData: { ...state.aiStreamingData, [noteId]: undefined },
+            aiErrors: { ...state.aiErrors, [noteId]: undefined },
+          }));
+
+          console.log(`✅ AI生成完成，便签ID: ${noteId.slice(-8)}`);
+        } catch (error) {
+          console.error("保存AI生成内容失败:", error);
+          set((state) => ({
+            aiErrors: { ...state.aiErrors, [noteId]: (error as Error).message },
+            aiGenerating: { ...state.aiGenerating, [noteId]: false },
+          }));
+        }
+      },
+
+      // 取消AI生成
+      cancelAIGeneration: (noteId: string) => {
+        set((state) => ({
+          aiGenerating: { ...state.aiGenerating, [noteId]: false },
+          aiStreamingData: { ...state.aiStreamingData, [noteId]: undefined },
+          aiErrors: { ...state.aiErrors, [noteId]: undefined },
+        }));
+        console.log(`🚫 取消AI生成，便签ID: ${noteId.slice(-8)}`);
+      },
+
+      // 切换思维链显示
+      toggleThinkingChain: async (noteId: string) => {
+        const note = get().notes.find((n) => n.id === noteId);
+        if (note?.customProperties?.ai) {
+          const currentShow = note.customProperties.ai.showThinking ?? true;
+          await get().updateNote(noteId, {
+            customProperties: {
+              ...note.customProperties,
+              ai: {
+                ...note.customProperties.ai,
+                showThinking: !currentShow,
+              },
+            },
+          });
+          console.log(
+            `💭 切换思维链显示: ${noteId.slice(-8)}, 显示: ${!currentShow}`
+          );
+        }
+      },
+
+      // 保存AI生成的便签
+      saveAINote: async (
+        noteData: Partial<Note>,
+        aiData: AICustomProperties["ai"]
+      ): Promise<string> => {
+        const noteWithAI: Partial<Note> = {
+          ...noteData,
+          customProperties: {
+            ...noteData.customProperties,
+            ai: aiData,
+          },
+        };
+
+        // 如果有ID则更新，否则创建新便签
+        if (noteWithAI.id) {
+          await get().updateNote(noteWithAI.id, noteWithAI);
+          return noteWithAI.id;
+        } else {
+          const canvasId = noteWithAI.canvasId || "default-canvas";
+          const position = noteWithAI.position || { x: 100, y: 100 };
+          const color = noteWithAI.color || NoteColor.YELLOW;
+
+          return await get().createNote(canvasId, position, color);
+        }
+      },
+
+      // 从提示词生成便签
+      createAINoteFromPrompt: async (
+        canvasId: string,
+        prompt: string,
+        position: Position = { x: 200, y: 200 }
+      ): Promise<string> => {
+        try {
+          // 先创建一个空白便签作为占位符
+          const noteId = await get().createNote(
+            canvasId,
+            position,
+            NoteColor.YELLOW
+          );
+
+          // 更新便签标题为提示词的前几个字
+          const title =
+            prompt.length > 20 ? prompt.slice(0, 20) + "..." : prompt;
+          await get().updateNote(noteId, {
+            title,
+            content: "<p>🤖 AI正在生成内容...</p>",
+          });
+
+          console.log(
+            `📝 创建AI便签占位符: ${noteId.slice(-8)}, 提示: ${prompt.slice(
+              0,
+              30
+            )}...`
+          );
+
+          return noteId;
+        } catch (error) {
+          console.error("创建AI便签失败:", error);
+          throw error;
         }
       },
     }),

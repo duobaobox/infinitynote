@@ -1,12 +1,26 @@
 import type { ToolbarButton, ColorOption } from "./types";
 
-// 工具栏按钮配置 - 精简为4个核心功能
+// 工具栏按钮配置 - 添加AI功能
 export const TOOLBAR_BUTTONS: ToolbarButton[] = [
+  {
+    id: "ai-generate",
+    label: "AI生成",
+    icon: "RobotOutlined",
+    tooltip: "使用AI生成内容",
+  },
+  {
+    id: "ai-config",
+    label: "AI设置",
+    icon: "SettingOutlined",
+    tooltip: "AI功能设置",
+    separator: true, // 在AI功能前添加分隔符
+  },
   {
     id: "color",
     label: "更改颜色",
     icon: "BgColorsOutlined",
     tooltip: "更改便签颜色",
+    separator: true, // 在颜色功能前添加分隔符
   },
   {
     id: "duplicate",
@@ -26,6 +40,7 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     icon: "DeleteOutlined",
     tooltip: "删除便签",
     danger: true,
+    separator: true, // 在删除功能前添加分隔符
   },
 ];
 

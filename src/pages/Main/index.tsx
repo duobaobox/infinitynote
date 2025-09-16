@@ -20,6 +20,8 @@ import { CanvasToolbar } from "../../components/CanvasToolbar";
 import { NoteWorkbench } from "../../components/NoteWorkbench";
 // 引入设置弹窗组件
 import SettingsModal from "../../components/SettingsModal/index";
+// 引入AI功能测试组件（临时）
+import { AIFunctionTest } from "../../components/AIFunctionTest";
 // 引入Ant Design组件
 import {
   Layout, // 用于整体页面布局，包含Sider和Content
@@ -83,8 +85,18 @@ const Main: React.FC = () => {
   // 获取App Context中的modal实例
   const { modal } = App.useApp();
   // 状态管理
-  const { notes, createNote, getNotesByCanvas, initialize, selectNote } =
-    useNoteStore();
+  const {
+    notes,
+    createNote,
+    getNotesByCanvas,
+    initialize,
+    selectNote,
+    createAINoteFromPrompt,
+    startAIGeneration,
+    aiGenerating,
+    aiStreamingData,
+    aiErrors,
+  } = useNoteStore();
   const {
     activeCanvasId,
     viewport,
@@ -236,10 +248,15 @@ const Main: React.FC = () => {
         if (position) {
           // 如果指定了位置，直接使用
           canvasPosition = position;
-        } else {          // 使用智能位置计算，避免重叠
-          const { generateSmartPosition } = await import("../../utils/notePositioning");
-          const currentCanvasNotes = notes.filter((note: Note) => note.canvasId === activeCanvasId);
-          
+        } else {
+          // 使用智能位置计算，避免重叠
+          const { generateSmartPosition } = await import(
+            "../../utils/notePositioning"
+          );
+          const currentCanvasNotes = notes.filter(
+            (note: Note) => note.canvasId === activeCanvasId
+          );
+
           canvasPosition = generateSmartPosition(
             viewport,
             { width: window.innerWidth, height: window.innerHeight },
@@ -688,13 +705,71 @@ const Main: React.FC = () => {
 
         {/* 便签工作台 - 浮动在画布底部 */}
         <NoteWorkbench
-          onAddNote={(prompt) => {
-            // TODO: 实现AI生成便签或创建空白便签的逻辑
-            console.log("添加便签:", prompt ? `AI生成: ${prompt}` : "空白便签");
-            handleCreateNote();
+          aiGenerating={aiGenerating}
+          aiStreamingData={aiStreamingData}
+          aiErrors={aiErrors}
+          onAddNote={async (prompt) => {
+            if (!activeCanvasId) {
+              console.error("❌ 没有活动画布");
+              return;
+            }
+
+            try {
+              if (prompt && prompt.trim()) {
+                // 有提示词：使用AI生成便签
+                console.log("🤖 AI生成便签，提示:", prompt);
+
+                // 获取智能位置
+                const { generateSmartPosition } = await import(
+                  "../../utils/notePositioning"
+                );
+                const currentCanvasNotes = notes.filter(
+                  (note: Note) => note.canvasId === activeCanvasId
+                );
+
+                const position = generateSmartPosition(
+                  viewport,
+                  { width: window.innerWidth, height: window.innerHeight },
+                  { width: 200, height: 150 },
+                  currentCanvasNotes
+                );
+
+                // 创建AI便签占位符
+                const noteId = await createAINoteFromPrompt(
+                  activeCanvasId,
+                  prompt,
+                  position
+                );
+
+                // 开始AI生成
+                await startAIGeneration(noteId, prompt);
+
+                console.log("✅ AI便签创建成功");
+              } else {
+                // 无提示词：创建空白便签
+                console.log("📝 创建空白便签");
+                await handleCreateNote();
+              }
+            } catch (error) {
+              console.error("❌ 添加便签失败:", error);
+              // 可以在这里添加用户提示
+            }
           }}
         />
       </Content>
+
+      {/* AI功能测试组件（临时，用于测试） */}
+      <div
+        style={{
+          position: "fixed",
+          top: "10px",
+          right: "10px",
+          zIndex: 9999,
+          maxWidth: "400px",
+        }}
+      >
+        <AIFunctionTest />
+      </div>
 
       {/* 设置弹窗 */}
       <SettingsModal

@@ -1,5 +1,12 @@
 // 工具栏操作类型
-export type ToolbarAction = "color" | "duplicate" | "pin" | "delete";
+export type ToolbarAction =
+  | "color"
+  | "duplicate"
+  | "pin"
+  | "delete"
+  | "ai-generate"
+  | "ai-config"
+  | "ai-content-generated";
 
 // 工具栏事件数据
 export interface ToolbarActionData {

@@ -73,20 +73,98 @@ export const MENU_ITEMS: SettingMenuItem[] = [
  * API 提供商选项
  */
 export const API_PROVIDERS = [
-  { value: "openai", label: "OpenAI" },
-  { value: "anthropic", label: "Anthropic" },
-  { value: "azure", label: "Azure OpenAI" },
-  { value: "local", label: "本地模型" },
+  { value: "zhipu", label: "智谱AI", description: "国产AI模型，支持思维链" },
+  { value: "deepseek", label: "深度求索", description: "高性能推理模型" },
+  { value: "siliconflow", label: "硅基流动", description: "高性价比AI服务" },
+  { value: "alibaba", label: "阿里百炼", description: "阿里云AI服务" },
+  { value: "openai", label: "OpenAI", description: "GPT系列模型" },
+  { value: "anthropic", label: "Anthropic", description: "Claude系列模型" },
 ] as const;
 
 /**
- * 模型选项配置
+ * 模型选项配置 - 按提供商分组
  */
-export const MODEL_OPTIONS = [
-  { value: "gpt-4", label: "GPT-4" },
-  { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
-  { value: "claude-3", label: "Claude-3" },
-] as const;
+export const MODEL_OPTIONS_BY_PROVIDER = {
+  zhipu: [
+    {
+      value: "glm-4-plus",
+      label: "GLM-4 Plus",
+      description: "最新旗舰模型，支持思维链",
+    },
+    { value: "glm-4-0520", label: "GLM-4", description: "平衡性能与成本" },
+    { value: "glm-4-air", label: "GLM-4 Air", description: "轻量级模型" },
+    { value: "glm-4-airx", label: "GLM-4 AirX", description: "超快响应" },
+    { value: "glm-4-flash", label: "GLM-4 Flash", description: "极速推理" },
+  ],
+  deepseek: [
+    {
+      value: "deepseek-chat",
+      label: "DeepSeek Chat",
+      description: "对话生成模型",
+    },
+    {
+      value: "deepseek-coder",
+      label: "DeepSeek Coder",
+      description: "代码生成专用",
+    },
+  ],
+  siliconflow: [
+    {
+      value: "deepseek-llm-67b-chat",
+      label: "DeepSeek 67B",
+      description: "大参数对话模型",
+    },
+    {
+      value: "qwen-72b-chat",
+      label: "通义千问 72B",
+      description: "阿里大模型",
+    },
+    {
+      value: "internlm2_5-7b-chat",
+      label: "InternLM 7B",
+      description: "上海AI实验室",
+    },
+  ],
+  alibaba: [
+    {
+      value: "qwen-plus",
+      label: "通义千问 Plus",
+      description: "增强版对话模型",
+    },
+    {
+      value: "qwen-turbo",
+      label: "通义千问 Turbo",
+      description: "快速响应版本",
+    },
+    { value: "qwen-max", label: "通义千问 Max", description: "顶级性能模型" },
+  ],
+  openai: [
+    { value: "gpt-4", label: "GPT-4", description: "OpenAI旗舰模型" },
+    { value: "gpt-4-turbo", label: "GPT-4 Turbo", description: "更快的GPT-4" },
+    {
+      value: "gpt-3.5-turbo",
+      label: "GPT-3.5 Turbo",
+      description: "经济实用选择",
+    },
+  ],
+  anthropic: [
+    {
+      value: "claude-3-opus",
+      label: "Claude-3 Opus",
+      description: "最强推理能力",
+    },
+    {
+      value: "claude-3-sonnet",
+      label: "Claude-3 Sonnet",
+      description: "平衡选择",
+    },
+    {
+      value: "claude-3-haiku",
+      label: "Claude-3 Haiku",
+      description: "快速响应",
+    },
+  ],
+} as const;
 
 /**
  * 语言选项配置
@@ -194,10 +272,14 @@ export const APP_INFO: AppInfo = {
  * 默认模型设置
  */
 export const DEFAULT_MODEL_SETTINGS = {
-  provider: "openai" as const,
-  apiKey: "",
-  defaultModel: "gpt-4",
-  customEndpoint: "",
+  provider: "zhipu" as const,
+  apiKeys: {} as Record<string, string>,
+  defaultModel: "glm-4-plus",
+  temperature: 0.7,
+  maxTokens: 4000,
+  showThinking: true,
+  autoSave: true,
+  customEndpoints: {} as Record<string, string>,
 };
 
 /**

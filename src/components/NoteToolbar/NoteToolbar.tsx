@@ -4,9 +4,12 @@ import {
   CopyOutlined,
   PushpinOutlined,
   DeleteOutlined,
+  RobotOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import type { NoteToolbarProps, ToolbarAction } from "./types";
 import { TOOLBAR_BUTTONS, COLOR_OPTIONS } from "./constants";
+import { AIGenerationControl } from "../AIGenerationControl";
 import styles from "./index.module.css";
 
 // 图标映射组件
@@ -15,6 +18,8 @@ const IconMap: Record<string, React.ComponentType<any>> = {
   CopyOutlined,
   PushpinOutlined,
   DeleteOutlined,
+  RobotOutlined,
+  SettingOutlined,
 };
 
 const renderIcon = (iconName: string) => {
@@ -35,6 +40,7 @@ const renderIcon = (iconName: string) => {
 export const NoteToolbar = memo<NoteToolbarProps>(
   ({ noteId, visible, onAction, onClose, color }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
+    const [showAIGeneration, setShowAIGeneration] = useState(false);
     const [currentNoteColor, setCurrentNoteColor] = useState(color); // 用 props.color 初始化
     const toolbarRef = useRef<HTMLDivElement>(null);
     const colorPickerRef = useRef<HTMLDivElement>(null); // 处理按钮点击
@@ -42,6 +48,17 @@ export const NoteToolbar = memo<NoteToolbarProps>(
       (action: ToolbarAction) => {
         if (action === "color") {
           setShowColorPicker(!showColorPicker);
+          return;
+        }
+
+        if (action === "ai-generate") {
+          setShowAIGeneration(true);
+          return;
+        }
+
+        if (action === "ai-config") {
+          // 触发AI配置，这里可以打开设置模态框的AI标签页
+          onAction?.("ai-config", { noteId });
           return;
         }
 
@@ -158,6 +175,26 @@ export const NoteToolbar = memo<NoteToolbarProps>(
             ))}
           </div>
         )}
+
+        {/* AI生成控制模态框 */}
+        <AIGenerationControl
+          noteId={noteId}
+          visible={showAIGeneration}
+          onClose={() => setShowAIGeneration(false)}
+          onComplete={(content, aiData) => {
+            // 通知父组件更新便签内容
+            onAction?.("ai-content-generated", {
+              noteId,
+              content,
+              aiData,
+            });
+            setShowAIGeneration(false);
+          }}
+          onError={(error) => {
+            console.error("AI生成失败:", error);
+            // 可以在这里添加更多错误处理逻辑
+          }}
+        />
       </div>
     );
   }

@@ -22,6 +22,7 @@ import { Toolbar, DEFAULT_TOOLBAR_CONFIG } from "./toolbar/Toolbar";
 import type { ToolbarConfig } from "./toolbar/Toolbar";
 import { useOptimizedDebounce } from "./performance";
 import { TiptapEditorErrorBoundary } from "./ErrorBoundary";
+import { ThinkingChainDisplay } from "./ThinkingChainDisplay";
 import "./TiptapEditor.css";
 
 /**
@@ -49,6 +50,10 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     debounceDelay = DEFAULT_CONFIG.DEBOUNCE_DELAY,
     // enableHistory = true, // 历史记录功能暂时保留
     enableShortcuts = true,
+    // AI 功能相关属性
+    aiData,
+    thinkingChainExpanded = false,
+    onThinkingChainToggle,
   }) => {
     const { isDark } = useTheme();
     const editorId = useRef(generateEditorId());
@@ -56,6 +61,23 @@ export const TiptapEditor = memo<TiptapEditorProps>(
 
     // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
     const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
+
+    // 思维链展开状态管理
+    const [isThinkingExpanded, setIsThinkingExpanded] = useState(
+      thinkingChainExpanded
+    );
+
+    // AI 生成的便签检测
+    const isAIGenerated = useMemo(() => {
+      return aiData?.generated === true && aiData?.thinkingChain;
+    }, [aiData]);
+
+    // 处理思维链展开/收起
+    const handleThinkingToggle = () => {
+      const newExpanded = !isThinkingExpanded;
+      setIsThinkingExpanded(newExpanded);
+      onThinkingChainToggle?.(newExpanded);
+    };
 
     // TipTap 官方推荐的扩展配置方式 - 直接配置，简洁明了
     const extensions = useMemo(
@@ -261,6 +283,11 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       }
     }, [editor, readonly]);
 
+    // 当外部思维链展开状态改变时同步内部状态
+    useEffect(() => {
+      setIsThinkingExpanded(thinkingChainExpanded);
+    }, [thinkingChainExpanded]);
+
     // 清理函数
     useEffect(() => {
       return () => {
@@ -304,6 +331,15 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     return (
       <TiptapEditorErrorBoundary>
         <div className={containerClassName} style={editorStyle}>
+          {/* 思维链显示 - 位于编辑器内容上方 */}
+          {isAIGenerated && aiData?.thinkingChain && (
+            <ThinkingChainDisplay
+              thinkingData={aiData.thinkingChain}
+              isCollapsed={!isThinkingExpanded}
+              onToggle={handleThinkingToggle}
+            />
+          )}
+
           {/* 编辑器内容区域 - 充满主要空间 */}
           <EditorContent editor={editor} className="tiptap-editor-content" />
 

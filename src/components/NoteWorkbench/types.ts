@@ -11,13 +11,21 @@ export interface NoteWorkbenchProps {
   /** 输入框值变化回调 */
   onChange?: (value: string) => void;
   /** 添加便签按钮点击回调 */
-  onAddNote?: (prompt?: string) => void;
+  onAddNote?: (prompt?: string) => Promise<void> | void;
   /** 是否禁用 */
   disabled?: boolean;
   /** 自定义占位符文本 */
   placeholder?: string;
   /** 是否显示加载状态 */
   loading?: boolean;
+  /** AI生成状态 */
+  aiGenerating?: Record<string, boolean>;
+  /** AI流式数据 */
+  aiStreamingData?: Record<string, string | undefined>;
+  /** AI错误信息 */
+  aiErrors?: Record<string, string | undefined>;
+  /** 是否显示AI生成预览 */
+  showAIPreview?: boolean;
 }
 
 /**
@@ -57,7 +65,7 @@ export interface NoteCreationResult {
 /**
  * 工作台状态
  */
-export type WorkbenchStatus = 'idle' | 'loading' | 'success' | 'error';
+export type WorkbenchStatus = "idle" | "loading" | "success" | "error";
 
 /**
  * 工作台事件类型
@@ -66,7 +74,9 @@ export interface WorkbenchEvents {
   /** 创建空白便签 */
   onCreateBlankNote?: () => Promise<NoteCreationResult> | NoteCreationResult;
   /** AI生成便签 */
-  onGenerateAINote?: (options: AIGenerateOptions) => Promise<NoteCreationResult> | NoteCreationResult;
+  onGenerateAINote?: (
+    options: AIGenerateOptions
+  ) => Promise<NoteCreationResult> | NoteCreationResult;
   /** 输入框焦点事件 */
   onInputFocus?: () => void;
   /** 输入框失焦事件 */

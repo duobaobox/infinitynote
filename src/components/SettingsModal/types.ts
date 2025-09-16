@@ -71,13 +71,27 @@ export type SettingTabKey =
  */
 export interface ModelSettings {
   /** API 提供商 */
-  provider: "openai" | "anthropic" | "azure" | "local";
-  /** API 密钥 */
-  apiKey: string;
+  provider:
+    | "zhipu"
+    | "openai"
+    | "anthropic"
+    | "deepseek"
+    | "siliconflow"
+    | "alibaba";
+  /** API 密钥映射 */
+  apiKeys: Record<string, string>;
   /** 默认模型 */
   defaultModel: string;
-  /** 自定义 API 端点 */
-  customEndpoint?: string;
+  /** 生成参数 */
+  temperature: number;
+  /** 最大生成长度 */
+  maxTokens: number;
+  /** 是否显示思维链 */
+  showThinking: boolean;
+  /** 是否自动保存AI生成的内容 */
+  autoSave: boolean;
+  /** 自定义API端点映射 */
+  customEndpoints?: Record<string, string>;
 }
 
 /**

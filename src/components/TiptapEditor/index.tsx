@@ -3,6 +3,7 @@
  */
 
 export { TiptapEditor } from "./TiptapEditor";
+export { ThinkingChainDisplay } from "./ThinkingChainDisplay";
 export type {
   TiptapEditorProps,
   ToolbarButton,

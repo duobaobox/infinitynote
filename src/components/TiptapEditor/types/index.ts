@@ -4,6 +4,7 @@
 
 import type { Editor, Extension } from "@tiptap/core";
 import type { ReactNode } from "react";
+import type { AICustomProperties } from "../../../types/ai";
 
 // 编辑器状态接口
 export interface EditorState {
@@ -147,6 +148,14 @@ export interface TiptapEditorProps {
   onEmpty?: () => void;
   /** 编辑器创建完成的回调 */
   onEditorReady?: (editor: Editor) => void;
+
+  // === AI 功能相关属性 ===
+  /** AI 生成的数据（包含思维链） */
+  aiData?: AICustomProperties["ai"];
+  /** 思维链是否默认展开 */
+  thinkingChainExpanded?: boolean;
+  /** 思维链展开/收起回调 */
+  onThinkingChainToggle?: (expanded: boolean) => void;
 }
 
 // 错误类型

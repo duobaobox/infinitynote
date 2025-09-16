@@ -1,0 +1,34 @@
+/**
+ * AI功能测试组件样式
+ */
+
+.testContainer {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.testCard {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.testCard .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+}
+
+.testCard .ant-card-head-title {
+  color: white;
+}
+
+/* 深色模式适配 */
+:global(.dark) .testCard {
+  background: #1f1f1f;
+  border-color: #434343;
+}
+
+:global(.dark) .testCard .ant-card-head {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  border-bottom-color: #434343;
+}

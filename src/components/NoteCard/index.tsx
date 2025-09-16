@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { Note, Size } from "../../types";
+import type { AICustomProperties } from "../../types/ai";
 import { NOTE_MIN_SIZE } from "../../types/constants";
 import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
@@ -34,9 +35,8 @@ interface NoteCardProps {
 export const NoteCard = memo<NoteCardProps>(
   ({ note, onSelect, isSelected, onResize }) => {
     const { isDark } = useTheme();
-    const { resizeNote, updateNote, deleteNote, moveNote } = useNoteStore();
-
-    // 悬浮状态
+    const { updateNote, deleteNote, moveNote, resizeNote, startAIGeneration } =
+      useNoteStore(); // 悬浮状态
     const [isHovered, setIsHovered] = useState(false);
 
     // 编辑状态
@@ -44,6 +44,16 @@ export const NoteCard = memo<NoteCardProps>(
 
     // 工具栏显示状态
     const [showToolbar, setShowToolbar] = useState(false);
+
+    // AI 数据提取
+    const aiData = note.customProperties?.ai as
+      | AICustomProperties["ai"]
+      | undefined;
+
+    // 思维链展开状态（从便签的 AI 数据中获取，默认展开）
+    const [thinkingChainExpanded, setThinkingChainExpanded] = useState(
+      aiData?.showThinking ?? true
+    );
 
     // 缩放状态
     const [isResizing, setIsResizing] = useState(false);
@@ -56,14 +66,15 @@ export const NoteCard = memo<NoteCardProps>(
       startWidth: number;
       startHeight: number;
       currentWidth: number;
-      currentHeight: number;    } | null>(null);
+      currentHeight: number;
+    } | null>(null);
 
     // 拖拽性能优化
     const {
       displayPosition,
       updateDrag,
       endDrag: endOptimizedDrag,
-    } = useOptimizedNoteDrag(note.id, note.position, moveNote);    // 使用 dnd-kit 的拖拽功能
+    } = useOptimizedNoteDrag(note.id, note.position, moveNote); // 使用 dnd-kit 的拖拽功能
     const {
       attributes,
       listeners,
@@ -77,7 +88,7 @@ export const NoteCard = memo<NoteCardProps>(
       },
       // 只有在缩放时禁用拖拽，编辑时允许通过头部拖拽
       disabled: isResizing,
-    });    // 拖拽状态跟踪
+    }); // 拖拽状态跟踪
     const dragStateRef = useRef({
       isDragging: false,
       hasMoved: false,
@@ -90,7 +101,7 @@ export const NoteCard = memo<NoteCardProps>(
       if (dndIsDragging) {
         dragStateRef.current.isDragging = true;
         dragStateRef.current.hasMoved = true;
-        
+
         // 如果使用transform，更新优化的拖拽状态
         if (transform) {
           updateDrag({ x: transform.x, y: transform.y });
@@ -98,7 +109,7 @@ export const NoteCard = memo<NoteCardProps>(
       } else {
         // 拖拽结束时使用优化的结束逻辑
         endOptimizedDrag();
-        
+
         // 拖拽结束后短暂延迟重置状态，防止立即触发点击
         setTimeout(() => {
           dragStateRef.current = {
@@ -187,6 +198,26 @@ export const NoteCard = memo<NoteCardProps>(
       [note.id, updateNote]
     );
 
+    // 处理思维链展开/收起
+    const handleThinkingChainToggle = useCallback(
+      (expanded: boolean) => {
+        setThinkingChainExpanded(expanded);
+        // 同时更新便签的 AI 数据
+        if (aiData) {
+          updateNote(note.id, {
+            customProperties: {
+              ...note.customProperties,
+              ai: {
+                ...aiData,
+                showThinking: expanded,
+              },
+            },
+          });
+        }
+      },
+      [note.id, note.customProperties, aiData, updateNote]
+    );
+
     // 删除这个函数，合并到 handleMouseUp 中
 
     // 处理双击进入编辑（保留作为备用）
@@ -212,6 +243,29 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [isEditing]);
 
+    // 处理AI生成
+    const handleAIGenerate = useCallback(async () => {
+      try {
+        const prompt = window.prompt("请输入AI生成提示词:");
+        if (!prompt?.trim()) return;
+
+        console.log(`🤖 开始为便签 ${note.id.slice(-8)} 生成AI内容`);
+        await startAIGeneration(note.id, prompt.trim());
+        setShowToolbar(false); // 关闭工具栏
+      } catch (error) {
+        console.error("AI生成失败:", error);
+        // 可以在这里显示错误提示
+      }
+    }, [note.id, startAIGeneration]);
+
+    // 处理AI配置
+    const handleAIConfig = useCallback(() => {
+      console.log("🔧 打开AI设置");
+      // TODO: 打开设置模态框的AI标签页
+      // 这里可以通过事件总线或上下文来打开设置
+      setShowToolbar(false); // 关闭工具栏
+    }, []);
+
     // 处理工具栏操作
     const handleToolbarAction = useCallback(
       (action: ToolbarAction, data?: any) => {
@@ -233,11 +287,17 @@ export const NoteCard = memo<NoteCardProps>(
             // TODO: 实现置顶功能
             console.log("Pin note:", note.id);
             break;
+          case "ai-generate":
+            handleAIGenerate();
+            break;
+          case "ai-config":
+            handleAIConfig();
+            break;
           default:
             console.log("Unhandled action:", action);
         }
       },
-      [note.id, updateNote, deleteNote]
+      [note.id, updateNote, deleteNote, handleAIGenerate, handleAIConfig]
     ); // 关闭工具栏
     const handleCloseToolbar = useCallback(() => {
       setShowToolbar(false);
@@ -541,7 +601,9 @@ export const NoteCard = memo<NoteCardProps>(
       : {};
 
     return (
-      <>        {/* 便签容器包装器 - 统一管理便签和工具栏的布局 */}
+      <>
+        {" "}
+        {/* 便签容器包装器 - 统一管理便签和工具栏的布局 */}
         <div
           className={styles.noteCardContainer}
           style={{
@@ -624,6 +686,10 @@ export const NoteCard = memo<NoteCardProps>(
                 onBlur={handleEditorBlur}
                 onEscape={handleEditorEscape}
                 debounceDelay={300}
+                // AI 功能相关属性
+                aiData={aiData}
+                thinkingChainExpanded={thinkingChainExpanded}
+                onThinkingChainToggle={handleThinkingChainToggle}
               />
             </div>
 
