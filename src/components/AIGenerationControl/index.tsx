@@ -3,7 +3,7 @@
  * 用于触发AI内容生成、配置生成参数和处理生成流程
  */
 
-import { memo, useState, useCallback, useRef } from "react";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 import {
   Modal,
   Input,
@@ -12,7 +12,7 @@ import {
   Button,
   Space,
   Form,
-  message,
+  App,
   Divider,
   Typography,
   Tooltip,
@@ -28,9 +28,9 @@ import {
   BulbOutlined,
   FileTextOutlined,
 } from "@ant-design/icons";
-import { aiService } from "../../services/aiService";
+import { aiService, securityManager } from "../../services/aiService";
 import type { AIGenerationOptions } from "../../types/ai";
-import { AIGenerationStatus } from "../AIGenerationStatus";
+import { AIGenerationStatus } from "../AIGenerationStatus/index.tsx";
 import styles from "./index.module.css";
 
 const { TextArea } = Input;
@@ -67,6 +67,7 @@ interface GenerationState {
  */
 export const AIGenerationControl = memo<AIGenerationControlProps>(
   ({ noteId, visible, onClose, onComplete, onError }) => {
+    const { message, modal } = App.useApp();
     const [form] = Form.useForm();
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -121,6 +122,16 @@ export const AIGenerationControl = memo<AIGenerationControlProps>(
       },
     ];
 
+    // 组件卸载时清理
+    useEffect(() => {
+      return () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+          abortControllerRef.current = null;
+        }
+      };
+    }, []);
+
     // 重置生成状态
     const resetGenerationState = useCallback(() => {
       setGenerationState({
@@ -140,7 +151,9 @@ export const AIGenerationControl = memo<AIGenerationControlProps>(
         return;
       }
 
-      if (!aiSettings.apiKeys?.[aiSettings.provider]) {
+      // 检查API密钥是否已配置（使用securityManager检查实际存储）
+      const apiKey = securityManager.getAPIKey(aiSettings.provider);
+      if (!apiKey) {
         message.error("请先配置AI服务的API密钥");
         return;
       }
@@ -251,7 +264,7 @@ export const AIGenerationControl = memo<AIGenerationControlProps>(
     // 处理模态框关闭
     const handleClose = useCallback(() => {
       if (generationState.status === "generating") {
-        Modal.confirm({
+        modal.confirm({
           title: "确认关闭",
           content: "AI正在生成内容，关闭将停止生成。确定要关闭吗？",
           onOk: () => {
@@ -264,7 +277,13 @@ export const AIGenerationControl = memo<AIGenerationControlProps>(
         resetGenerationState();
         onClose();
       }
-    }, [generationState.status, stopGeneration, resetGenerationState, onClose]);
+    }, [
+      generationState.status,
+      stopGeneration,
+      resetGenerationState,
+      onClose,
+      modal,
+    ]);
 
     return (
       <Modal
@@ -281,10 +300,9 @@ export const AIGenerationControl = memo<AIGenerationControlProps>(
         onCancel={handleClose}
         footer={null}
         width={800}
-        className={styles.generationModal}
         destroyOnClose
       >
-        <div className={styles.modalContent}>
+        <div>
           {/* AI生成状态显示 */}
           <AIGenerationStatus
             status={generationState.status}

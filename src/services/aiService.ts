@@ -516,6 +516,7 @@ class AIService {
   constructor() {
     this.securityManager = SecurityManager.getInstance();
     this.initializeProviders();
+    this.loadUserSettings();
   }
 
   private initializeProviders() {
@@ -527,6 +528,27 @@ class AIService {
 
     // OpenAI提供商
     this.providers.set("openai", new OpenAIProvider());
+  }
+
+  /**
+   * 加载用户保存的AI配置
+   */
+  private loadUserSettings() {
+    try {
+      const savedSettings = localStorage.getItem("ai_settings");
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+
+        // 加载用户配置的提供商
+        if (parsed.provider && this.providers.has(parsed.provider)) {
+          this.currentProvider = parsed.provider;
+          console.log(`📋 已加载用户配置的AI提供商: ${this.currentProvider}`);
+        }
+      }
+    } catch (error) {
+      console.error("加载用户AI设置失败:", error);
+      // 保持默认设置
+    }
   }
 
   /**

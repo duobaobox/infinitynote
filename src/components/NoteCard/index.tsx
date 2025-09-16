@@ -366,7 +366,17 @@ export const NoteCard = memo<NoteCardProps>(
           target.closest("[data-note-toolbar]") ||
           target.closest(".noteToolbar");
 
-        if (!isInNoteCard && !isInToolbar) {
+        // 检查点击是否在Modal内部 (包括AI生成、设置等各种Modal)
+        const isInModal =
+          target.closest(".ant-modal") ||
+          target.closest(".ant-modal-content") ||
+          target.closest(".ant-modal-mask") ||
+          target.closest("[role='dialog']") ||
+          target.closest(".ant-drawer") ||
+          target.closest(".ant-popover") ||
+          target.closest(".ant-tooltip");
+
+        if (!isInNoteCard && !isInToolbar && !isInModal) {
           if (isEditing) {
             setIsEditing(false);
           }

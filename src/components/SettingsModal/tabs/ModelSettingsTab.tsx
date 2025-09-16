@@ -11,12 +11,12 @@ import {
   Slider,
   Switch,
   Button,
-  message,
+  App,
 } from "antd";
 import { RobotOutlined, KeyOutlined, SettingOutlined } from "@ant-design/icons";
 import type { ModelSettings } from "../types";
 import { MODEL_OPTIONS_BY_PROVIDER } from "../constants";
-import { aiService } from "../../../services/aiService";
+import { aiService, securityManager } from "../../../services/aiService";
 import styles from "../index.module.css";
 
 const { Title, Text, Paragraph } = Typography;
@@ -31,6 +31,8 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
   settings,
   onSettingChange,
 }) => {
+  const { message } = App.useApp();
+
   const [selectedProvider, setSelectedProvider] = useState<string>(
     settings.provider || "zhipu"
   );
@@ -48,16 +50,43 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     setAiSettings(currentSettings);
     setSelectedProvider(currentSettings.provider);
 
-    // 初始化API密钥输入框的值
+    // 从securityManager获取实际保存的API密钥
     const initialApiKeys: { [key: string]: string } = {};
-    Object.keys(currentSettings.apiKeys || {}).forEach((provider) => {
-      const savedKey = currentSettings.apiKeys?.[provider];
+    const providers = ["zhipu", "deepseek", "openai"]; // 支持的提供商列表
+
+    providers.forEach((provider) => {
+      // 直接从securityManager获取加密保存的密钥
+      const savedKey = securityManager.getAPIKey(provider);
       if (savedKey) {
         initialApiKeys[provider] = savedKey;
       }
     });
+
     setApiKeyInputs(initialApiKeys);
+
+    // 初始化连接状态
+    const initialStatus: {
+      [key: string]: "idle" | "testing" | "success" | "error";
+    } = {};
+    providers.forEach((provider) => {
+      initialStatus[provider] = "idle";
+    });
+    setConnectionStatus(initialStatus);
   }, []);
+
+  // 监听提供商切换，确保显示正确的API密钥
+  useEffect(() => {
+    if (selectedProvider && !apiKeyInputs[selectedProvider]) {
+      // 如果切换到的提供商没有在输入框中显示密钥，尝试从存储加载
+      const savedKey = securityManager.getAPIKey(selectedProvider);
+      if (savedKey) {
+        setApiKeyInputs((prev) => ({
+          ...prev,
+          [selectedProvider]: savedKey,
+        }));
+      }
+    }
+  }, [selectedProvider, apiKeyInputs]);
 
   const handleSettingChange = useCallback(
     (key: string, value: any) => {
@@ -97,23 +126,26 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     }
 
     try {
-      const newSettings = {
+      // 直接使用securityManager保存API密钥，更可靠
+      securityManager.setAPIKey(selectedProvider, apiKey);
+
+      // 更新当前设置状态
+      const updatedSettings = {
         ...aiSettings,
         apiKeys: {
           ...aiSettings.apiKeys,
           [selectedProvider]: apiKey,
         },
       };
+      setAiSettings(updatedSettings);
 
-      await aiService.saveSettings(newSettings);
-      setAiSettings(newSettings);
       message.success("API密钥保存成功！");
     } catch (error) {
       message.error(
         `保存失败: ${error instanceof Error ? error.message : "未知错误"}`
       );
     }
-  }, [aiSettings, selectedProvider, apiKeyInputs]);
+  }, [aiSettings, selectedProvider, apiKeyInputs, message]);
 
   const testConnection = async () => {
     const apiKey = apiKeyInputs[selectedProvider];
@@ -128,16 +160,10 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     }));
 
     try {
-      // 先保存API密钥，再测试
-      const tempSettings = {
-        ...aiSettings,
-        apiKeys: {
-          ...aiSettings.apiKeys,
-          [selectedProvider]: apiKey,
-        },
-      };
+      // 先保存API密钥到securityManager，再测试
+      securityManager.setAPIKey(selectedProvider, apiKey);
 
-      await aiService.saveSettings(tempSettings);
+      // 测试连接
       const result = await aiService.testProvider(selectedProvider);
 
       if (result) {
