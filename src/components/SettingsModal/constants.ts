@@ -103,9 +103,9 @@ export const MODEL_OPTIONS_BY_PROVIDER = {
       description: "对话生成模型",
     },
     {
-      value: "deepseek-coder",
-      label: "DeepSeek Coder",
-      description: "代码生成专用",
+      value: "deepseek-reasoner",
+      label: "DeepSeek Reasoner",
+      description: "推理专用模型",
     },
   ],
   siliconflow: [

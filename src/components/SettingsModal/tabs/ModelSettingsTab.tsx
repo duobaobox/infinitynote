@@ -49,7 +49,11 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
 
   useEffect(() => {
     const initializeComponent = async () => {
-      const currentSettings = aiService.getSettingsSync();
+      // 等待一小段时间让aiService加载完成
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // 获取最新的AI设置（包括从IndexedDB加载的设置）
+      const currentSettings = await aiService.getSettings();
       setAiSettings(currentSettings);
       setSelectedProvider(currentSettings.provider);
 
@@ -105,15 +109,40 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
       };
 
       setAiSettings(newSettings);
-      try {
-        await aiService.saveSettings(newSettings);
-      } catch (error) {
-        console.error("保存AI设置失败:", error);
+
+      // 检查是否可以保存配置
+      const canSave = await validateAndSaveSettings(newSettings);
+      if (canSave) {
+        onSettingChange(key as keyof ModelSettings, value);
       }
-      onSettingChange(key as keyof ModelSettings, value);
     },
     [aiSettings, onSettingChange]
   );
+
+  const validateAndSaveSettings = useCallback(async (settings: any) => {
+    try {
+      // 检查当前提供商是否有API密钥
+      const currentApiKey = await securityManager.getAPIKey(settings.provider);
+      if (!currentApiKey) {
+        console.log("API密钥未配置，无法保存设置");
+        return false;
+      }
+
+      // 检查是否选择了模型
+      if (!settings.defaultModel) {
+        console.log("模型未选择，无法保存设置");
+        return false;
+      }
+
+      // 保存设置
+      await aiService.saveSettings(settings);
+      console.log("✅ AI设置已保存:", settings);
+      return true;
+    } catch (error) {
+      console.error("保存AI设置失败:", error);
+      return false;
+    }
+  }, []);
 
   const handleApiKeyChange = useCallback(
     (value: string) => {
@@ -139,8 +168,8 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     }
 
     try {
-      // 直接使用securityManager保存API密钥，更可靠
-      securityManager.setAPIKey(selectedProvider, apiKey);
+      // 保存API密钥
+      await securityManager.setAPIKey(selectedProvider, apiKey);
 
       // 更新当前设置状态
       const updatedSettings = {
@@ -152,13 +181,26 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
       };
       setAiSettings(updatedSettings);
 
-      message.success("API密钥保存成功！");
+      // 验证并尝试保存完整配置
+      const canSave = await validateAndSaveSettings(updatedSettings);
+
+      if (canSave) {
+        message.success("API密钥保存成功，AI配置已生效！");
+      } else {
+        message.success("API密钥保存成功，请选择模型以完成配置！");
+      }
     } catch (error) {
       message.error(
         `保存失败: ${error instanceof Error ? error.message : "未知错误"}`
       );
     }
-  }, [aiSettings, selectedProvider, apiKeyInputs, message]);
+  }, [
+    aiSettings,
+    selectedProvider,
+    apiKeyInputs,
+    message,
+    validateAndSaveSettings,
+  ]);
 
   const testConnection = async () => {
     const apiKey = apiKeyInputs[selectedProvider];
@@ -173,8 +215,8 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     }));
 
     try {
-      // 先保存API密钥到securityManager，再测试
-      securityManager.setAPIKey(selectedProvider, apiKey);
+      // 临时保存API密钥用于测试
+      await securityManager.setAPIKey(selectedProvider, apiKey);
 
       // 测试连接
       const result = await aiService.testProvider(selectedProvider);
@@ -184,13 +226,13 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
           ...prev,
           [selectedProvider]: "success",
         }));
-        message.success("连接测试成功！模型可以使用");
+        message.success("✅ 连接测试成功！API可以正常使用");
       } else {
         setConnectionStatus((prev) => ({
           ...prev,
           [selectedProvider]: "error",
         }));
-        message.error("连接测试失败，请检查API密钥是否正确");
+        message.error("❌ 连接测试失败，请检查API密钥是否正确");
       }
     } catch (error) {
       setConnectionStatus((prev) => ({
@@ -198,7 +240,9 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
         [selectedProvider]: "error",
       }));
       message.error(
-        `连接测试失败: ${error instanceof Error ? error.message : "未知错误"}`
+        `❌ 连接测试失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
       );
     }
   };
@@ -212,6 +256,27 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
         <Paragraph type="secondary">
           配置AI服务提供商和模型参数，开始使用AI功能生成便签内容。
         </Paragraph>
+
+        {/* 当前AI配置状态 */}
+        <Card
+          size="small"
+          style={{ marginTop: "16px", backgroundColor: "#f6f8fa" }}
+        >
+          <Space>
+            <Text strong>当前系统AI配置：</Text>
+            <Text type="secondary">
+              提供商: <Text code>{aiSettings.provider}</Text>
+            </Text>
+            <Text type="secondary">
+              模型: <Text code>{aiSettings.defaultModel || "未选择"}</Text>
+            </Text>
+            {aiSettings.defaultModel && apiKeyInputs[aiSettings.provider] ? (
+              <Text type="success">✅ 配置完成</Text>
+            ) : (
+              <Text type="warning">⚠️ 配置不完整</Text>
+            )}
+          </Space>
+        </Card>
       </div>
 
       <Divider />

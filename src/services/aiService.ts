@@ -397,7 +397,7 @@ class OpenAIProvider implements AIProvider {
  */
 class DeepSeekProvider implements AIProvider {
   name = "deepseek";
-  supportedModels = ["deepseek-chat", "deepseek-coder"];
+  supportedModels = ["deepseek-chat", "deepseek-reasoner"];
   supportsStreaming = true;
   supportsThinking = false; // DeepSeek 不支持思维链显示
 
@@ -511,6 +511,15 @@ class AIService {
   private providers: Map<string, AIProvider> = new Map();
   private currentProvider: string = "zhipu";
   private securityManager: SecurityManager;
+  private currentSettings: AISettings = {
+    provider: "zhipu",
+    apiKeys: {},
+    defaultModel: "",
+    temperature: 0.7,
+    maxTokens: 1000,
+    showThinking: true,
+    autoSave: true,
+  };
 
   constructor() {
     this.securityManager = SecurityManager.getInstance();
@@ -545,15 +554,38 @@ class AIService {
       if (settingsConfig && settingsConfig.value) {
         const parsed = JSON.parse(settingsConfig.value);
 
+        // 更新完整的设置
+        this.currentSettings = {
+          ...this.currentSettings,
+          ...parsed,
+        };
+
         // 加载用户配置的提供商
         if (parsed.provider && this.providers.has(parsed.provider)) {
           this.currentProvider = parsed.provider;
+          this.currentSettings.provider = parsed.provider;
           console.log(`📋 已加载用户配置的AI提供商: ${this.currentProvider}`);
         }
+
+        // 加载用户选择的模型
+        if (parsed.defaultModel) {
+          this.currentSettings.defaultModel = parsed.defaultModel;
+          console.log(`📋 已加载用户配置的默认模型: ${parsed.defaultModel}`);
+        } else {
+          // 如果没有保存的模型，使用当前提供商的第一个模型
+          this.currentSettings.defaultModel =
+            this.providers.get(this.currentProvider)?.supportedModels[0] || "";
+        }
+      } else {
+        // 如果没有保存的设置，使用默认值
+        this.currentSettings.defaultModel =
+          this.providers.get(this.currentProvider)?.supportedModels[0] || "";
       }
     } catch (error) {
       console.error("加载用户AI设置失败:", error);
       // 保持默认设置
+      this.currentSettings.defaultModel =
+        this.providers.get(this.currentProvider)?.supportedModels[0] || "";
     }
   }
 
@@ -588,6 +620,7 @@ class AIService {
   setProvider(providerName: string): void {
     if (this.providers.has(providerName)) {
       this.currentProvider = providerName;
+      this.currentSettings.provider = providerName;
       console.log(`🔄 切换AI提供商: ${providerName}`);
     } else {
       throw new Error(`不支持的AI提供商: ${providerName}`);
@@ -745,18 +778,17 @@ class AIService {
   }
 
   /**
-   * 同步获取AI设置（基础版本，用于向后兼容）
+   * 同步获取AI设置（返回已加载的设置）
    */
   getSettingsSync(): AISettings {
     return {
+      ...this.currentSettings,
       provider: this.currentProvider,
-      apiKeys: {},
+      // 如果没有默认模型，使用当前提供商的第一个模型
       defaultModel:
-        this.providers.get(this.currentProvider)?.supportedModels[0] || "",
-      temperature: 0.7,
-      maxTokens: 1000,
-      showThinking: true,
-      autoSave: true,
+        this.currentSettings.defaultModel ||
+        this.providers.get(this.currentProvider)?.supportedModels[0] ||
+        "",
     };
   }
 
@@ -774,7 +806,19 @@ class AIService {
         }
       }
 
-      // 保存其他设置
+      // 更新内存中的设置
+      this.currentSettings = {
+        ...this.currentSettings,
+        ...settings,
+      };
+
+      // 更新当前提供商
+      if (settings.provider && settings.provider !== this.currentProvider) {
+        this.currentProvider = settings.provider;
+        this.currentSettings.provider = settings.provider;
+      }
+
+      // 保存其他设置到IndexedDB
       const settingsToSave = { ...settings };
       delete settingsToSave.apiKeys; // 不保存明文密钥
 
@@ -789,12 +833,7 @@ class AIService {
 
       await dbOperations.saveAIConfig(config);
 
-      // 更新当前提供商
-      if (settings.provider && settings.provider !== this.currentProvider) {
-        this.setProvider(settings.provider);
-      }
-
-      console.log("✅ AI设置保存成功");
+      console.log("✅ AI设置保存成功:", settingsToSave);
     } catch (error) {
       console.error("保存AI设置失败:", error);
       throw error;
