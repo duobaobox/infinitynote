@@ -7,6 +7,7 @@ import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
+import { AIInlineControl } from "../AIInlineControl";
 import type { ToolbarAction } from "../NoteToolbar/types";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import styles from "./index.module.css";
@@ -35,8 +36,17 @@ interface NoteCardProps {
 export const NoteCard = memo<NoteCardProps>(
   ({ note, onSelect, isSelected, onResize }) => {
     const { isDark } = useTheme();
-    const { updateNote, deleteNote, moveNote, resizeNote, startAIGeneration } =
-      useNoteStore(); // 悬浮状态
+    const {
+      updateNote,
+      deleteNote,
+      moveNote,
+      resizeNote,
+      startAIGeneration,
+      cancelAIGeneration,
+      aiGenerating,
+      aiStreamingData,
+      aiErrors,
+    } = useNoteStore(); // 悬浮状态
     const [isHovered, setIsHovered] = useState(false);
 
     // 编辑状态
@@ -679,6 +689,20 @@ export const NoteCard = memo<NoteCardProps>(
             >
               <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
             </div>
+
+            {/* AI状态控制组件 */}
+            <AIInlineControl
+              noteId={note.id}
+              isGenerating={aiGenerating[note.id]}
+              error={aiErrors[note.id]}
+              streamingContent={aiStreamingData[note.id]}
+              onCancel={cancelAIGeneration}
+              onRetry={(noteId) => {
+                // 重试逻辑：使用上次的提示词或弹出输入框
+                const lastPrompt = aiData?.prompt || "请继续生成内容";
+                startAIGeneration(noteId, lastPrompt);
+              }}
+            />
 
             {/* 便签内容区域 - 编辑器 */}
             <div className={styles.noteContent}>
