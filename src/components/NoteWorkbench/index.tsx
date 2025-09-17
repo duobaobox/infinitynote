@@ -1,16 +1,8 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Input, Button } from "antd";
-import { iconRegistry } from "../../utils/iconRegistry";
-import type { IconType } from "../../utils/iconRegistry";
+import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
 import type { NoteWorkbenchProps, WorkbenchStatus } from "./types";
 import styles from "./index.module.css";
-
-// 创建动态图标组件
-const DynamicIcon = ({ type }: { type: IconType }) => {
-  const IconComponent = iconRegistry[type];
-  // @ts-expect-error - iconRegistry包含多种类型，需要忽略类型检查
-  return IconComponent ? <IconComponent /> : null;
-};
 
 /**
  * 便签工作台组件
@@ -18,6 +10,8 @@ const DynamicIcon = ({ type }: { type: IconType }) => {
  * 功能特性：
  * - 提供AI生成便签的提示词输入框
  * - 支持创建空白便签
+ * - AI生成时支持停止并删除正在生成的便签
+ * - 使用Ant Design标准按钮样式
  * - 响应式布局适配不同屏幕尺寸
  * - 与现有主题系统兼容
  * - 支持快捷键操作
@@ -26,15 +20,18 @@ const DynamicIcon = ({ type }: { type: IconType }) => {
  * 使用场景：
  * - 用户输入提示词，AI生成便签内容
  * - 留空输入框，创建空白便签
+ * - AI生成过程中可停止并删除便签
  */
 export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   value = "",
   onChange,
   onAddNote,
+  onStopAI,
   disabled = false,
   loading = false,
   placeholder = "输入文本AI生成便签，留空创建空白便签...",
   aiGenerating = {},
+  currentGeneratingNoteId,
 }) => {
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);
@@ -63,13 +60,13 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     try {
       await onAddNote?.(prompt || undefined);
 
-      // 只有在没有AI生成时才清空输入框（AI生成时在上层组件处理）
-      if (!isAnyAIGenerating && !prompt) {
+      // AI生成成功后清空输入框
+      if (prompt) {
         setInputValue("");
         onChange?.("");
       }
 
-      // 直接重置到idle状态，不显示绿色成功状态
+      // 直接重置到idle状态
       setStatus("idle");
     } catch (error) {
       setStatus("error");
@@ -79,6 +76,17 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
       setTimeout(() => setStatus("idle"), 2000);
     }
   }, [inputValue, disabled, loading, isAnyAIGenerating, onAddNote, onChange]);
+
+  /**
+   * 处理停止AI生成（仅在悬浮时显示）
+   */
+  const handleStopAI = useCallback(() => {
+    onStopAI?.();
+    // 清空输入框
+    setInputValue("");
+    onChange?.("");
+    setStatus("idle");
+  }, [onStopAI, onChange]);
 
   /**
    * 处理回车键提交
@@ -95,31 +103,45 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     setInputValue(value);
   }, [value]);
 
+  // 检测是否有输入内容来决定按钮状态
+  const hasPrompt = inputValue.trim().length > 0;
+
   // 计算按钮状态
   const isButtonDisabled =
-    disabled || loading || status === "loading" || isAnyAIGenerating;
-  const isLoading = loading || status === "loading" || isAnyAIGenerating;
+    disabled || ((loading || status === "loading") && !isAnyAIGenerating);
 
   // 动态占位符
   const dynamicPlaceholder = isAnyAIGenerating
     ? "AI正在生成便签..."
     : placeholder;
 
-  // 检测是否有输入内容来决定按钮状态
-  const hasPrompt = inputValue.trim().length > 0;
+  // 按钮点击处理
+  const handleButtonClick = () => {
+    if (isAnyAIGenerating) {
+      handleStopAI();
+    } else {
+      handleAddNote();
+    }
+  };
 
-  // 动态按钮配置
-  const buttonConfig = {
-    icon: hasPrompt ? "RobotOutlined" : "PlusOutlined",
-    tooltip: hasPrompt ? "AI生成便签" : "创建空白便签",
-    type: hasPrompt ? ("default" as const) : ("primary" as const),
-    className: hasPrompt
-      ? `${styles.addExternalButton} ${styles.aiButton}`
-      : styles.addExternalButton,
+  // 工具提示文本
+  const getTooltipText = () => {
+    if (isAnyAIGenerating) {
+      return "停止生成并删除便签";
+    }
+
+    if (hasPrompt) {
+      return "AI生成便签";
+    }
+
+    return "创建空白便签";
   };
 
   return (
-    <div className={styles.consoleContainer} data-loading={isLoading}>
+    <div
+      className={styles.consoleContainer}
+      data-loading={loading || status === "loading"}
+    >
       {/* 主输入区域 */}
       <div className={styles.consoleInputArea}>
         {/* 输入框容器 */}
@@ -129,7 +151,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={dynamicPlaceholder}
-            disabled={disabled}
+            disabled={disabled || isAnyAIGenerating} // AI生成时禁用输入框
             className={styles.consoleInput}
             autoComplete="off"
           />
@@ -138,17 +160,16 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
         {/* 外部按钮容器 */}
         <div className={styles.consoleExternalButtons}>
           <Button
-            type={buttonConfig.type}
+            type="primary"
             shape="circle"
-            icon={<DynamicIcon type={buttonConfig.icon as IconType} />}
-            onClick={handleAddNote}
+            icon={hasPrompt ? <RobotOutlined /> : <PlusOutlined />}
+            loading={isAnyAIGenerating}
+            onClick={handleButtonClick}
             disabled={isButtonDisabled}
-            loading={isLoading}
-            className={buttonConfig.className}
-            title={buttonConfig.tooltip}
-            data-success={status === "success"}
-            data-error={status === "error"}
-            data-has-prompt={hasPrompt}
+            title={getTooltipText()}
+            className={
+              isAnyAIGenerating ? styles.aiGeneratingButton : undefined
+            }
           />
         </div>
       </div>

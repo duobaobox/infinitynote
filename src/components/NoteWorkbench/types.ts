@@ -20,6 +20,10 @@ export interface NoteWorkbenchProps {
   loading?: boolean;
   /** AI生成状态 */
   aiGenerating?: Record<string, boolean>;
+  /** 停止AI生成回调 */
+  onStopAI?: () => void;
+  /** 当前生成便签ID（用于停止时删除） */
+  currentGeneratingNoteId?: string;
 }
 
 /**

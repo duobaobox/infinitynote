@@ -354,3 +354,49 @@
     transform: translateX(-50%) translateY(0);
   }
 }
+
+/* AI生成中按钮样式 */
+.aiGeneratingButton {
+  position: relative;
+}
+
+/* AI生成中按钮悬浮效果 - 显示红色关闭图标 */
+.aiGeneratingButton:hover {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+}
+
+/* 悬浮时隐藏loading图标，显示关闭图标 */
+.aiGeneratingButton:hover .anticon-loading {
+  display: none;
+}
+
+.aiGeneratingButton:hover::after {
+  content: "✕";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 新的工作台按钮样式 - 使用Ant Design标准样式 */
+.workbenchButton {
+  min-width: 100px;
+  height: 36px;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+/* AI生成中的停止按钮悬浮效果 */
+.workbenchButton.ant-btn-primary.ant-btn-dangerous:hover {
+  background-color: #ff7875 !important;
+  border-color: #ff7875 !important;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.3);
+}

@@ -79,6 +79,10 @@ const Main: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   // 控制画布拖动模式状态
   const [isDragMode, setIsDragMode] = useState(false);
+  // 当前正在生成的便签ID
+  const [currentGeneratingNoteId, setCurrentGeneratingNoteId] = useState<
+    string | undefined
+  >(undefined);
 
   // 获取App Context中的modal实例
   const { modal } = App.useApp();
@@ -86,11 +90,13 @@ const Main: React.FC = () => {
   const {
     notes,
     createNote,
+    deleteNote,
     getNotesByCanvas,
     initialize,
     selectNote,
     createAINoteFromPrompt,
     startAIGeneration,
+    cancelAIGeneration,
     aiGenerating,
   } = useNoteStore();
   const {
@@ -702,6 +708,15 @@ const Main: React.FC = () => {
         {/* 便签工作台 - 浮动在画布底部 */}
         <NoteWorkbench
           aiGenerating={aiGenerating}
+          currentGeneratingNoteId={currentGeneratingNoteId}
+          onStopAI={() => {
+            // 停止AI生成并删除正在生成的便签
+            if (currentGeneratingNoteId) {
+              cancelAIGeneration(currentGeneratingNoteId);
+              deleteNote(currentGeneratingNoteId);
+              setCurrentGeneratingNoteId(undefined);
+            }
+          }}
           onAddNote={async (prompt) => {
             if (!activeCanvasId) {
               console.error("❌ 没有活动画布");
@@ -735,8 +750,14 @@ const Main: React.FC = () => {
                   position
                 );
 
+                // 记录当前生成的便签ID
+                setCurrentGeneratingNoteId(noteId);
+
                 // 开始AI生成
                 await startAIGeneration(noteId, prompt);
+
+                // 生成完成后清理状态
+                setCurrentGeneratingNoteId(undefined);
 
                 console.log("✅ AI便签创建成功");
               } else {
@@ -746,6 +767,8 @@ const Main: React.FC = () => {
               }
             } catch (error) {
               console.error("❌ 添加便签失败:", error);
+              // 清理状态
+              setCurrentGeneratingNoteId(undefined);
               // 可以在这里添加用户提示
             }
           }}
