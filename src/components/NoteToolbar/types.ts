@@ -4,6 +4,7 @@ export type ToolbarAction =
   | "duplicate"
   | "pin"
   | "delete"
+  | "ai-generate"
   | "ai-config"
   | "ai-content-generated";
 

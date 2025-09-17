@@ -69,7 +69,17 @@ export const TiptapEditor = memo<TiptapEditorProps>(
 
     // AI 生成的便签检测
     const isAIGenerated = useMemo(() => {
-      return aiData?.generated === true && aiData?.thinkingChain;
+      const result = aiData?.generated === true && aiData?.thinkingChain;
+      console.log("🤖 TiptapEditor AI检测:", {
+        hasAiData: !!aiData,
+        generated: aiData?.generated,
+        hasThinkingChain: !!aiData?.thinkingChain,
+        isAIGenerated: result,
+        model: aiData?.model,
+        showThinking: aiData?.showThinking,
+        thinkingSteps: aiData?.thinkingChain?.totalSteps || 0,
+      });
+      return result;
     }, [aiData]);
 
     // 处理思维链展开/收起

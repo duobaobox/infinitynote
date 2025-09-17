@@ -1,0 +1,482 @@
+/* AI调试面板样式 */
+
+.debugPanel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 480px;
+  max-height: 600px;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.debugPanel.minimized {
+  height: 48px;
+  max-height: 48px;
+  overflow: hidden;
+}
+
+.debugPanel.hidden {
+  display: none;
+}
+
+/* 头部区域 */
+.debugHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+  border-radius: 8px 8px 0 0;
+  cursor: move;
+  user-select: none;
+}
+
+.debugTitle {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #262626;
+  margin: 0;
+}
+
+.debugTitle .icon {
+  margin-right: 6px;
+  font-size: 14px;
+  color: #1890ff;
+}
+
+.debugControls {
+  display: flex;
+  gap: 4px;
+}
+
+.controlButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #8c8c8c;
+  transition: all 0.2s;
+}
+
+.controlButton:hover {
+  background: #f0f0f0;
+  color: #1890ff;
+}
+
+.controlButton.active {
+  background: #1890ff;
+  color: white;
+}
+
+/* 状态指示器 */
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d9d9d9;
+}
+
+.statusDot.active {
+  background: #52c41a;
+  animation: pulse 1.5s infinite;
+}
+
+.statusDot.error {
+  background: #ff4d4f;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 内容区域 */
+.debugContent {
+  height: 552px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Tab导航 */
+.tabNav {
+  display: flex;
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabNav::-webkit-scrollbar {
+  display: none;
+}
+
+.tabItem {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #8c8c8c;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tabItem:hover {
+  color: #1890ff;
+  background: #f0f9ff;
+}
+
+.tabItem.active {
+  color: #1890ff;
+  background: #ffffff;
+  border-bottom-color: #1890ff;
+}
+
+/* Tab内容 */
+.tabContent {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* 概览页面 */
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.statCard {
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.statCard .number {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1890ff;
+  margin-bottom: 2px;
+}
+
+.statCard .label {
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
+.sessionList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.sessionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sessionItem:hover {
+  background: #f0f9ff;
+}
+
+.sessionItem.selected {
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+}
+
+.sessionInfo {
+  flex: 1;
+}
+
+.sessionId {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 10px;
+  color: #8c8c8c;
+  margin-bottom: 2px;
+}
+
+.sessionProvider {
+  font-size: 11px;
+  color: #262626;
+  font-weight: 500;
+}
+
+.sessionStatus {
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.sessionStatus.completed {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.sessionStatus.error {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
+.sessionStatus.streaming {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.sessionStatus.cancelled {
+  background: #f5f5f5;
+  color: #8c8c8c;
+}
+
+/* JSON数据展示 */
+.jsonViewer {
+  background: #2d3748;
+  color: #e2e8f0;
+  padding: 12px;
+  border-radius: 4px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 11px;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.jsonViewer pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 流式数据展示 */
+.streamingData {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.streamChunk {
+  padding: 8px;
+  background: #f8f9fa;
+  border-left: 3px solid #1890ff;
+  border-radius: 0 4px 4px 0;
+}
+
+.chunkHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 10px;
+  color: #8c8c8c;
+}
+
+.chunkContent {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 11px;
+  color: #262626;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 思维链展示 */
+.thinkingChain {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.thinkingStep {
+  padding: 8px;
+  background: #fff7e6;
+  border-left: 3px solid #faad14;
+  border-radius: 0 4px 4px 0;
+}
+
+.stepHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 10px;
+  color: #8c8c8c;
+}
+
+.stepContent {
+  font-size: 11px;
+  color: #262626;
+  line-height: 1.4;
+}
+
+/* 对比视图 */
+.comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comparisonSection {
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+
+.comparisonHeader {
+  padding: 6px 8px;
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: 11px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.comparisonContent {
+  padding: 8px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 10px;
+  max-height: 120px;
+  overflow-y: auto;
+  line-height: 1.3;
+}
+
+/* 错误展示 */
+.errorDisplay {
+  padding: 8px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+  color: #a8071a;
+}
+
+.errorMessage {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.errorStack {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 10px;
+  white-space: pre-wrap;
+  opacity: 0.8;
+}
+
+/* 过滤器 */
+.filters {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e8e8e8;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filterLabel {
+  font-size: 11px;
+  color: #8c8c8c;
+}
+
+.filterSelect {
+  font-size: 11px;
+  padding: 2px 4px;
+  border: 1px solid #d9d9d9;
+  border-radius: 3px;
+  background: white;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .debugPanel {
+    width: calc(100vw - 40px);
+    max-width: 380px;
+  }
+}
+
+/* 深色主题 */
+[data-theme="dark"] .debugPanel {
+  background: #1f1f1f;
+  border-color: #434343;
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .debugHeader {
+  background: #262626;
+  border-bottom-color: #434343;
+}
+
+[data-theme="dark"] .debugTitle {
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .tabNav {
+  background: #262626;
+  border-bottom-color: #434343;
+}
+
+[data-theme="dark"] .tabItem {
+  color: #a0a0a0;
+}
+
+[data-theme="dark"] .tabItem:hover {
+  background: #334155;
+}
+
+[data-theme="dark"] .tabItem.active {
+  background: #1f1f1f;
+  color: #1890ff;
+}
+
+[data-theme="dark"] .jsonViewer {
+  background: #0d1117;
+  color: #f0f6fc;
+}

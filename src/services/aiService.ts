@@ -12,6 +12,7 @@ import type {
 } from "../types/ai";
 import { markdownConverter } from "../utils/markdownConverter";
 import { dbOperations, type AIConfigDB } from "../utils/db";
+import { aiDebugCollector } from "../utils/aiDebugCollector";
 
 /**
  * 安全管理器 - 处理API密钥存储（使用IndexedDB）
@@ -111,6 +112,10 @@ class ZhipuAIProvider implements AIProvider {
       throw new Error("智谱AI API密钥未配置");
     }
 
+    // 开始调试会话
+    const debugSessionId = aiDebugCollector.startSession(options);
+    aiDebugCollector.updateSessionProvider(debugSessionId, "zhipu");
+
     const abortController = new AbortController();
 
     try {
@@ -140,19 +145,32 @@ class ZhipuAIProvider implements AIProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
+        const error = new Error(
           `智谱AI API请求失败: ${response.status} ${response.statusText}. ${errorText}`
         );
+        aiDebugCollector.recordError(debugSessionId, error, {
+          status: response.status,
+          statusText: response.statusText,
+          responseText: errorText,
+        });
+        throw error;
       }
 
-      await this.handleStreamResponse(response, options, abortController);
+      await this.handleStreamResponse(
+        response,
+        options,
+        abortController,
+        debugSessionId
+      );
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
+        aiDebugCollector.cancelSession(debugSessionId);
         console.log("智谱AI生成已被中止");
         return; // 正常中止，不抛出错误
       }
 
       console.error("智谱AI API调用失败:", error);
+      aiDebugCollector.recordError(debugSessionId, error as Error);
       options.onError?.(error as Error);
       throw error;
     }
@@ -161,7 +179,8 @@ class ZhipuAIProvider implements AIProvider {
   private async handleStreamResponse(
     response: Response,
     options: AIGenerationOptions,
-    abortController: AbortController
+    abortController: AbortController,
+    debugSessionId: string
   ): Promise<void> {
     const reader = response.body?.getReader();
     if (!reader) throw new Error("无法读取响应流");
@@ -215,6 +234,14 @@ class ZhipuAIProvider implements AIProvider {
                     timestamp: Date.now(),
                   });
                 }
+
+                // 记录调试数据
+                aiDebugCollector.recordStreamChunk(
+                  debugSessionId,
+                  parsed,
+                  deltaContent,
+                  thinking
+                );
 
                 retryCount = 0; // 重置重试计数
               } catch (parseError) {
@@ -271,6 +298,9 @@ class ZhipuAIProvider implements AIProvider {
           };
         }
 
+        // 记录调试完成数据
+        aiDebugCollector.completeSession(debugSessionId, finalHTML, aiData);
+
         options.onComplete?.(finalHTML, aiData);
       }
     } finally {
@@ -296,6 +326,12 @@ class OpenAIProvider implements AIProvider {
       throw new Error("OpenAI API密钥未配置");
     }
 
+    // 开始调试会话
+    const debugSessionId = aiDebugCollector.startSession(options);
+    aiDebugCollector.updateSessionProvider(debugSessionId, "openai");
+
+    const abortController = new AbortController();
+
     // 基础实现，可以后续扩展
     try {
       const response = await fetch(
@@ -318,24 +354,64 @@ class OpenAIProvider implements AIProvider {
             temperature: options.temperature || 0.7,
             max_tokens: options.maxTokens || 1000,
           }),
+          signal: abortController.signal,
         }
       );
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
+        const error = new Error(
           `OpenAI API请求失败: ${response.status} ${response.statusText}. ${errorText}`
         );
+        aiDebugCollector.recordError(debugSessionId, error, {
+          status: response.status,
+          statusText: response.statusText,
+          responseText: errorText,
+        });
+        throw error;
       }
 
-      // 简化的流式处理（与智谱AI类似的逻辑）
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("无法读取响应流");
+      await this.handleStreamResponse(
+        response,
+        options,
+        abortController,
+        debugSessionId
+      );
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        aiDebugCollector.cancelSession(debugSessionId);
+        console.log("OpenAI生成已被中止");
+        return;
+      }
 
-      let fullMarkdown = "";
+      console.error("OpenAI API调用失败:", error);
+      aiDebugCollector.recordError(debugSessionId, error as Error);
+      options.onError?.(error as Error);
+      throw error;
+    }
+  }
 
-      try {
-        while (true) {
+  private async handleStreamResponse(
+    response: Response,
+    options: AIGenerationOptions,
+    abortController: AbortController,
+    debugSessionId: string
+  ): Promise<void> {
+    // 简化的流式处理（与智谱AI类似的逻辑）
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("无法读取响应流");
+
+    let fullMarkdown = "";
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    try {
+      while (true) {
+        if (abortController.signal.aborted) {
+          break;
+        }
+
+        try {
           const { done, value } = await reader.read();
           if (done) break;
 
@@ -346,9 +422,31 @@ class OpenAIProvider implements AIProvider {
             fullMarkdown += content;
             const html = markdownConverter.convertStreamChunk(fullMarkdown);
             options.onStream?.(html);
-          }
-        }
 
+            // 记录调试数据
+            aiDebugCollector.recordStreamChunk(
+              debugSessionId,
+              { raw: chunk, type: "openai_chunk" },
+              content
+            );
+          }
+
+          retryCount = 0; // 重置重试计数
+        } catch (readError) {
+          if (readError instanceof Error && readError.name === "AbortError") {
+            return;
+          }
+          console.error("读取OpenAI流数据失败:", readError);
+          retryCount++;
+          if (retryCount > maxRetries) {
+            throw readError;
+          }
+          // 短暂延迟后继续
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+
+      if (!abortController.signal.aborted) {
         const finalHTML = markdownConverter.convertComplete(fullMarkdown);
         const aiData: AICustomProperties["ai"] = {
           generated: true,
@@ -363,14 +461,13 @@ class OpenAIProvider implements AIProvider {
           originalMarkdown: fullMarkdown,
         };
 
+        // 记录调试完成数据
+        aiDebugCollector.completeSession(debugSessionId, finalHTML, aiData);
+
         options.onComplete?.(finalHTML, aiData);
-      } finally {
-        reader.releaseLock();
       }
-    } catch (error) {
-      console.error("OpenAI API调用失败:", error);
-      options.onError?.(error as Error);
-      throw error;
+    } finally {
+      reader.releaseLock();
     }
   }
 
@@ -412,6 +509,10 @@ class DeepSeekProvider implements AIProvider {
       throw new Error("DeepSeek API密钥未配置");
     }
 
+    // 开始调试会话
+    const debugSessionId = aiDebugCollector.startSession(options);
+    aiDebugCollector.updateSessionProvider(debugSessionId, "deepseek");
+
     const abortController = new AbortController();
 
     try {
@@ -441,19 +542,32 @@ class DeepSeekProvider implements AIProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
+        const error = new Error(
           `DeepSeek API请求失败: ${response.status} ${response.statusText}. ${errorText}`
         );
+        aiDebugCollector.recordError(debugSessionId, error, {
+          status: response.status,
+          statusText: response.statusText,
+          responseText: errorText,
+        });
+        throw error;
       }
 
-      await this.handleStreamResponse(response, options, abortController);
+      await this.handleStreamResponse(
+        response,
+        options,
+        abortController,
+        debugSessionId
+      );
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") {
+        aiDebugCollector.cancelSession(debugSessionId);
         console.log("DeepSeek生成已被中止");
         return; // 正常中止，不抛出错误
       }
 
       console.error("DeepSeek API调用失败:", error);
+      aiDebugCollector.recordError(debugSessionId, error as Error);
       options.onError?.(error as Error);
       throw error;
     }
@@ -462,7 +576,8 @@ class DeepSeekProvider implements AIProvider {
   private async handleStreamResponse(
     response: Response,
     options: AIGenerationOptions,
-    abortController: AbortController
+    abortController: AbortController,
+    debugSessionId: string
   ): Promise<void> {
     const reader = response.body?.getReader();
     if (!reader) throw new Error("无法读取响应流");
@@ -497,6 +612,19 @@ class DeepSeekProvider implements AIProvider {
 
               try {
                 const parsed = JSON.parse(data);
+
+                // 添加详细的调试日志
+                if (options.model?.includes("reasoner")) {
+                  console.log("🧠 DeepSeek-Reasoner 响应数据:", {
+                    fullParsed: parsed,
+                    choices: parsed.choices,
+                    delta: parsed.choices?.[0]?.delta,
+                    deltaKeys: parsed.choices?.[0]?.delta
+                      ? Object.keys(parsed.choices[0].delta)
+                      : [],
+                  });
+                }
+
                 const deltaContent = parsed.choices?.[0]?.delta?.content || "";
 
                 if (deltaContent) {
@@ -507,20 +635,43 @@ class DeepSeekProvider implements AIProvider {
                   options.onStream?.(fullContent);
                 }
 
-                // 解析思维链内容 - DeepSeek可能使用不同的字段名
-                // 根据实际API响应调整这个字段名
-                const reasoning =
-                  parsed.choices?.[0]?.delta?.reasoning_content ||
-                  parsed.choices?.[0]?.delta?.thinking ||
-                  parsed.choices?.[0]?.delta?.thought;
+                // 解析思维链内容 - DeepSeek Reasoner的思维链数据
+                // 根据官方文档，可能的字段名包括：reasoning_content, reasoning, thinking
+                const delta = parsed.choices?.[0]?.delta;
+                let reasoning = null;
 
-                if (reasoning && options.model?.includes("reasoner")) {
-                  thinkingChain.push({
-                    id: `step_${thinkingChain.length + 1}`,
-                    content: reasoning,
-                    timestamp: Date.now(),
-                  });
+                if (delta && options.model?.includes("reasoner")) {
+                  reasoning =
+                    delta.reasoning_content || // DeepSeek官方字段名
+                    delta.reasoning || // 可能的字段名
+                    delta.thinking || // 另一种可能
+                    delta.thought || // 备选字段名
+                    delta["reasoning-content"]; // 可能使用连字符
+
+                  // 如果有思维链内容，记录详细信息
+                  if (reasoning) {
+                    console.log("🧠 发现思维链内容:", {
+                      fieldName: Object.keys(delta).find(
+                        (key) => key.includes("reason") || key.includes("think")
+                      ),
+                      content: reasoning.substring(0, 100) + "...",
+                    });
+
+                    thinkingChain.push({
+                      id: `step_${thinkingChain.length + 1}`,
+                      content: reasoning,
+                      timestamp: Date.now(),
+                    });
+                  }
                 }
+
+                // 记录调试数据
+                aiDebugCollector.recordStreamChunk(
+                  debugSessionId,
+                  parsed,
+                  deltaContent,
+                  reasoning
+                );
 
                 retryCount = 0; // 重置重试计数
               } catch (parseError) {
@@ -572,12 +723,41 @@ class DeepSeekProvider implements AIProvider {
 
         // 如果是reasoner模型且有思维链数据
         if (options.model?.includes("reasoner") && thinkingChain.length > 0) {
+          console.log("🧠 构造思维链数据:", {
+            model: options.model,
+            stepsCount: thinkingChain.length,
+            firstStep: thinkingChain[0]?.content?.substring(0, 50) + "...",
+            lastStep:
+              thinkingChain[thinkingChain.length - 1]?.content?.substring(
+                0,
+                50
+              ) + "...",
+          });
+
           aiData.thinkingChain = {
             steps: thinkingChain,
             summary: `通过${thinkingChain.length}步推理完成`,
             totalSteps: thinkingChain.length,
           };
+        } else {
+          console.log("⚠️ 未构造思维链数据:", {
+            model: options.model,
+            isReasonerModel: options.model?.includes("reasoner"),
+            thinkingChainLength: thinkingChain.length,
+            showThinking: aiData.showThinking,
+          });
         }
+
+        console.log("🎯 最终AI数据:", {
+          model: aiData.model,
+          provider: aiData.provider,
+          hasThinkingChain: !!aiData.thinkingChain,
+          showThinking: aiData.showThinking,
+          thinkingSteps: aiData.thinkingChain?.totalSteps || 0,
+        });
+
+        // 记录调试完成数据
+        aiDebugCollector.completeSession(debugSessionId, finalHTML, aiData);
 
         options.onComplete?.(finalHTML, aiData);
       }
@@ -1034,14 +1214,27 @@ class AIService {
         throw new Error(`AI提供商 ${this.currentProvider} 不可用`);
       }
 
+      // 确保options包含完整的配置信息
+      const completeOptions: AIGenerationOptions = {
+        ...options,
+        // 如果没有指定model，使用当前设置的默认模型
+        model:
+          options.model ||
+          this.currentSettings.defaultModel ||
+          provider.supportedModels[0] ||
+          "unknown",
+        // 如果没有指定其他参数，使用默认值
+        temperature: options.temperature ?? this.currentSettings.temperature,
+        maxTokens: options.maxTokens ?? this.currentSettings.maxTokens,
+      };
+
       console.log(
-        `🚀 使用 ${provider.name} 开始生成内容，提示: ${options.prompt.slice(
-          0,
-          50
-        )}...`
+        `🚀 使用 ${provider.name} 开始生成内容，模型: ${
+          completeOptions.model
+        }，提示: ${completeOptions.prompt.slice(0, 50)}...`
       );
 
-      await provider.generateContent(options);
+      await provider.generateContent(completeOptions);
     } catch (error) {
       console.error("AI生成失败:", error);
       options.onError?.(error as Error);

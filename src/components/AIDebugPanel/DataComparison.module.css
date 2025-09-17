@@ -1,0 +1,313 @@
+/* 数据对比组件样式 */
+
+.dataComparison {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 12px;
+}
+
+/* 控制栏 */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controlLabel {
+  font-size: 11px;
+  color: #8c8c8c;
+  margin-right: 4px;
+}
+
+.controlButton {
+  padding: 4px 8px;
+  border: 1px solid #d9d9d9;
+  background: white;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.controlButton:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.controlButton.active {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+/* 差异统计 */
+.diffStats {
+  display: flex;
+  gap: 16px;
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statLabel {
+  font-size: 10px;
+  color: #8c8c8c;
+}
+
+.statValue {
+  font-size: 11px;
+  color: #262626;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+}
+
+.added {
+  color: #52c41a;
+}
+
+.removed {
+  color: #ff4d4f;
+}
+
+/* 对比内容 */
+.comparisonContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comparisonContent.side-by-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.comparisonContent.side-by-side .contentSection:nth-child(odd) {
+  border-right: 1px solid #e8e8e8;
+  padding-right: 8px;
+}
+
+.comparisonContent.side-by-side .contentSection:nth-child(even) {
+  padding-left: 8px;
+}
+
+.contentSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.contentLength {
+  font-size: 10px;
+  color: #8c8c8c;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+}
+
+.contentBox {
+  background: #f8f9fa;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.contentText {
+  margin: 0;
+  padding: 8px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #262626;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.htmlPreview {
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #262626;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+/* 差异详情 */
+.diffDetails {
+  padding: 8px;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 4px;
+}
+
+.diffTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fa8c16;
+  margin: 0 0 8px 0;
+}
+
+.diffItem {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid #ffe7ba;
+}
+
+.diffItem:last-child {
+  border-bottom: none;
+}
+
+.diffType {
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+.diffItem.addition .diffType {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.diffItem.deletion .diffType {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
+.diffItem.modification .diffType {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.diffLocation {
+  font-size: 10px;
+  color: #8c8c8c;
+  min-width: 50px;
+}
+
+.diffDescription {
+  font-size: 11px;
+  color: #262626;
+  flex: 1;
+}
+
+/* 流式进度 */
+.streamingProgress {
+  padding: 8px;
+  background: #f0f9ff;
+  border: 1px solid #91d5ff;
+  border-radius: 4px;
+}
+
+.progressTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1890ff;
+  margin: 0 0 8px 0;
+}
+
+.progressBar {
+  display: flex;
+  height: 12px;
+  background: #e8e8e8;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.progressSegment {
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.progressSegment:hover {
+  opacity: 0.8;
+}
+
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #8c8c8c;
+}
+
+/* 深色主题 */
+[data-theme="dark"] .controls {
+  background: #262626;
+  border-color: #434343;
+}
+
+[data-theme="dark"] .controlButton {
+  background: #1f1f1f;
+  border-color: #434343;
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .diffStats {
+  background: #262626;
+  border-color: #434343;
+}
+
+[data-theme="dark"] .statValue {
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .sectionTitle {
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .contentBox {
+  background: #1f1f1f;
+  border-color: #434343;
+}
+
+[data-theme="dark"] .contentText {
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .htmlPreview {
+  color: #e8e8e8;
+}
+
+[data-theme="dark"] .diffDetails {
+  background: #2d2416;
+  border-color: #d48806;
+}
+
+[data-theme="dark"] .streamingProgress {
+  background: #1a2332;
+  border-color: #1890ff;
+}

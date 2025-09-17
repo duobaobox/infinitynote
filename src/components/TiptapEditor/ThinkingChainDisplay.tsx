@@ -27,11 +27,20 @@ interface ThinkingChainDisplayProps {
  */
 export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
   ({ thinkingData, isCollapsed, onToggle }) => {
+    console.log("🧠 ThinkingChainDisplay 渲染:", {
+      hasThinkingData: !!thinkingData,
+      stepsLength: thinkingData?.steps?.length || 0,
+      totalSteps: thinkingData?.totalSteps || 0,
+      summary: thinkingData?.summary,
+      isCollapsed,
+    });
+
     if (
       !thinkingData ||
       !thinkingData.steps ||
       thinkingData.steps.length === 0
     ) {
+      console.log("⚠️ ThinkingChainDisplay 数据无效，不显示");
       return null;
     }
 

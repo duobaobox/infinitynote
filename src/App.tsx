@@ -6,6 +6,10 @@ import { ThemeProvider } from "./theme";
 import ErrorBoundary from "./components/ErrorBoundary";
 // 引入Ant Design App组件
 import { App as AntdApp } from "antd";
+// 引入AI调试面板
+import { AIDebugPanel } from "./components/AIDebugPanel";
+// 引入AI调试开关
+import { AIDebugToggle } from "./components/AIDebugToggle";
 // 引入全局样式
 import "./App.css";
 import "./theme/global.css";
@@ -49,6 +53,10 @@ function App() {
           <ErrorBoundary>
             <AntdApp>
               <Main />
+              {/* AI调试面板 - 仅在开发环境显示 */}
+              <AIDebugPanel />
+              {/* AI调试开关按钮 */}
+              <AIDebugToggle />
             </AntdApp>
           </ErrorBoundary>
         </div>

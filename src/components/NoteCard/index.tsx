@@ -7,7 +7,7 @@ import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
-import { AIInlineControl } from "../AIInlineControl";
+import { AIStatusIndicator } from "../AIStatusIndicator";
 import type { ToolbarAction } from "../NoteToolbar/types";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import styles from "./index.module.css";
@@ -59,6 +59,21 @@ export const NoteCard = memo<NoteCardProps>(
     const aiData = note.customProperties?.ai as
       | AICustomProperties["ai"]
       | undefined;
+
+    // 调试AI数据传递
+    useEffect(() => {
+      if (aiData) {
+        console.log("📝 NoteCard AI数据:", {
+          noteId: note.id.slice(-8),
+          hasAiData: !!aiData,
+          hasThinkingChain: !!aiData.thinkingChain,
+          showThinking: aiData.showThinking,
+          thinkingSteps: aiData.thinkingChain?.totalSteps || 0,
+          model: aiData.model,
+          provider: aiData.provider,
+        });
+      }
+    }, [aiData, note.id]);
 
     // 思维链展开状态（从便签的 AI 数据中获取，默认展开）
     const [thinkingChainExpanded, setThinkingChainExpanded] = useState(
@@ -690,14 +705,13 @@ export const NoteCard = memo<NoteCardProps>(
               <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
             </div>
 
-            {/* AI状态控制组件 */}
-            <AIInlineControl
+            {/* AI状态指示器 */}
+            <AIStatusIndicator
               noteId={note.id}
               isGenerating={aiGenerating[note.id]}
               error={aiErrors[note.id]}
-              streamingContent={aiStreamingData[note.id]}
               onCancel={cancelAIGeneration}
-              onRetry={(noteId) => {
+              onRetry={(noteId: string) => {
                 // 重试逻辑：使用上次的提示词或弹出输入框
                 const lastPrompt = aiData?.prompt || "请继续生成内容";
                 startAIGeneration(noteId, lastPrompt);
