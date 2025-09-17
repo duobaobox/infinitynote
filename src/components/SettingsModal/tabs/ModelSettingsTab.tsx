@@ -12,10 +12,11 @@ import {
   Switch,
   Button,
   App,
+  InputNumber,
 } from "antd";
 import { RobotOutlined, KeyOutlined, SettingOutlined } from "@ant-design/icons";
 import type { ModelSettings } from "../types";
-import { MODEL_OPTIONS_BY_PROVIDER } from "../constants";
+import { MODEL_OPTIONS_BY_PROVIDER, API_PROVIDERS } from "../constants";
 import { aiService, securityManager } from "../../../services/aiService";
 import styles from "../index.module.css";
 
@@ -32,6 +33,19 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
   onSettingChange,
 }) => {
   const { message } = App.useApp();
+
+  // 获取提供商颜色
+  const getProviderColor = (providerId: string): string => {
+    const colors: Record<string, string> = {
+      zhipu: "#1890ff",
+      deepseek: "#722ed1",
+      openai: "#10a37f",
+      alibaba: "#ff7a00",
+      siliconflow: "#13c2c2",
+      anthropic: "#eb2f96",
+    };
+    return colors[providerId] || "#666";
+  };
 
   const [selectedProvider, setSelectedProvider] = useState<string>(
     settings.provider || "zhipu"
@@ -287,23 +301,16 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
             <Text strong>AI 服务提供商</Text>
           </div>
           <List
-            dataSource={[
-              {
-                id: "zhipu",
-                name: "智谱AI",
-                icon: <RobotOutlined style={{ color: "#1890ff" }} />,
-              },
-              {
-                id: "deepseek",
-                name: "深度求索",
-                icon: <RobotOutlined style={{ color: "#722ed1" }} />,
-              },
-              {
-                id: "openai",
-                name: "OpenAI",
-                icon: <RobotOutlined style={{ color: "#10a37f" }} />,
-              },
-            ]}
+            dataSource={API_PROVIDERS.map((provider) => ({
+              id: provider.value,
+              name: provider.label,
+              description: provider.description,
+              icon: (
+                <RobotOutlined
+                  style={{ color: getProviderColor(provider.value) }}
+                />
+              ),
+            }))}
             renderItem={(provider) => (
               <List.Item
                 style={{
@@ -324,6 +331,11 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                   title={
                     <Text strong={selectedProvider === provider.id}>
                       {provider.name}
+                    </Text>
+                  }
+                  description={
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      {provider.description}
                     </Text>
                   }
                 />
@@ -421,20 +433,29 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                 />
               </Form.Item>
 
-              <Form.Item label="最大生成长度">
-                <Slider
-                  min={500}
-                  max={8000}
-                  step={500}
+              <Form.Item label="最大生成长度 (tokens)">
+                <InputNumber
+                  min={100}
+                  max={32000}
                   value={aiSettings.maxTokens}
-                  onChange={(value) => handleSettingChange("maxTokens", value)}
-                  marks={{
-                    500: "简短",
-                    2000: "中等",
-                    4000: "详细",
-                    8000: "完整",
-                  }}
+                  onChange={(value) =>
+                    handleSettingChange("maxTokens", value || 1000)
+                  }
+                  style={{ width: "200px" }}
+                  placeholder="输入token数量"
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(value) => value!.replace(/\$\s?|(,*)/g, "") as any}
                 />
+                <div
+                  style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}
+                >
+                  <Text type="secondary">
+                    推荐值: 短文本 500-1000 | 中等内容 1000-2000 | 长文本
+                    2000-4000 | 详细内容 4000+
+                  </Text>
+                </div>
               </Form.Item>
 
               <Form.Item>
@@ -442,7 +463,21 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                   <div
                     style={{ display: "flex", justifyContent: "space-between" }}
                   >
-                    <span>显示思维链</span>
+                    <div>
+                      <span>显示思维链</span>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginTop: "2px",
+                        }}
+                      >
+                        <Text type="secondary">
+                          显示AI的推理过程 (智谱AI、DeepSeek
+                          Reasoner支持，其他提供商未来可能支持)
+                        </Text>
+                      </div>
+                    </div>
                     <Switch
                       checked={aiSettings.showThinking}
                       onChange={(value) =>
@@ -453,7 +488,18 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                   <div
                     style={{ display: "flex", justifyContent: "space-between" }}
                   >
-                    <span>自动保存</span>
+                    <div>
+                      <span>自动保存AI内容</span>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          marginTop: "2px",
+                        }}
+                      >
+                        <Text type="secondary">AI生成完成后自动保存到便签</Text>
+                      </div>
+                    </div>
                     <Switch
                       checked={aiSettings.autoSave}
                       onChange={(value) =>

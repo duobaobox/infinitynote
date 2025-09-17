@@ -31,7 +31,6 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   loading = false,
   placeholder = "输入文本AI生成便签，留空创建空白便签...",
   aiGenerating = {},
-  currentGeneratingNoteId,
 }) => {
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);

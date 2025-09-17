@@ -74,7 +74,11 @@ export const MENU_ITEMS: SettingMenuItem[] = [
  */
 export const API_PROVIDERS = [
   { value: "zhipu", label: "智谱AI", description: "国产AI模型，支持思维链" },
-  { value: "deepseek", label: "深度求索", description: "高性能推理模型" },
+  {
+    value: "deepseek",
+    label: "深度求索",
+    description: "高性能推理模型，支持思维链",
+  },
   { value: "siliconflow", label: "硅基流动", description: "高性价比AI服务" },
   { value: "alibaba", label: "阿里百炼", description: "阿里云AI服务" },
   { value: "openai", label: "OpenAI", description: "GPT系列模型" },
@@ -105,7 +109,7 @@ export const MODEL_OPTIONS_BY_PROVIDER = {
     {
       value: "deepseek-reasoner",
       label: "DeepSeek Reasoner",
-      description: "推理专用模型",
+      description: "支持思维链的推理模型",
     },
   ],
   siliconflow: [

@@ -73,6 +73,9 @@ class SecurityManager {
       zhipu: /^[a-zA-Z0-9]{32,}$/,
       openai: /^sk-[a-zA-Z0-9]{48}$/,
       deepseek: /^sk-[a-zA-Z0-9]{32,}$/, // DeepSeek API密钥格式
+      alibaba: /^sk-[a-zA-Z0-9]{20,}$/, // 阿里百炼 API密钥格式
+      siliconflow: /^sk-[a-zA-Z0-9]{32,}$/, // 硅基流动 API密钥格式
+      anthropic: /^sk-ant-api03-[a-zA-Z0-9\-_]{93}$/, // Anthropic API密钥格式
     };
 
     const pattern = patterns[provider as keyof typeof patterns];
@@ -399,7 +402,7 @@ class DeepSeekProvider implements AIProvider {
   name = "deepseek";
   supportedModels = ["deepseek-chat", "deepseek-reasoner"];
   supportsStreaming = true;
-  supportsThinking = false; // DeepSeek 不支持思维链显示
+  supportsThinking = true; // DeepSeek-V3.1 支持思维链显示
 
   async generateContent(options: AIGenerationOptions): Promise<void> {
     const securityManager = SecurityManager.getInstance();
@@ -409,9 +412,321 @@ class DeepSeekProvider implements AIProvider {
       throw new Error("DeepSeek API密钥未配置");
     }
 
+    const abortController = new AbortController();
+
     try {
       const response = await fetch(
         "https://api.deepseek.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: options.model || "deepseek-chat",
+            messages: [
+              {
+                role: "user",
+                content: options.prompt,
+              },
+            ],
+            stream: true,
+            temperature: options.temperature || 0.7,
+            max_tokens: options.maxTokens || 2000,
+          }),
+          signal: abortController.signal,
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `DeepSeek API请求失败: ${response.status} ${response.statusText}. ${errorText}`
+        );
+      }
+
+      await this.handleStreamResponse(response, options, abortController);
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        console.log("DeepSeek生成已被中止");
+        return; // 正常中止，不抛出错误
+      }
+
+      console.error("DeepSeek API调用失败:", error);
+      options.onError?.(error as Error);
+      throw error;
+    }
+  }
+
+  private async handleStreamResponse(
+    response: Response,
+    options: AIGenerationOptions,
+    abortController: AbortController
+  ): Promise<void> {
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("无法读取响应流");
+
+    let fullContent = "";
+    let fullMarkdown = "";
+    const thinkingChain: any[] = [];
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    try {
+      while (true) {
+        if (abortController.signal.aborted) {
+          break;
+        }
+
+        try {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split("\n").filter((line) => line.trim());
+
+          for (const line of lines) {
+            if (abortController.signal.aborted) {
+              return;
+            }
+
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const deltaContent = parsed.choices?.[0]?.delta?.content || "";
+
+                if (deltaContent) {
+                  fullMarkdown += deltaContent;
+                  // 实时转换为HTML
+                  fullContent =
+                    markdownConverter.convertStreamChunk(fullMarkdown);
+                  options.onStream?.(fullContent);
+                }
+
+                // 解析思维链内容 - DeepSeek可能使用不同的字段名
+                // 根据实际API响应调整这个字段名
+                const reasoning =
+                  parsed.choices?.[0]?.delta?.reasoning_content ||
+                  parsed.choices?.[0]?.delta?.thinking ||
+                  parsed.choices?.[0]?.delta?.thought;
+
+                if (reasoning && options.model?.includes("reasoner")) {
+                  thinkingChain.push({
+                    id: `step_${thinkingChain.length + 1}`,
+                    content: reasoning,
+                    timestamp: Date.now(),
+                  });
+                }
+
+                retryCount = 0; // 重置重试计数
+              } catch (parseError) {
+                console.warn(
+                  "解析DeepSeek响应数据失败:",
+                  parseError,
+                  "原始数据:",
+                  data
+                );
+                retryCount++;
+                if (retryCount > maxRetries) {
+                  throw new Error("连续解析失败，中止生成");
+                }
+              }
+            }
+          }
+        } catch (readError) {
+          if (readError instanceof Error && readError.name === "AbortError") {
+            return;
+          }
+          console.error("读取DeepSeek流数据失败:", readError);
+          retryCount++;
+          if (retryCount > maxRetries) {
+            throw readError;
+          }
+          // 短暂延迟后继续
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+
+      if (!abortController.signal.aborted) {
+        // 最终转换
+        const finalHTML = markdownConverter.convertComplete(fullMarkdown);
+
+        // 构造AI数据
+        const aiData: AICustomProperties["ai"] = {
+          generated: true,
+          model: options.model || "deepseek-chat",
+          provider: "deepseek",
+          generatedAt: new Date().toISOString(),
+          prompt: options.prompt,
+          requestId: `req_${Date.now()}`,
+          showThinking:
+            options.model?.includes("reasoner") && thinkingChain.length > 0,
+          thinkingCollapsed: false,
+          isStreaming: false,
+          originalMarkdown: fullMarkdown,
+        };
+
+        // 如果是reasoner模型且有思维链数据
+        if (options.model?.includes("reasoner") && thinkingChain.length > 0) {
+          aiData.thinkingChain = {
+            steps: thinkingChain,
+            summary: `通过${thinkingChain.length}步推理完成`,
+            totalSteps: thinkingChain.length,
+          };
+        }
+
+        options.onComplete?.(finalHTML, aiData);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  }
+}
+
+/**
+ * 阿里百炼 提供商实现
+ */
+class AlibabaProvider implements AIProvider {
+  name = "alibaba";
+  supportedModels = ["qwen-plus", "qwen-turbo", "qwen-max"];
+  supportsStreaming = true;
+  supportsThinking = false; // 暂时不支持思维链，待官方API更新
+
+  async generateContent(options: AIGenerationOptions): Promise<void> {
+    const securityManager = SecurityManager.getInstance();
+    const apiKey = await securityManager.getAPIKey("alibaba");
+
+    if (!apiKey) {
+      throw new Error("阿里百炼 API密钥未配置");
+    }
+
+    try {
+      const response = await fetch(
+        "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: options.model || "qwen-turbo",
+            input: {
+              messages: [
+                {
+                  role: "user",
+                  content: options.prompt,
+                },
+              ],
+            },
+            parameters: {
+              temperature: options.temperature || 0.7,
+              max_tokens: options.maxTokens || 2000,
+              stream: true,
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `阿里百炼 API请求失败: ${response.status} ${response.statusText}. ${errorText}`
+        );
+      }
+
+      // 简化的流式处理
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("无法读取响应流");
+
+      let fullMarkdown = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const content = this.extractContentFromChunk(chunk);
+          if (content) {
+            fullMarkdown += content;
+            const html = markdownConverter.convertStreamChunk(fullMarkdown);
+            options.onStream?.(html);
+          }
+        }
+
+        const finalHTML = markdownConverter.convertComplete(fullMarkdown);
+        const aiData: AICustomProperties["ai"] = {
+          generated: true,
+          model: options.model || "qwen-turbo",
+          provider: "alibaba",
+          generatedAt: new Date().toISOString(),
+          prompt: options.prompt,
+          requestId: `req_${Date.now()}`,
+          showThinking: false, // 不支持思维链
+          thinkingCollapsed: false,
+          isStreaming: false,
+          originalMarkdown: fullMarkdown,
+        };
+
+        options.onComplete?.(finalHTML, aiData);
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error("阿里百炼 API调用失败:", error);
+      options.onError?.(error as Error);
+      throw error;
+    }
+  }
+
+  private extractContentFromChunk(chunk: string): string {
+    try {
+      const lines = chunk
+        .split("\n")
+        .filter((line) => line.startsWith("data: "));
+      let content = "";
+      for (const line of lines) {
+        const data = line.slice(6);
+        if (data === "[DONE]") continue;
+        const parsed = JSON.parse(data);
+        // 阿里百炼可能使用不同的字段结构
+        content +=
+          parsed.output?.choices?.[0]?.message?.content ||
+          parsed.output?.text ||
+          "";
+      }
+      return content;
+    } catch {
+      return "";
+    }
+  }
+}
+
+/**
+ * 硅基流动 提供商实现（使用OpenAI兼容API）
+ */
+class SiliconFlowProvider implements AIProvider {
+  name = "siliconflow";
+  supportedModels = ["deepseek-chat", "qwen-72b-chat", "internlm2_5-7b-chat"];
+  supportsStreaming = true;
+  supportsThinking = false; // 作为代理服务，不支持思维链
+
+  async generateContent(options: AIGenerationOptions): Promise<void> {
+    const securityManager = SecurityManager.getInstance();
+    const apiKey = await securityManager.getAPIKey("siliconflow");
+
+    if (!apiKey) {
+      throw new Error("硅基流动 API密钥未配置");
+    }
+
+    try {
+      const response = await fetch(
+        "https://api.siliconflow.cn/v1/chat/completions",
         {
           method: "POST",
           headers: {
@@ -436,11 +751,11 @@ class DeepSeekProvider implements AIProvider {
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
-          `DeepSeek API请求失败: ${response.status} ${response.statusText}. ${errorText}`
+          `硅基流动 API请求失败: ${response.status} ${response.statusText}. ${errorText}`
         );
       }
 
-      // 流式处理
+      // 使用OpenAI兼容的流式处理
       const reader = response.body?.getReader();
       if (!reader) throw new Error("无法读取响应流");
 
@@ -464,11 +779,11 @@ class DeepSeekProvider implements AIProvider {
         const aiData: AICustomProperties["ai"] = {
           generated: true,
           model: options.model || "deepseek-chat",
-          provider: "deepseek",
+          provider: "siliconflow",
           generatedAt: new Date().toISOString(),
           prompt: options.prompt,
           requestId: `req_${Date.now()}`,
-          showThinking: false, // DeepSeek不支持思维链
+          showThinking: false, // 不支持思维链
           thinkingCollapsed: false,
           isStreaming: false,
           originalMarkdown: fullMarkdown,
@@ -479,7 +794,7 @@ class DeepSeekProvider implements AIProvider {
         reader.releaseLock();
       }
     } catch (error) {
-      console.error("DeepSeek API调用失败:", error);
+      console.error("硅基流动 API调用失败:", error);
       options.onError?.(error as Error);
       throw error;
     }
@@ -496,6 +811,117 @@ class DeepSeekProvider implements AIProvider {
         if (data === "[DONE]") continue;
         const parsed = JSON.parse(data);
         content += parsed.choices?.[0]?.delta?.content || "";
+      }
+      return content;
+    } catch {
+      return "";
+    }
+  }
+}
+
+/**
+ * Anthropic 提供商实现
+ */
+class AnthropicProvider implements AIProvider {
+  name = "anthropic";
+  supportedModels = ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"];
+  supportsStreaming = true;
+  supportsThinking = false; // Claude暂时不支持思维链
+
+  async generateContent(options: AIGenerationOptions): Promise<void> {
+    const securityManager = SecurityManager.getInstance();
+    const apiKey = await securityManager.getAPIKey("anthropic");
+
+    if (!apiKey) {
+      throw new Error("Anthropic API密钥未配置");
+    }
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: options.model || "claude-3-sonnet-20240229",
+          messages: [
+            {
+              role: "user",
+              content: options.prompt,
+            },
+          ],
+          stream: true,
+          temperature: options.temperature || 0.7,
+          max_tokens: options.maxTokens || 2000,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Anthropic API请求失败: ${response.status} ${response.statusText}. ${errorText}`
+        );
+      }
+
+      // Claude的流式处理
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("无法读取响应流");
+
+      let fullMarkdown = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const content = this.extractContentFromChunk(chunk);
+          if (content) {
+            fullMarkdown += content;
+            const html = markdownConverter.convertStreamChunk(fullMarkdown);
+            options.onStream?.(html);
+          }
+        }
+
+        const finalHTML = markdownConverter.convertComplete(fullMarkdown);
+        const aiData: AICustomProperties["ai"] = {
+          generated: true,
+          model: options.model || "claude-3-sonnet",
+          provider: "anthropic",
+          generatedAt: new Date().toISOString(),
+          prompt: options.prompt,
+          requestId: `req_${Date.now()}`,
+          showThinking: false, // 不支持思维链
+          thinkingCollapsed: false,
+          isStreaming: false,
+          originalMarkdown: fullMarkdown,
+        };
+
+        options.onComplete?.(finalHTML, aiData);
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      console.error("Anthropic API调用失败:", error);
+      options.onError?.(error as Error);
+      throw error;
+    }
+  }
+
+  private extractContentFromChunk(chunk: string): string {
+    try {
+      const lines = chunk
+        .split("\n")
+        .filter((line) => line.startsWith("data: "));
+      let content = "";
+      for (const line of lines) {
+        const data = line.slice(6);
+        if (data === "[DONE]") continue;
+        const parsed = JSON.parse(data);
+        // Anthropic使用不同的字段结构
+        content += parsed.delta?.text || "";
       }
       return content;
     } catch {
@@ -539,6 +965,15 @@ class AIService {
 
     // OpenAI提供商
     this.providers.set("openai", new OpenAIProvider());
+
+    // 阿里百炼提供商
+    this.providers.set("alibaba", new AlibabaProvider());
+
+    // 硅基流动提供商
+    this.providers.set("siliconflow", new SiliconFlowProvider());
+
+    // Anthropic提供商
+    this.providers.set("anthropic", new AnthropicProvider());
   }
 
   /**
@@ -727,6 +1162,48 @@ class AIService {
           };
           testBody = {
             model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: testPrompt }],
+            max_tokens: 10,
+          };
+          break;
+        case "alibaba":
+          testEndpoint =
+            "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+          testHeaders = {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          };
+          testBody = {
+            model: "qwen-turbo",
+            input: {
+              messages: [{ role: "user", content: testPrompt }],
+            },
+            parameters: {
+              max_tokens: 10,
+            },
+          };
+          break;
+        case "siliconflow":
+          testEndpoint = "https://api.siliconflow.cn/v1/chat/completions";
+          testHeaders = {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          };
+          testBody = {
+            model: "deepseek-chat",
+            messages: [{ role: "user", content: testPrompt }],
+            max_tokens: 10,
+          };
+          break;
+        case "anthropic":
+          testEndpoint = "https://api.anthropic.com/v1/messages";
+          testHeaders = {
+            "x-api-key": apiKey,
+            "Content-Type": "application/json",
+            "anthropic-version": "2023-06-01",
+          };
+          testBody = {
+            model: "claude-3-haiku-20240307",
             messages: [{ role: "user", content: testPrompt }],
             max_tokens: 10,
           };
