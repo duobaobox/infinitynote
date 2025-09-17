@@ -38,6 +38,8 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   aiStreamingData = {},
   aiErrors = {},
   showAIPreview = true,
+  onCancelAI,
+  onRetryAI,
 }) => {
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);
@@ -122,6 +124,19 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     ? "AI生成出错，请重试..."
     : placeholder;
 
+  // 检测是否有输入内容来决定按钮状态
+  const hasPrompt = inputValue.trim().length > 0;
+
+  // 动态按钮配置
+  const buttonConfig = {
+    icon: hasPrompt ? "RobotOutlined" : "PlusOutlined",
+    tooltip: hasPrompt ? "AI生成便签" : "创建空白便签",
+    type: hasPrompt ? ("default" as const) : ("primary" as const),
+    className: hasPrompt
+      ? `${styles.addExternalButton} ${styles.aiButton}`
+      : styles.addExternalButton,
+  };
+
   return (
     <div className={styles.consoleContainer} data-loading={isLoading}>
       {/* 主输入区域 */}
@@ -142,42 +157,84 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
         {/* 外部按钮容器 */}
         <div className={styles.consoleExternalButtons}>
           <Button
-            type="primary"
+            type={buttonConfig.type}
             shape="circle"
-            icon={<DynamicIcon type="PlusOutlined" />}
+            icon={<DynamicIcon type={buttonConfig.icon as IconType} />}
             onClick={handleAddNote}
             disabled={isButtonDisabled}
             loading={isLoading}
-            className={styles.addExternalButton}
+            className={buttonConfig.className}
+            title={buttonConfig.tooltip}
             data-success={status === "success"}
             data-error={status === "error"}
+            data-has-prompt={hasPrompt}
           />
         </div>
       </div>
 
       {/* AI生成预览 */}
-      {showAIPreview && (hasAIStreamingData || hasAIErrors) && (
-        <div className={styles.aiPreview}>
-          {hasAIErrors && currentAIError ? (
-            <div className={styles.aiError}>
-              <div className={styles.aiErrorHeader}>
-                <span>❌ AI生成失败</span>
+      {showAIPreview &&
+        (hasAIStreamingData || hasAIErrors || isAnyAIGenerating) && (
+          <div className={styles.aiPreview}>
+            {hasAIErrors && currentAIError ? (
+              <div className={styles.aiError}>
+                <div className={styles.aiErrorHeader}>
+                  <span>❌ AI生成失败</span>
+                  <button
+                    className={styles.aiErrorRetry}
+                    onClick={() => {
+                      onRetryAI?.();
+                    }}
+                    title="重试"
+                  >
+                    🔄
+                  </button>
+                </div>
+                <div className={styles.aiErrorContent}>{currentAIError}</div>
               </div>
-              <div className={styles.aiErrorContent}>{currentAIError}</div>
-            </div>
-          ) : hasAIStreamingData && currentStreamingContent ? (
-            <div className={styles.aiStreaming}>
-              <div className={styles.aiStreamingHeader}>
-                <span>🤖 AI正在生成...</span>
+            ) : isAnyAIGenerating && !hasAIStreamingData ? (
+              // 生成中但还没有流式数据
+              <div className={styles.aiInitializing}>
+                <div className={styles.aiInitializingHeader}>
+                  <span>🤖 AI正在准备生成...</span>
+                  <div className={styles.aiSpinner}></div>
+                </div>
+                <div className={styles.aiInitializingContent}>
+                  正在连接AI服务，请稍候...
+                </div>
               </div>
-              <div
-                className={styles.aiStreamingContent}
-                dangerouslySetInnerHTML={{ __html: currentStreamingContent }}
-              />
-            </div>
-          ) : null}
-        </div>
-      )}
+            ) : hasAIStreamingData && currentStreamingContent ? (
+              <div className={styles.aiStreaming}>
+                <div className={styles.aiStreamingHeader}>
+                  <span>🤖 AI正在生成...</span>
+                  <button
+                    className={styles.aiStreamingStop}
+                    onClick={() => {
+                      onCancelAI?.();
+                    }}
+                    title="停止生成"
+                  >
+                    ⏸️
+                  </button>
+                </div>
+                <div
+                  className={styles.aiStreamingContent}
+                  dangerouslySetInnerHTML={{ __html: currentStreamingContent }}
+                />
+                <div className={styles.aiStreamingProgress}>
+                  <div className={styles.progressIndicator}>
+                    <div className={styles.progressDots}>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span className={styles.progressText}>内容生成中</span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
     </div>
   );
 };

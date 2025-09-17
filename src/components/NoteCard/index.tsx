@@ -707,15 +707,24 @@ export const NoteCard = memo<NoteCardProps>(
             {/* 便签内容区域 - 编辑器 */}
             <div className={styles.noteContent}>
               <TiptapEditor
-                content={note.content || ""}
+                content={
+                  // 如果正在生成AI内容且有流式数据，显示流式内容；否则显示原内容
+                  aiGenerating[note.id] && aiStreamingData[note.id]
+                    ? aiStreamingData[note.id] || ""
+                    : note.content || ""
+                }
                 onContentChange={handleContentChange}
                 placeholder={
-                  isSelected ? "开始输入内容..." : "点击编辑便签内容..."
+                  aiGenerating[note.id]
+                    ? "AI正在生成内容..."
+                    : isSelected
+                    ? "开始输入内容..."
+                    : "点击编辑便签内容..."
                 }
                 height="100%"
                 className={styles.noteText}
                 autoFocus={isEditing}
-                readonly={!isEditing}
+                readonly={!isEditing || aiGenerating[note.id]}
                 onFocus={handleEditorFocus}
                 onBlur={handleEditorBlur}
                 onEscape={handleEditorEscape}

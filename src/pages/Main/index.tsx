@@ -93,6 +93,7 @@ const Main: React.FC = () => {
     selectNote,
     createAINoteFromPrompt,
     startAIGeneration,
+    cancelAIGeneration,
     aiGenerating,
     aiStreamingData,
     aiErrors,
@@ -708,6 +709,25 @@ const Main: React.FC = () => {
           aiGenerating={aiGenerating}
           aiStreamingData={aiStreamingData}
           aiErrors={aiErrors}
+          onCancelAI={() => {
+            // 取消当前所有AI生成任务
+            Object.keys(aiGenerating).forEach((noteId) => {
+              if (aiGenerating[noteId]) {
+                cancelAIGeneration(noteId);
+              }
+            });
+          }}
+          onRetryAI={() => {
+            // 重试失败的AI生成任务
+            Object.keys(aiErrors).forEach((noteId) => {
+              if (aiErrors[noteId]) {
+                const note = notes.find((n) => n.id === noteId);
+                if (note?.customProperties?.ai?.prompt) {
+                  startAIGeneration(noteId, note.customProperties.ai.prompt);
+                }
+              }
+            });
+          }}
           onAddNote={async (prompt) => {
             if (!activeCanvasId) {
               console.error("❌ 没有活动画布");

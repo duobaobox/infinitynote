@@ -26,6 +26,10 @@ export interface NoteWorkbenchProps {
   aiErrors?: Record<string, string | undefined>;
   /** 是否显示AI生成预览 */
   showAIPreview?: boolean;
+  /** 取消AI生成回调 */
+  onCancelAI?: () => void;
+  /** 重试AI生成回调 */
+  onRetryAI?: () => void;
 }
 
 /**
