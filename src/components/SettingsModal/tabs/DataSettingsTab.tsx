@@ -33,9 +33,8 @@
  */
 
 import React from "react";
-import { Divider, Button, Space, Typography, Row, Col } from "antd";
+import { Button, Typography, Row, Col, Card } from "antd";
 import {
-  DatabaseOutlined,
   ExportOutlined,
   ImportOutlined,
   DeleteOutlined,
@@ -43,7 +42,7 @@ import {
 import type { DataSettings } from "../types";
 import styles from "../index.module.css";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export interface DataSettingsTabProps {
   settings: DataSettings;
@@ -60,99 +59,137 @@ const DataSettingsTab: React.FC<DataSettingsTabProps> = ({
 }) => {
   return (
     <div className={styles.contentSection}>
-      <Title level={3}>
-        <DatabaseOutlined /> 数据设置
-      </Title>
-      <Divider />
-
-      <div className={styles.settingGroup}>
-        <Title level={4}>数据管理</Title>
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <div className={styles.settingItem}>
-            <Button
-              type="primary"
-              icon={<ExportOutlined />}
-              onClick={onExportData}
-            >
-              导出所有数据
-            </Button>
-            <Text type="secondary" style={{ marginLeft: 12 }}>
-              将所有笔记和设置导出为备份文件
-            </Text>
-          </div>
-
-          <div className={styles.settingItem}>
-            <Button icon={<ImportOutlined />} onClick={onImportData}>
-              导入数据
-            </Button>
-            <Text type="secondary" style={{ marginLeft: 12 }}>
-              从备份文件恢复笔记和设置
-            </Text>
-          </div>
-
-          <div className={styles.settingItem}>
-            <Button
-              danger
-              icon={<DeleteOutlined />}
-              onClick={() => {
-                console.log("🔧 清除数据按钮被点击");
-                console.log("🔧 onClearData 函数:", onClearData);
-                if (onClearData) {
-                  onClearData();
-                } else {
-                  console.error("❌ onClearData 函数未定义");
-                }
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* 数据管理 */}
+        <Card size="small" title="数据管理" style={{ flex: "0 0 auto" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              清除所有数据
-            </Button>
-            <Text type="secondary" style={{ marginLeft: 12 }}>
-              警告：此操作将删除所有本地数据且不可恢复
-            </Text>
-          </div>
-        </Space>
-      </div>
+              <div>
+                <Text strong>导出所有数据</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  将所有笔记和设置导出为备份文件
+                </div>
+              </div>
+              <Button
+                type="primary"
+                icon={<ExportOutlined />}
+                onClick={onExportData}
+              >
+                导出数据
+              </Button>
+            </div>
 
-      <div className={styles.settingGroup}>
-        <Title level={4}>存储信息</Title>
-        <div className={styles.storageInfo}>
-          <Row gutter={[16, 16]}>
-            <Col span={8}>
-              <div className={styles.infoCard}>
-                <Text strong>已用存储</Text>
-                <div className={styles.storageValue}>
-                  {settings.storageUsed}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>导入数据</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  从备份文件恢复笔记和设置
                 </div>
               </div>
-            </Col>
-            <Col span={8}>
-              <div className={styles.infoCard}>
-                <Text strong>笔记数量</Text>
-                <div className={styles.storageValue}>{settings.noteCount}</div>
-              </div>
-            </Col>
-            <Col span={8}>
-              <div className={styles.infoCard}>
-                <Text strong>画布数量</Text>
-                <div className={styles.storageValue}>
-                  {settings.canvasCount || 0}
+              <Button icon={<ImportOutlined />} onClick={onImportData}>
+                导入数据
+              </Button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>清除所有数据</Text>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#d32f2f",
+                    marginTop: "2px",
+                  }}
+                >
+                  警告：此操作将删除所有本地数据且不可恢复
                 </div>
               </div>
-            </Col>
-          </Row>
-          {settings.lastBackupTime && (
-            <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-              <Col span={24}>
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => {
+                  console.log("🔧 清除数据按钮被点击");
+                  console.log("🔧 onClearData 函数:", onClearData);
+                  if (onClearData) {
+                    onClearData();
+                  } else {
+                    console.error("❌ onClearData 函数未定义");
+                  }
+                }}
+              >
+                清除数据
+              </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* 存储信息 */}
+        <Card size="small" title="存储信息" style={{ flex: 1 }}>
+          <div className={styles.storageInfo}>
+            <Row gutter={[16, 16]}>
+              <Col span={8}>
                 <div className={styles.infoCard}>
-                  <Text strong>最后修改时间</Text>
+                  <Text strong>已用存储</Text>
                   <div className={styles.storageValue}>
-                    {new Date(settings.lastBackupTime).toLocaleString()}
+                    {settings.storageUsed}
+                  </div>
+                </div>
+              </Col>
+              <Col span={8}>
+                <div className={styles.infoCard}>
+                  <Text strong>笔记数量</Text>
+                  <div className={styles.storageValue}>
+                    {settings.noteCount}
+                  </div>
+                </div>
+              </Col>
+              <Col span={8}>
+                <div className={styles.infoCard}>
+                  <Text strong>画布数量</Text>
+                  <div className={styles.storageValue}>
+                    {settings.canvasCount || 0}
                   </div>
                 </div>
               </Col>
             </Row>
-          )}
-        </div>
+            {settings.lastBackupTime && (
+              <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+                <Col span={24}>
+                  <div className={styles.infoCard}>
+                    <Text strong>最后修改时间</Text>
+                    <div className={styles.storageValue}>
+                      {new Date(settings.lastBackupTime).toLocaleString()}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
+            )}
+          </div>
+        </Card>
       </div>
     </div>
   );

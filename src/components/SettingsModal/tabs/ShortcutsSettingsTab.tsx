@@ -29,12 +29,11 @@
  */
 
 import React from "react";
-import { Divider, Typography } from "antd";
-import { KeyOutlined } from "@ant-design/icons";
+import { Typography, Card } from "antd";
 import type { ShortcutConfig } from "../types";
 import styles from "../index.module.css";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export interface ShortcutsSettingsTabProps {
   editShortcuts: ShortcutConfig[];
@@ -45,32 +44,32 @@ const ShortcutsSettingsTab: React.FC<ShortcutsSettingsTabProps> = ({
   editShortcuts,
   viewShortcuts,
 }) => {
-  const renderShortcutList = (shortcuts: ShortcutConfig[]) => (
-    <div className={styles.shortcutList}>
-      {shortcuts.map((shortcut) => (
-        <div key={shortcut.name} className={styles.shortcutItem}>
-          <Text>{shortcut.description}</Text>
-          <div className={styles.shortcut}>{shortcut.keys}</div>
-        </div>
-      ))}
-    </div>
-  );
-
   return (
     <div className={styles.contentSection}>
-      <Title level={3}>
-        <KeyOutlined /> 快捷键
-      </Title>
-      <Divider />
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* 编辑快捷键 */}
+        <Card size="small" title="编辑快捷键" style={{ flex: "0 0 auto" }}>
+          <div className={styles.shortcutList}>
+            {editShortcuts.map((shortcut) => (
+              <div key={shortcut.name} className={styles.shortcutItem}>
+                <Text>{shortcut.description}</Text>
+                <div className={styles.shortcut}>{shortcut.keys}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
 
-      <div className={styles.settingGroup}>
-        <Title level={4}>编辑快捷键</Title>
-        {renderShortcutList(editShortcuts)}
-      </div>
-
-      <div className={styles.settingGroup}>
-        <Title level={4}>视图快捷键</Title>
-        {renderShortcutList(viewShortcuts)}
+        {/* 视图快捷键 */}
+        <Card size="small" title="视图快捷键" style={{ flex: 1 }}>
+          <div className={styles.shortcutList}>
+            {viewShortcuts.map((shortcut) => (
+              <div key={shortcut.name} className={styles.shortcutItem}>
+                <Text>{shortcut.description}</Text>
+                <div className={styles.shortcut}>{shortcut.keys}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     </div>
   );

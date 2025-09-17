@@ -24,24 +24,13 @@
  */
 
 import React, { useEffect, useState } from "react";
-import {
-  Divider,
-  Switch,
-  Select,
-  Space,
-  Typography,
-  Card,
-  Row,
-  Col,
-  ColorPicker,
-} from "antd";
-import { EyeOutlined, BgColorsOutlined } from "@ant-design/icons";
+import { Switch, Select, Typography, Card, Row, Col, ColorPicker } from "antd";
 import { useTheme } from "../../../theme";
 import type { DisplaySettings } from "../types";
 import { THEME_OPTIONS, CANVAS_COLOR_PRESETS } from "../constants";
 import styles from "../index.module.css";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export interface DisplaySettingsTabProps {
   settings: DisplaySettings;
@@ -102,59 +91,99 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
 
   return (
     <div className={styles.contentSection}>
-      <Title level={3}>
-        <EyeOutlined /> 显示设置
-      </Title>
-      <Divider />
-
-      <div className={styles.settingGroup}>
-        <Title level={4}>主题与外观</Title>
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <div className={styles.settingItem}>
-            <Text strong>主题模式</Text>
-            <Select
-              style={{ width: 200, marginTop: 8 }}
-              value={settings.theme}
-              onChange={handleThemeChange}
-              options={[...THEME_OPTIONS]}
-            />
-          </div>
-
-          <div className={styles.settingItem}>
-            <div className={styles.settingLabel}>
-              <Text strong>显示网格</Text>
-              <Text type="secondary">在画布上显示网格线</Text>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* 主题与外观 */}
+        <Card size="small" title="主题与外观" style={{ flex: "0 0 auto" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>主题模式</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  选择浅色、深色或跟随系统
+                </div>
+              </div>
+              <Select
+                style={{ width: 160 }}
+                value={settings.theme}
+                onChange={handleThemeChange}
+                options={[...THEME_OPTIONS]}
+              />
             </div>
-            <Switch
-              checked={settings.showGrid}
-              onChange={(checked) => onSettingChange("showGrid", checked)}
-            />
-          </div>
 
-          <div className={styles.settingItem}>
-            <div className={styles.settingLabel}>
-              <Text strong>平滑缩放</Text>
-              <Text type="secondary">启用画布平滑缩放动画</Text>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>显示网格</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  在画布上显示网格线
+                </div>
+              </div>
+              <Switch
+                checked={settings.showGrid}
+                onChange={(checked) => onSettingChange("showGrid", checked)}
+              />
             </div>
-            <Switch
-              checked={settings.smoothZoom}
-              onChange={(checked) => onSettingChange("smoothZoom", checked)}
-            />
-          </div>
-        </Space>
-      </div>
 
-      <div className={styles.settingGroup}>
-        <Title level={4}>
-          <BgColorsOutlined /> 画布设置
-        </Title>
-        <Space direction="vertical" style={{ width: "100%" }} size="large">
-          <div className={styles.settingItem}>
-            <div className={styles.settingLabel}>
-              <Text strong>画布背景颜色</Text>
-              <Text type="secondary">自定义画布的背景颜色</Text>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>平滑缩放</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  启用画布平滑缩放动画
+                </div>
+              </div>
+              <Switch
+                checked={settings.smoothZoom}
+                onChange={(checked) => onSettingChange("smoothZoom", checked)}
+              />
             </div>
-            <Space>
+          </div>
+        </Card>
+
+        {/* 画布设置 */}
+        <Card size="small" title="画布设置" style={{ flex: 1 }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>画布背景颜色</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  自定义画布的背景颜色
+                </div>
+              </div>
               <ColorPicker
                 value={settings.canvasColor}
                 onChange={(color) =>
@@ -164,68 +193,76 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
                 size="large"
                 style={{ width: 120 }}
               />
-            </Space>
-          </div>
-
-          <div
-            className={styles.settingItem}
-            style={{ flexDirection: "column", alignItems: "flex-start" }}
-          >
-            <div className={styles.settingLabel} style={{ marginBottom: 16 }}>
-              <Text strong>颜色预设</Text>
-              <Text type="secondary">选择精心搭配的预设颜色</Text>
             </div>
-            <Row gutter={[12, 12]} style={{ width: "100%" }}>
-              {CANVAS_COLOR_PRESETS.map((preset) => (
-                <Col key={preset.value} xs={12} sm={8} md={6}>
-                  <Card
-                    hoverable
-                    size="small"
-                    style={{
-                      borderColor:
-                        selectedPreset === preset.value ? "#1677ff" : "#d9d9d9",
-                      borderWidth: selectedPreset === preset.value ? 2 : 1,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handlePresetSelect(preset.value)}
-                  >
-                    <div style={{ textAlign: "center" }}>
-                      <div
-                        style={{
-                          width: "60px",
-                          height: "40px",
-                          backgroundColor: preset.value,
-                          border: "1px solid #e0e0e0",
-                          borderRadius: "6px",
-                          margin: "0 auto 8px auto",
-                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                        }}
-                      />
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        {preset.name}
+
+            <div>
+              <Text strong style={{ marginBottom: "12px", display: "block" }}>
+                颜色预设
+              </Text>
+              <Text
+                type="secondary"
+                style={{
+                  fontSize: "12px",
+                  marginBottom: "12px",
+                  display: "block",
+                }}
+              >
+                选择精心搭配的预设颜色
+              </Text>
+              <Row gutter={[12, 12]} style={{ width: "100%" }}>
+                {CANVAS_COLOR_PRESETS.map((preset) => (
+                  <Col key={preset.value} xs={12} sm={8} md={6}>
+                    <Card
+                      hoverable
+                      size="small"
+                      style={{
+                        borderColor:
+                          selectedPreset === preset.value
+                            ? "#1677ff"
+                            : "#d9d9d9",
+                        borderWidth: selectedPreset === preset.value ? 2 : 1,
+                        cursor: "pointer",
+                      }}
+                      onClick={() => handlePresetSelect(preset.value)}
+                    >
+                      <div style={{ textAlign: "center" }}>
+                        <div
+                          style={{
+                            width: "60px",
+                            height: "40px",
+                            backgroundColor: preset.value,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: "6px",
+                            margin: "0 auto 8px auto",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          }}
+                        />
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          {preset.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            color: "#666",
+                            lineHeight: "1.2",
+                          }}
+                        >
+                          {preset.description}
+                        </div>
                       </div>
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          color: "#666",
-                          lineHeight: "1.2",
-                        }}
-                      >
-                        {preset.description}
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </div>
           </div>
-        </Space>
+        </Card>
       </div>
     </div>
   );

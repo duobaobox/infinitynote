@@ -33,9 +33,8 @@
  */
 
 import React from "react";
-import { Divider, Button, Space, Switch, Typography } from "antd";
+import { Button, Switch, Typography, Card } from "antd";
 import {
-  InfoCircleOutlined,
   AppstoreOutlined,
   QuestionCircleOutlined,
   GlobalOutlined,
@@ -47,7 +46,7 @@ import {
 import type { AppInfo } from "../types";
 import styles from "../index.module.css";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 export interface AboutSettingsTabProps {
   appInfo: AppInfo;
@@ -71,57 +70,109 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
 
   return (
     <div className={styles.contentSection}>
-      <Title level={3}>
-        <InfoCircleOutlined /> 关于我们
-      </Title>
-      <Divider />
-
-      <div className={styles.settingGroup}>
-        <div className={styles.aboutSection}>
-          <div className={styles.appInfo}>
-            <div className={styles.appLogo}>
-              <AppstoreOutlined style={{ fontSize: 48, color: "#1890ff" }} />
-            </div>
-            <div className={styles.appDetails}>
-              <Title level={2}>{appInfo.name}</Title>
-              <Text type="secondary">版本 {appInfo.version}</Text>
-              <Text style={{ display: "block", marginTop: 8 }}>
-                {appInfo.description}
-              </Text>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* 应用信息 */}
+        <Card size="small" title="应用信息" style={{ flex: "0 0 auto" }}>
+          <div className={styles.aboutSection}>
+            <div className={styles.appInfo}>
+              <div className={styles.appLogo}>
+                <AppstoreOutlined style={{ fontSize: 48, color: "#1890ff" }} />
+              </div>
+              <div className={styles.appDetails}>
+                <div
+                  style={{
+                    fontSize: "20px",
+                    fontWeight: "bold",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {appInfo.name}
+                </div>
+                <Text type="secondary">版本 {appInfo.version}</Text>
+                <Text style={{ display: "block", marginTop: 8 }}>
+                  {appInfo.description}
+                </Text>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </Card>
 
-      <div className={styles.settingGroup}>
-        <Title level={4}>功能特色</Title>
-        <div className={styles.featureList}>
-          {featureItems.map((item, index) => (
-            <div key={index} className={styles.featureItem}>
-              {item.icon} {item.label}
+        {/* 功能特色 */}
+        <Card size="small" title="功能特色" style={{ flex: "0 0 auto" }}>
+          <div className={styles.featureList}>
+            {featureItems.map((item, index) => (
+              <div key={index} className={styles.featureItem}>
+                {item.icon} {item.label}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* 更新检查 */}
+        <Card size="small" title="更新检查" style={{ flex: "0 0 auto" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <div>
+              <Text strong>检查更新</Text>
+              <div
+                style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+              >
+                手动检查应用更新
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+            <Button type="primary" onClick={onCheckUpdate}>
+              检查更新
+            </Button>
+          </div>
 
-      <div className={styles.settingGroup}>
-        <Title level={4}>更新检查</Title>
-        <Space>
-          <Button type="primary" onClick={onCheckUpdate}>
-            检查更新
-          </Button>
-          <div className={styles.settingItem}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "16px",
+            }}
+          >
+            <div>
+              <Text strong>自动更新</Text>
+              <div
+                style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+              >
+                启用后自动检查并安装更新
+              </div>
+            </div>
             <Switch />
-            <Text style={{ marginLeft: 8 }}>自动更新</Text>
           </div>
-        </Space>
-      </div>
+        </Card>
 
-      <div className={styles.settingGroup}>
-        <Title level={4}>测试面板</Title>
-        <Button type="default" onClick={onOpenTestPanel}>
-          打开
-        </Button>
+        {/* 测试面板 */}
+        <Card size="small" title="测试面板" style={{ flex: 1 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <Text strong>开发者测试工具</Text>
+              <div
+                style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+              >
+                用于开发和调试功能的测试界面
+              </div>
+            </div>
+            <Button type="default" onClick={onOpenTestPanel}>
+              打开测试面板
+            </Button>
+          </div>
+        </Card>
       </div>
     </div>
   );
