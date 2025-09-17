@@ -20,8 +20,6 @@ import { CanvasToolbar } from "../../components/CanvasToolbar";
 import { NoteWorkbench } from "../../components/NoteWorkbench";
 // 引入设置弹窗组件
 import SettingsModal from "../../components/SettingsModal/index";
-// 引入AI功能测试组件（临时）
-import { AIFunctionTest } from "../../components/AIFunctionTest";
 // 引入Ant Design组件
 import {
   Layout, // 用于整体页面布局，包含Sider和Content
@@ -93,10 +91,7 @@ const Main: React.FC = () => {
     selectNote,
     createAINoteFromPrompt,
     startAIGeneration,
-    cancelAIGeneration,
     aiGenerating,
-    aiStreamingData,
-    aiErrors,
   } = useNoteStore();
   const {
     activeCanvasId,
@@ -707,27 +702,6 @@ const Main: React.FC = () => {
         {/* 便签工作台 - 浮动在画布底部 */}
         <NoteWorkbench
           aiGenerating={aiGenerating}
-          aiStreamingData={aiStreamingData}
-          aiErrors={aiErrors}
-          onCancelAI={() => {
-            // 取消当前所有AI生成任务
-            Object.keys(aiGenerating).forEach((noteId) => {
-              if (aiGenerating[noteId]) {
-                cancelAIGeneration(noteId);
-              }
-            });
-          }}
-          onRetryAI={() => {
-            // 重试失败的AI生成任务
-            Object.keys(aiErrors).forEach((noteId) => {
-              if (aiErrors[noteId]) {
-                const note = notes.find((n) => n.id === noteId);
-                if (note?.customProperties?.ai?.prompt) {
-                  startAIGeneration(noteId, note.customProperties.ai.prompt);
-                }
-              }
-            });
-          }}
           onAddNote={async (prompt) => {
             if (!activeCanvasId) {
               console.error("❌ 没有活动画布");
@@ -777,19 +751,6 @@ const Main: React.FC = () => {
           }}
         />
       </Content>
-
-      {/* AI功能测试组件（临时，用于测试） */}
-      <div
-        style={{
-          position: "fixed",
-          top: "10px",
-          right: "10px",
-          zIndex: 9999,
-          maxWidth: "400px",
-        }}
-      >
-        <AIFunctionTest />
-      </div>
 
       {/* 设置弹窗 */}
       <SettingsModal

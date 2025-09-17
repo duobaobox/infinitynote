@@ -3,12 +3,6 @@ import type { ToolbarButton, ColorOption } from "./types";
 // 工具栏按钮配置 - 添加AI功能
 export const TOOLBAR_BUTTONS: ToolbarButton[] = [
   {
-    id: "ai-generate",
-    label: "AI生成",
-    icon: "RobotOutlined",
-    tooltip: "使用AI生成内容",
-  },
-  {
     id: "ai-config",
     label: "AI设置",
     icon: "SettingOutlined",

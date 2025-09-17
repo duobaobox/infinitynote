@@ -35,11 +35,6 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   loading = false,
   placeholder = "输入文本AI生成便签，留空创建空白便签...",
   aiGenerating = {},
-  aiStreamingData = {},
-  aiErrors = {},
-  showAIPreview = true,
-  onCancelAI,
-  onRetryAI,
 }) => {
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);
@@ -47,18 +42,6 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
 
   // AI状态计算
   const isAnyAIGenerating = Object.values(aiGenerating).some(Boolean);
-  const hasAIStreamingData = Object.values(aiStreamingData).some(
-    (data) => data && data.trim()
-  );
-  const hasAIErrors = Object.values(aiErrors).some(
-    (error) => error && error.trim()
-  );
-
-  // 获取当前流式数据用于预览
-  const currentStreamingContent =
-    Object.values(aiStreamingData).find((data) => data && data.trim()) || "";
-  const currentAIError =
-    Object.values(aiErrors).find((error) => error && error.trim()) || "";
 
   /**
    * 处理输入框值变化
@@ -120,8 +103,6 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   // 动态占位符
   const dynamicPlaceholder = isAnyAIGenerating
     ? "AI正在生成便签..."
-    : hasAIErrors
-    ? "AI生成出错，请重试..."
     : placeholder;
 
   // 检测是否有输入内容来决定按钮状态
@@ -171,70 +152,6 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
           />
         </div>
       </div>
-
-      {/* AI生成预览 */}
-      {showAIPreview &&
-        (hasAIStreamingData || hasAIErrors || isAnyAIGenerating) && (
-          <div className={styles.aiPreview}>
-            {hasAIErrors && currentAIError ? (
-              <div className={styles.aiError}>
-                <div className={styles.aiErrorHeader}>
-                  <span>❌ AI生成失败</span>
-                  <button
-                    className={styles.aiErrorRetry}
-                    onClick={() => {
-                      onRetryAI?.();
-                    }}
-                    title="重试"
-                  >
-                    🔄
-                  </button>
-                </div>
-                <div className={styles.aiErrorContent}>{currentAIError}</div>
-              </div>
-            ) : isAnyAIGenerating && !hasAIStreamingData ? (
-              // 生成中但还没有流式数据
-              <div className={styles.aiInitializing}>
-                <div className={styles.aiInitializingHeader}>
-                  <span>🤖 AI正在准备生成...</span>
-                  <div className={styles.aiSpinner}></div>
-                </div>
-                <div className={styles.aiInitializingContent}>
-                  正在连接AI服务，请稍候...
-                </div>
-              </div>
-            ) : hasAIStreamingData && currentStreamingContent ? (
-              <div className={styles.aiStreaming}>
-                <div className={styles.aiStreamingHeader}>
-                  <span>🤖 AI正在生成...</span>
-                  <button
-                    className={styles.aiStreamingStop}
-                    onClick={() => {
-                      onCancelAI?.();
-                    }}
-                    title="停止生成"
-                  >
-                    ⏸️
-                  </button>
-                </div>
-                <div
-                  className={styles.aiStreamingContent}
-                  dangerouslySetInnerHTML={{ __html: currentStreamingContent }}
-                />
-                <div className={styles.aiStreamingProgress}>
-                  <div className={styles.progressIndicator}>
-                    <div className={styles.progressDots}>
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                    <span className={styles.progressText}>内容生成中</span>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
     </div>
   );
 };
