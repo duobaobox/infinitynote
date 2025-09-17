@@ -177,7 +177,10 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
   }, [selectedProvider, apiKeyInputs, message]);
 
   return (
-    <div className={styles.contentSection}>
+    <div
+      className={styles.contentSection}
+      style={{ height: "100%", display: "flex", flexDirection: "column" }}
+    >
       {/* 状态栏 */}
       <div
         style={{
@@ -226,7 +229,7 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "16px", height: "460px" }}>
+      <div style={{ display: "flex", gap: "16px", height: "100%", flex: 1 }}>
         {/* 左侧提供商列表 */}
         <div
           style={{ width: "240px", display: "flex", flexDirection: "column" }}
