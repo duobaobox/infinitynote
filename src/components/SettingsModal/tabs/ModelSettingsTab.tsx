@@ -117,20 +117,43 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
 
   const handleSettingChange = useCallback(
     async (key: string, value: any) => {
-      const newSettings = {
+      let newSettings = {
         ...aiSettings,
         [key]: value,
       };
 
+      // 当切换提供商时，自动选择该提供商的第一个模型
+      if (key === "provider" && value !== aiSettings.provider) {
+        const providerModels =
+          MODEL_OPTIONS_BY_PROVIDER[
+            value as keyof typeof MODEL_OPTIONS_BY_PROVIDER
+          ];
+        if (providerModels && providerModels.length > 0) {
+          newSettings.defaultModel = providerModels[0].value;
+          message.info(`已自动切换到 ${providerModels[0].label} 模型`);
+        }
+      }
+
       setAiSettings(newSettings);
 
-      // 检查是否可以保存配置
+      // 自动保存配置（如果有API密钥的话）
       const canSave = await validateAndSaveSettings(newSettings);
       if (canSave) {
+        onSettingChange("provider", newSettings.provider);
+        onSettingChange("defaultModel", newSettings.defaultModel);
+        message.success("AI配置已自动保存并生效！");
+      } else {
+        // 如果不能完整保存，至少保存当前选择
         onSettingChange(key as keyof ModelSettings, value);
+        if (
+          key === "provider" &&
+          newSettings.defaultModel !== aiSettings.defaultModel
+        ) {
+          onSettingChange("defaultModel", newSettings.defaultModel);
+        }
       }
     },
-    [aiSettings, onSettingChange]
+    [aiSettings, onSettingChange, message]
   );
 
   const validateAndSaveSettings = useCallback(async (settings: any) => {
@@ -138,17 +161,17 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
       // 检查当前提供商是否有API密钥
       const currentApiKey = await securityManager.getAPIKey(settings.provider);
       if (!currentApiKey) {
-        console.log("API密钥未配置，无法保存设置");
+        console.log("API密钥未配置，暂时保存本地设置");
         return false;
       }
 
       // 检查是否选择了模型
       if (!settings.defaultModel) {
-        console.log("模型未选择，无法保存设置");
+        console.log("模型未选择，暂时保存本地设置");
         return false;
       }
 
-      // 保存设置
+      // 保存完整设置
       await aiService.saveSettings(settings);
       console.log("✅ AI设置已保存:", settings);
       return true;
@@ -170,16 +193,26 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
         ...prev,
         [selectedProvider]: "idle",
       }));
+
+      // 如果用户删除了API密钥，立即清除保存的密钥
+      if (!value) {
+        securityManager.setAPIKey(selectedProvider, "");
+      }
     },
     [selectedProvider]
   );
 
-  const saveApiKey = useCallback(async () => {
+  const saveAndTestApiKey = useCallback(async () => {
     const apiKey = apiKeyInputs[selectedProvider];
     if (!apiKey) {
       message.warning("请输入API密钥");
       return;
     }
+
+    setConnectionStatus((prev) => ({
+      ...prev,
+      [selectedProvider]: "testing",
+    }));
 
     try {
       // 保存API密钥
@@ -195,17 +228,36 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
       };
       setAiSettings(updatedSettings);
 
-      // 验证并尝试保存完整配置
-      const canSave = await validateAndSaveSettings(updatedSettings);
+      // 测试连接
+      const testResult = await aiService.testProvider(selectedProvider);
 
-      if (canSave) {
-        message.success("API密钥保存成功，AI配置已生效！");
+      if (testResult) {
+        setConnectionStatus((prev) => ({
+          ...prev,
+          [selectedProvider]: "success",
+        }));
+
+        // 验证并尝试保存完整配置
+        const canSave = await validateAndSaveSettings(updatedSettings);
+        if (canSave) {
+          message.success("✅ API密钥验证成功，AI配置已生效！");
+        } else {
+          message.success("✅ API密钥验证成功，请选择模型完成配置！");
+        }
       } else {
-        message.success("API密钥保存成功，请选择模型以完成配置！");
+        setConnectionStatus((prev) => ({
+          ...prev,
+          [selectedProvider]: "error",
+        }));
+        message.error("❌ API密钥验证失败，请检查密钥是否正确");
       }
     } catch (error) {
+      setConnectionStatus((prev) => ({
+        ...prev,
+        [selectedProvider]: "error",
+      }));
       message.error(
-        `保存失败: ${error instanceof Error ? error.message : "未知错误"}`
+        `验证失败: ${error instanceof Error ? error.message : "未知错误"}`
       );
     }
   }, [
@@ -215,51 +267,6 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     message,
     validateAndSaveSettings,
   ]);
-
-  const testConnection = async () => {
-    const apiKey = apiKeyInputs[selectedProvider];
-    if (!apiKey) {
-      message.warning("请先输入API密钥");
-      return;
-    }
-
-    setConnectionStatus((prev) => ({
-      ...prev,
-      [selectedProvider]: "testing",
-    }));
-
-    try {
-      // 临时保存API密钥用于测试
-      await securityManager.setAPIKey(selectedProvider, apiKey);
-
-      // 测试连接
-      const result = await aiService.testProvider(selectedProvider);
-
-      if (result) {
-        setConnectionStatus((prev) => ({
-          ...prev,
-          [selectedProvider]: "success",
-        }));
-        message.success("✅ 连接测试成功！API可以正常使用");
-      } else {
-        setConnectionStatus((prev) => ({
-          ...prev,
-          [selectedProvider]: "error",
-        }));
-        message.error("❌ 连接测试失败，请检查API密钥是否正确");
-      }
-    } catch (error) {
-      setConnectionStatus((prev) => ({
-        ...prev,
-        [selectedProvider]: "error",
-      }));
-      message.error(
-        `❌ 连接测试失败: ${
-          error instanceof Error ? error.message : "未知错误"
-        }`
-      );
-    }
-  };
 
   return (
     <div className={styles.contentSection}>
@@ -271,25 +278,114 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
           配置AI服务提供商和模型参数，开始使用AI功能生成便签内容。
         </Paragraph>
 
-        {/* 当前AI配置状态 */}
+        {/* 当前AI配置状态 - 改进版 */}
         <Card
           size="small"
           style={{ marginTop: "16px", backgroundColor: "#f6f8fa" }}
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <RobotOutlined style={{ color: "#1890ff" }} />
+              <Text strong>当前AI配置状态</Text>
+            </div>
+          }
         >
-          <Space>
-            <Text strong>当前系统AI配置：</Text>
-            <Text type="secondary">
-              提供商: <Text code>{aiSettings.provider}</Text>
-            </Text>
-            <Text type="secondary">
-              模型: <Text code>{aiSettings.defaultModel || "未选择"}</Text>
-            </Text>
-            {aiSettings.defaultModel && apiKeyInputs[aiSettings.provider] ? (
-              <Text type="success">✅ 配置完成</Text>
-            ) : (
-              <Text type="warning">⚠️ 配置不完整</Text>
-            )}
-          </Space>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text>提供商:</Text>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <Text code>{aiSettings.provider}</Text>
+                <div
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: getProviderColor(aiSettings.provider),
+                  }}
+                />
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text>模型:</Text>
+              <Text code>{aiSettings.defaultModel || "未选择"}</Text>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text>API密钥:</Text>
+              {apiKeyInputs[aiSettings.provider] ? (
+                <Text type="success">✅ 已配置</Text>
+              ) : (
+                <Text type="warning">⚠️ 未配置</Text>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Text>连接状态:</Text>
+              {connectionStatus[aiSettings.provider] === "success" ? (
+                <Text type="success">✅ 连接正常</Text>
+              ) : connectionStatus[aiSettings.provider] === "error" ? (
+                <Text type="danger">❌ 连接失败</Text>
+              ) : connectionStatus[aiSettings.provider] === "testing" ? (
+                <Text>🔄 测试中...</Text>
+              ) : (
+                <Text type="secondary">⚪ 未测试</Text>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "8px",
+                paddingTop: "8px",
+                borderTop: "1px solid #f0f0f0",
+              }}
+            >
+              <Text strong>整体状态:</Text>
+              {aiSettings.defaultModel && apiKeyInputs[aiSettings.provider] ? (
+                connectionStatus[aiSettings.provider] === "success" ? (
+                  <Text type="success" strong>
+                    🎉 配置完成，可以使用
+                  </Text>
+                ) : (
+                  <Text type="warning" strong>
+                    ⚡ 配置完成，建议测试连接
+                  </Text>
+                )
+              ) : (
+                <Text type="warning" strong>
+                  ⚠️ 配置不完整
+                </Text>
+              )}
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -361,14 +457,18 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                     ? "✅ 连接测试成功，模型可以使用"
                     : connectionStatus[selectedProvider] === "error"
                     ? "❌ 连接测试失败，请检查API密钥"
-                    : "请输入API密钥并测试连接"
+                    : "输入API密钥后将自动保存并测试连接"
                 }
               >
                 <Space.Compact style={{ width: "100%" }}>
                   <Input.Password
-                    placeholder={`输入 ${selectedProvider} 的 API Key`}
+                    placeholder={`输入 ${
+                      API_PROVIDERS.find((p) => p.value === selectedProvider)
+                        ?.label
+                    } 的 API Key`}
                     value={apiKeyInputs[selectedProvider] || ""}
                     onChange={(e) => handleApiKeyChange(e.target.value)}
+                    onPressEnter={saveAndTestApiKey}
                     style={{ flex: 1 }}
                     status={
                       connectionStatus[selectedProvider] === "success"
@@ -378,18 +478,15 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                         : ""
                     }
                   />
-                  <Button onClick={saveApiKey} type="default">
-                    保存
-                  </Button>
                   <Button
-                    onClick={testConnection}
+                    onClick={saveAndTestApiKey}
                     type="primary"
                     loading={connectionStatus[selectedProvider] === "testing"}
                     disabled={!apiKeyInputs[selectedProvider]}
                   >
                     {connectionStatus[selectedProvider] === "testing"
-                      ? "测试中..."
-                      : "测试连接"}
+                      ? "验证中..."
+                      : "保存并测试"}
                   </Button>
                 </Space.Compact>
               </Form.Item>
@@ -405,16 +502,39 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
               <Form.Item label="默认模型">
                 <Select
                   value={aiSettings.defaultModel}
-                  onChange={(value) =>
-                    handleSettingChange("defaultModel", value)
-                  }
+                  onChange={async (value) => {
+                    const newSettings = {
+                      ...aiSettings,
+                      defaultModel: value,
+                    };
+                    setAiSettings(newSettings);
+
+                    // 自动保存配置
+                    const canSave = await validateAndSaveSettings(newSettings);
+                    if (canSave) {
+                      onSettingChange("defaultModel", value);
+                      message.success(`模型已切换到 ${value} 并自动保存！`);
+                    } else {
+                      onSettingChange("defaultModel", value);
+                      message.info(
+                        `模型已切换到 ${value}，配置API密钥后将自动生效`
+                      );
+                    }
+                  }}
                   style={{ width: "100%" }}
+                  placeholder="选择一个模型"
                 >
                   {MODEL_OPTIONS_BY_PROVIDER[
                     selectedProvider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
                   ]?.map((model) => (
                     <Option key={model.value} value={model.value}>
                       {model.label}
+                      <Text
+                        type="secondary"
+                        style={{ fontSize: "12px", marginLeft: "8px" }}
+                      >
+                        {model.description}
+                      </Text>
                     </Option>
                   )) || null}
                 </Select>
