@@ -70,15 +70,17 @@ class InfinityNoteDatabase extends Dexie {
       aiConfigs: "id, type, provider, value, encrypted, createdAt, updatedAt",
     });
 
-    // 暂时注释版本3，避免数据库升级问题
-    // 当需要新字段时再启用
-    /*
+    // 版本3：添加扩展字段，包含customProperties
     this.version(3)
       .stores({
         notes:
-          "++id, title, content, color, zIndex, canvasId, createdAt, updatedAt, position.x, position.y, size.width, size.height, tags, priority, reminderAt, isPinned, isArchived, isFavorite, contentType, permission, templateId, parentNoteId, lastAccessedAt, version, isDeleted, deletedAt",
+          "id, title, content, color, zIndex, canvasId, createdAt, updatedAt, position.x, position.y, size.width, size.height, tags, priority, reminderAt, isPinned, isArchived, isFavorite, contentType, permission, templateId, parentNoteId, lastAccessedAt, version, isDeleted, deletedAt, customProperties",
+        canvases:
+          "id, name, scale, backgroundColor, createdAt, updatedAt, isDefault, offset.x, offset.y",
+        aiConfigs: "id, type, provider, value, encrypted, createdAt, updatedAt",
       })
       .upgrade((tx) => {
+        console.log("🔄 升级数据库到版本3，添加扩展字段支持...");
         // 数据迁移：为现有便签添加默认值
         return tx
           .table("notes")
@@ -96,9 +98,14 @@ class InfinityNoteDatabase extends Dexie {
             if (note.isDeleted === undefined) note.isDeleted = false;
             if (note.lastAccessedAt === undefined)
               note.lastAccessedAt = note.updatedAt;
+            // 确保customProperties存在，这是存储AI数据的关键字段
+            if (note.customProperties === undefined) note.customProperties = {};
+
+            console.log(
+              `✅ 便签 ${note.id.slice(-8)} 升级完成，包含AI数据支持`
+            );
           });
       });
-    */
   }
 }
 

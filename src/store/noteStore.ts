@@ -816,6 +816,8 @@ export const useNoteStore = create<NoteStore>()(
             version: note.version || 1,
             isDeleted: note.isDeleted || false,
             lastAccessedAt: note.lastAccessedAt || note.updatedAt,
+            // ⭐ 关键修复：确保包含 customProperties 字段，这里存储所有 AI 数据
+            customProperties: note.customProperties || {},
           }));
 
           // 计算最大 zIndex
@@ -830,15 +832,25 @@ export const useNoteStore = create<NoteStore>()(
             selectedNoteIds: [], // 清空选中状态
           });
 
-          // 输出详细信息但去重
+          // 输出详细信息但去重，包含AI数据统计
           if (formattedNotes.length > 0) {
+            const aiNotesCount = formattedNotes.filter(
+              (note) => note.customProperties?.ai
+            ).length;
+            const thinkingChainCount = formattedNotes.filter(
+              (note) => note.customProperties?.ai?.thinkingChain
+            ).length;
+
             logWithDedup(
-              `📋 Store加载 ${formattedNotes.length} 个便签:`,
+              `📋 Store加载 ${formattedNotes.length} 个便签 (AI便签: ${aiNotesCount}, 思维链: ${thinkingChainCount}):`,
               formattedNotes.map((note) => ({
                 id: note.id.slice(-8),
                 title: note.title,
                 canvasId: note.canvasId.slice(-8),
-                position: note.position,
+                hasAI: !!note.customProperties?.ai,
+                hasThinking: !!note.customProperties?.ai?.thinkingChain,
+                thinkingSteps:
+                  note.customProperties?.ai?.thinkingChain?.totalSteps || 0,
               }))
             );
           }
@@ -919,11 +931,15 @@ export const useNoteStore = create<NoteStore>()(
       },
 
       // 更新流式内容
-      updateAIStreamingContent: (noteId: string, content: string, aiData?: AICustomProperties["ai"]) => {
+      updateAIStreamingContent: (
+        noteId: string,
+        content: string,
+        aiData?: AICustomProperties["ai"]
+      ) => {
         set((state) => ({
           aiStreamingData: { ...state.aiStreamingData, [noteId]: content },
         }));
-        
+
         // 如果有AI数据（包含思维链），立即更新便签
         if (aiData) {
           const note = get().notes.find((n) => n.id === noteId);

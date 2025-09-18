@@ -77,6 +77,18 @@ export const NoteCard = memo<NoteCardProps>(
       aiData?.showThinking ?? true
     );
 
+    // 🔧 关键修复：当 AI 数据变化时，同步思维链展开状态
+    useEffect(() => {
+      if (aiData?.showThinking !== undefined) {
+        setThinkingChainExpanded(aiData.showThinking);
+        console.log(
+          `🔄 NoteCard ${note.id.slice(-8)} 同步思维链展开状态: ${
+            aiData.showThinking
+          }`
+        );
+      }
+    }, [aiData?.showThinking, note.id]);
+
     // 缩放状态
     const [isResizing, setIsResizing] = useState(false);
     const [resizeSize, setResizeSize] = useState<Size | null>(null);

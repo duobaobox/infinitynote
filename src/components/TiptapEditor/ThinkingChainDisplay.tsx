@@ -116,15 +116,53 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
       totalSteps: thinkingData?.totalSteps || 0,
       summary: thinkingData?.summary,
       isCollapsed,
+      // 增加更详细的调试信息
+      thinkingDataStructure: thinkingData
+        ? {
+            hasSteps: !!thinkingData.steps,
+            stepsIsArray: Array.isArray(thinkingData.steps),
+            firstStepId: thinkingData.steps?.[0]?.id,
+            firstStepContent: thinkingData.steps?.[0]?.content?.substring(
+              0,
+              30
+            ),
+          }
+        : null,
     });
 
-    if (
-      !thinkingData ||
-      !thinkingData.steps ||
-      thinkingData.steps.length === 0
-    ) {
-      console.log("⚠️ ThinkingChainDisplay 数据无效，不显示");
+    // 更严格的数据验证，但允许部分数据缺失
+    if (!thinkingData) {
+      console.log("⚠️ ThinkingChainDisplay: thinkingData 为空，不显示");
       return null;
+    }
+
+    if (!thinkingData.steps || !Array.isArray(thinkingData.steps)) {
+      console.log("⚠️ ThinkingChainDisplay: steps 不是有效数组，不显示");
+      return null;
+    }
+
+    if (thinkingData.steps.length === 0) {
+      console.log("⚠️ ThinkingChainDisplay: steps 数组为空，不显示");
+      return null;
+    }
+
+    // 验证 steps 数据的基本结构
+    const validSteps = thinkingData.steps.filter(
+      (step) =>
+        step && step.id && step.content && typeof step.timestamp === "number"
+    );
+
+    if (validSteps.length === 0) {
+      console.log("⚠️ ThinkingChainDisplay: 没有有效的 step 数据，不显示");
+      return null;
+    }
+
+    if (validSteps.length !== thinkingData.steps.length) {
+      console.warn(
+        `⚠️ ThinkingChainDisplay: 发现 ${
+          thinkingData.steps.length - validSteps.length
+        } 个无效步骤，已过滤`
+      );
     }
 
     const formatTime = (timestamp: number) => {
@@ -136,8 +174,8 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
       });
     };
 
-    // 将思维链步骤转换为带类型的 Steps 组件格式
-    const stepsItems = thinkingData.steps.map((step, index) => {
+    // 将验证过的思维链步骤转换为带类型的 Steps 组件格式
+    const stepsItems = validSteps.map((step, index) => {
       const stepType = detectStepType(step.content);
       const { icon, color } = getStepIcon(stepType);
 
@@ -167,12 +205,15 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
       };
     });
 
-    // 统计不同类型步骤数量
-    const stepStats = thinkingData.steps.reduce((acc, step) => {
+    // 统计不同类型步骤数量（使用验证过的步骤）
+    const stepStats = validSteps.reduce((acc, step) => {
       const stepType = detectStepType(step.content);
       acc[stepType] = (acc[stepType] || 0) + 1;
       return acc;
     }, {} as Record<StepType, number>);
+
+    // 使用实际的有效步骤数量
+    const actualTotalSteps = validSteps.length;
 
     return (
       <div className={styles.thinkingChainContainer}>
@@ -182,7 +223,7 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
             <ExperimentOutlined className={styles.thinkingIcon} />
             <span className={styles.thinkingTitle}>AI 思维过程</span>
             <Tag color="blue" className={styles.stepCount}>
-              {thinkingData.totalSteps} 步
+              {actualTotalSteps} 步
             </Tag>
             {/* 显示步骤类型统计 */}
             <div className={styles.stepStats}>
@@ -238,8 +279,6 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
     );
   }
 );
-
-ThinkingChainDisplay.displayName = "ThinkingChainDisplay";
 
 ThinkingChainDisplay.displayName = "ThinkingChainDisplay";
 
