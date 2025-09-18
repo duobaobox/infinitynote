@@ -1,0 +1,276 @@
+/**
+ * 思维链显示组件
+ * 用于在 TipTap 编辑器中显示 AI 的思维过程
+ */
+
+import { memo } from "react";
+import { Button, Steps } from "antd";
+import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import type { AICustomProperties } from "../../types/ai";
+import styles from "./ThinkingChainDisplay.module.css";
+
+const { Text } = Typography;
+
+// 步骤类型定义
+type StepType = "analysis" | "reasoning" | "conclusion" | "question" | "idea";
+
+interface ThinkingChainDisplayProps {
+  /** 思维链数据 */
+  thinkingData: NonNullable<AICustomProperties["ai"]>["thinkingChain"];
+  /** 是否折叠 */
+  isCollapsed: boolean;
+  /** 切换折叠状态回调 */
+  onToggle: () => void;
+}
+
+/**
+ * 获取步骤类型图标和颜色
+ */
+const getStepIcon = (stepType: StepType) => {
+  switch (stepType) {
+    case "analysis":
+      return { icon: <SearchOutlined />, color: "#1890ff" }; // 蓝色搜索图标
+    case "reasoning":
+      return { icon: <ExperimentOutlined />, color: "#52c41a" }; // 绿色实验图标
+    case "conclusion":
+      return { icon: <TrophyOutlined />, color: "#fa8c16" }; // 橙色奖杯图标
+    case "question":
+      return { icon: <QuestionCircleOutlined />, color: "#eb2f96" }; // 粉色问号图标
+    case "idea":
+      return { icon: <BulbOutlined />, color: "#722ed1" }; // 紫色灯泡图标
+    default:
+      return { icon: <ExperimentOutlined />, color: "#52c41a" };
+  }
+};
+
+/**
+ * 获取步骤类型中文标签
+ */
+const getStepTypeLabel = (stepType: StepType) => {
+  switch (stepType) {
+    case "analysis":
+      return "分析";
+    case "reasoning":
+      return "推理";
+    case "conclusion":
+      return "结论";
+    case "question":
+      return "疑问";
+    case "idea":
+      return "想法";
+    default:
+      return "思考";
+  }
+};
+
+/**
+ * 智能检测步骤类型
+ */
+const detectStepType = (content: string): StepType => {
+  const stepTypeRules = [
+    {
+      keywords: ["分析", "观察", "数据", "检查", "研究", "调查"],
+      type: "analysis" as StepType,
+    },
+    {
+      keywords: ["结论", "总结", "因此", "所以", "综上", "最终"],
+      type: "conclusion" as StepType,
+    },
+    {
+      keywords: ["?", "？", "如何", "为什么", "是否", "怎么", "疑问"],
+      type: "question" as StepType,
+    },
+    {
+      keywords: ["想法", "建议", "可以", "应该", "或许", "不妨", "建议"],
+      type: "idea" as StepType,
+    },
+  ];
+
+  // 智能匹配步骤类型
+  for (const rule of stepTypeRules) {
+    if (rule.keywords.some((keyword) => content.includes(keyword))) {
+      return rule.type;
+    }
+  }
+
+  return "reasoning"; // 默认类型
+};
+
+/**
+ * 思维链显示组件
+ */
+export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
+  ({ thinkingData, isCollapsed, onToggle }) => {
+    console.log("🧠 ThinkingChainDisplay 渲染:", {
+      hasThinkingData: !!thinkingData,
+      stepsLength: thinkingData?.steps?.length || 0,
+      totalSteps: thinkingData?.totalSteps || 0,
+      summary: thinkingData?.summary,
+      isCollapsed,
+      // 增加更详细的调试信息
+      thinkingDataStructure: thinkingData
+        ? {
+            hasSteps: !!thinkingData.steps,
+            stepsIsArray: Array.isArray(thinkingData.steps),
+            firstStepId: thinkingData.steps?.[0]?.id,
+            firstStepContent: thinkingData.steps?.[0]?.content?.substring(
+              0,
+              30
+            ),
+          }
+        : null,
+    });
+
+    // 更严格的数据验证，但允许部分数据缺失
+    if (!thinkingData) {
+      console.log("⚠️ ThinkingChainDisplay: thinkingData 为空，不显示");
+      return null;
+    }
+
+    if (!thinkingData.steps || !Array.isArray(thinkingData.steps)) {
+      console.log("⚠️ ThinkingChainDisplay: steps 不是有效数组，不显示");
+      return null;
+    }
+
+    if (thinkingData.steps.length === 0) {
+      console.log("⚠️ ThinkingChainDisplay: steps 数组为空，不显示");
+      return null;
+    }
+
+    // 验证 steps 数据的基本结构
+    const validSteps = thinkingData.steps.filter(
+      (step) =>
+        step && step.id && step.content && typeof step.timestamp === "number"
+    );
+
+    if (validSteps.length === 0) {
+      console.log("⚠️ ThinkingChainDisplay: 没有有效的 step 数据，不显示");
+      return null;
+    }
+
+    if (validSteps.length !== thinkingData.steps.length) {
+      console.warn(
+        `⚠️ ThinkingChainDisplay: 发现 ${
+          thinkingData.steps.length - validSteps.length
+        } 个无效步骤，已过滤`
+      );
+    }
+
+    const formatTime = (timestamp: number) => {
+      return new Date(timestamp).toLocaleTimeString("zh-CN", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    };
+
+    // 将验证过的思维链步骤转换为带类型的 Steps 组件格式
+    const stepsItems = validSteps.map((step, index) => {
+      const stepType = detectStepType(step.content);
+      const { icon, color } = getStepIcon(stepType);
+
+      return {
+        title: (
+          <div className={styles.stepTitle}>
+            <div className={styles.stepTypeTag} style={{ color }}>
+              {icon}
+              <span className={styles.stepTypeLabel}>
+                {getStepTypeLabel(stepType)}
+              </span>
+            </div>
+            <Text type="secondary" className={styles.stepNumber}>
+              第 {index + 1} 步
+            </Text>
+          </div>
+        ),
+        description: (
+          <div className={styles.stepDescription}>
+            <Text type="secondary" className={styles.stepTime}>
+              <ClockCircleOutlined />
+              {formatTime(step.timestamp)}
+            </Text>
+            <div className={styles.stepContent}>{step.content}</div>
+          </div>
+        ),
+      };
+    });
+
+    // 统计不同类型步骤数量（使用验证过的步骤）
+    const stepStats = validSteps.reduce((acc, step) => {
+      const stepType = detectStepType(step.content);
+      acc[stepType] = (acc[stepType] || 0) + 1;
+      return acc;
+    }, {} as Record<StepType, number>);
+
+    // 使用实际的有效步骤数量
+    const actualTotalSteps = validSteps.length;
+
+    return (
+      <div className={styles.thinkingChainContainer}>
+        {/* 思维链头部 - 增强版设计 */}
+        <div className={styles.thinkingHeader}>
+          <div className={styles.thinkingHeaderLeft}>
+            <ExperimentOutlined className={styles.thinkingIcon} />
+            <span className={styles.thinkingTitle}>AI 思维过程</span>
+            <Tag color="blue" className={styles.stepCount}>
+              {actualTotalSteps} 步
+            </Tag>
+            {/* 显示步骤类型统计 */}
+            <div className={styles.stepStats}>
+              {Object.entries(stepStats).map(([type, count]) => {
+                const { color } = getStepIcon(type as StepType);
+                return (
+                  <span
+                    key={type}
+                    className={styles.statItem}
+                    style={{ color }}
+                  >
+                    {getStepTypeLabel(type as StepType)}: {count}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+          <Button
+            type="text"
+            size="small"
+            icon={isCollapsed ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+            onClick={onToggle}
+            className={styles.toggleButton}
+            title={isCollapsed ? "展开思维过程" : "折叠思维过程"}
+          />
+        </div>
+
+        {/* 思维链内容 - 使用增强的 Steps 组件 */}
+        {!isCollapsed && (
+          <div className={styles.thinkingContent}>
+            <div className={styles.stepsContainer}>
+              <Steps
+                direction="vertical"
+                size="small"
+                current={stepsItems.length}
+                items={stepsItems}
+                className={styles.thinkingSteps}
+              />
+            </div>
+
+            {/* 思维链总结 - 更丰富的显示 */}
+            {thinkingData.summary && (
+              <div className={styles.thinkingSummary}>
+                <BulbOutlined className={styles.summaryIcon} />
+                <Text type="secondary" className={styles.summaryText}>
+                  {thinkingData.summary}
+                </Text>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+ThinkingChainDisplay.displayName = "ThinkingChainDisplay";
+
+export default ThinkingChainDisplay;
