@@ -18,6 +18,7 @@ import { useAIDebugStore } from "../../store/aiDebugStore";
 import { PerformanceMonitor } from "./PerformanceMonitor";
 import { DataComparison } from "./DataComparison";
 import { AdvancedControls } from "./AdvancedControls";
+import { RawDataView } from "./RawDataView";
 import styles from "./index.module.css";
 
 /**
@@ -90,6 +91,7 @@ export const AIDebugPanel: React.FC = () => {
     },
     { key: "comparison", label: "对比", disabled: !currentSession },
     { key: "performance", label: "性能", disabled: !currentSession },
+    { key: "rawData", label: "原始数据", disabled: !currentSession },
     { key: "errors", label: "错误", count: stats.error },
     { key: "controls", label: "控制" },
   ];
@@ -231,6 +233,9 @@ export const AIDebugPanel: React.FC = () => {
             )}
             {activeTab === "performance" && currentSession && (
               <PerformanceTab session={currentSession} />
+            )}
+            {activeTab === "rawData" && currentSession && (
+              <RawDataView session={currentSession} />
             )}
             {activeTab === "errors" && (
               <ErrorsTab

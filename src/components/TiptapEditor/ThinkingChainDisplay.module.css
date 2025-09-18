@@ -16,37 +16,22 @@
   border-color: var(--color-primary-border-hover);
 }
 
-/* 思维链头部 - 紧凑设计 */
+/* 思维链头部 - 极简设计 */
 .thinkingHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: var(--color-fill-quaternary);
-  border-bottom: 1px solid var(--color-border);
-  min-height: 36px;
+  padding: 6px 10px;
+  background: transparent;
+  min-height: 28px;
 }
 
 .thinkingHeaderLeft {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex: 1;
+  gap: 4px;
 }
 
-/* 步骤类型统计 */
-.stepStats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 8px;
-  font-size: 11px;
-}
-
-.statItem {
-  font-weight: 500;
-  white-space: nowrap;
-}
+/* 移除步骤类型统计 */
 
 .thinkingIcon {
   color: var(--color-primary);
@@ -84,21 +69,11 @@
   color: var(--color-primary);
 }
 
-/* 思维链内容 - 固定高度，滚动显示 */
+/* 思维链内容 - 自适应高度 */
 .thinkingContent {
-  height: 200px; /* 固定高度 */
   display: flex;
   flex-direction: column;
-}
-
-.stepsContainer {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden; /* 防止水平滚动 */
-  padding: 12px;
-  padding-right: 8px; /* 为滚动条预留空间 */
-  /* 确保这是唯一的滚动区域 */
-  position: relative;
+  padding: 8px;
 }
 
 /* Steps 组件样式定制 */
@@ -190,46 +165,19 @@
 
 .stepContent {
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.5;
   color: var(--color-text);
-  background: var(--color-bg-layout);
-  padding: 6px 8px;
-  border-radius: 4px;
-  border-left: 2px solid var(--color-primary);
+  background: transparent;
+  padding: 4px 6px;
+  margin-bottom: 8px;
   word-wrap: break-word;
   white-space: pre-wrap;
   max-width: 100%;
   overflow-wrap: break-word;
-  /* 确保单个步骤内容不会单独滚动 */
-  overflow: visible;
-  max-height: none;
+  border-left: 2px solid var(--color-primary);
 }
 
-/* 思维总结 - 增强版显示 */
-.thinkingSummary {
-  flex-shrink: 0;
-  padding: 8px 12px;
-  background: var(--color-primary-bg-hover);
-  border-top: 1px solid var(--color-border);
-  font-size: 11px;
-  line-height: 1.4;
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.summaryIcon {
-  color: #faad14;
-  font-size: 12px;
-  margin-top: 1px;
-  flex-shrink: 0;
-}
-
-.summaryText {
-  color: var(--color-text-secondary) !important;
-  font-style: italic;
-  margin: 0;
-}
+/* 移除思维总结部分 */
 
 /* 滚动条样式 */
 .stepsContainer::-webkit-scrollbar {

@@ -111,7 +111,8 @@ export interface AIDebugPanelState {
     | "comparison"
     | "performance"
     | "errors"
-    | "controls";
+    | "controls"
+    | "rawData";
   /** 当前选中的会话ID */
   selectedSessionId?: string;
   /** 过滤器 */
