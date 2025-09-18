@@ -31,6 +31,21 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1;
+}
+
+/* 步骤类型统计 */
+.stepStats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  font-size: 11px;
+}
+
+.statItem {
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .thinkingIcon {
@@ -133,6 +148,32 @@
   line-height: 1.4 !important;
 }
 
+/* 步骤标题 - 增强版设计 */
+.stepTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.stepTypeTag {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.stepTypeLabel {
+  margin-left: 1px;
+}
+
+.stepNumber {
+  font-size: 10px;
+  margin-left: auto;
+  color: var(--color-text-tertiary);
+}
+
 /* 步骤描述内容 */
 .stepDescription {
   margin: 0;
@@ -141,7 +182,9 @@
 .stepTime {
   font-size: 11px !important;
   color: var(--color-text-tertiary) !important;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-bottom: 6px;
 }
 
@@ -162,7 +205,7 @@
   max-height: none;
 }
 
-/* 思维总结 - 紧凑显示 */
+/* 思维总结 - 增强版显示 */
 .thinkingSummary {
   flex-shrink: 0;
   padding: 8px 12px;
@@ -170,6 +213,16 @@
   border-top: 1px solid var(--color-border);
   font-size: 11px;
   line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.summaryIcon {
+  color: #faad14;
+  font-size: 12px;
+  margin-top: 1px;
+  flex-shrink: 0;
 }
 
 .summaryText {
