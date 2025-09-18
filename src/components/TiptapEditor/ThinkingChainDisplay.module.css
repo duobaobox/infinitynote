@@ -1,44 +1,45 @@
 /**
- * 思维链显示组件样式
+ * 思维链显示组件样式 - 精简紧凑版本
  */
 
-/* 思维链容器 */
+/* 思维链容器 - 更紧凑的设计 */
 .thinkingChainContainer {
-  margin-bottom: 16px;
-  border: 1px solid var(--color-border-secondary);
-  border-radius: 8px;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
   background: var(--color-bg-container);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease;
 }
 
 .thinkingChainContainer:hover {
-  border-color: var(--color-primary-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-color: var(--color-primary-border-hover);
 }
 
-/* 思维链头部 */
+/* 思维链头部 - 紧凑设计 */
 .thinkingHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: var(--color-fill-quaternary);
-  border-bottom: 1px solid var(--color-border-secondary);
+  border-bottom: 1px solid var(--color-border);
+  min-height: 36px;
 }
 
 .thinkingHeaderLeft {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .thinkingIcon {
-  font-size: 16px;
+  color: var(--color-primary);
+  font-size: 14px;
 }
 
 .thinkingTitle {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text);
 }
@@ -47,187 +48,196 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   background: var(--color-primary);
   color: white;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  border-radius: 10px;
+  border-radius: 8px;
   line-height: 1;
 }
 
 .toggleButton {
   color: var(--color-text-secondary);
   transition: color 0.2s ease;
+  padding: 2px;
 }
 
 .toggleButton:hover {
   color: var(--color-primary);
 }
 
-/* 思维链内容 */
+/* 思维链内容 - 固定高度，滚动显示 */
 .thinkingContent {
-  padding: 0;
-  animation: thinkingSlideDown 0.3s ease-out;
-}
-
-@keyframes thinkingSlideDown {
-  from {
-    opacity: 0;
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    max-height: 400px;
-  }
-}
-
-/* 思维步骤列表 */
-.thinkingSteps {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-/* 思维步骤项 */
-.thinkingStep {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--color-border-secondary);
-  transition: background-color 0.2s ease;
-}
-
-.thinkingStep:last-child {
-  border-bottom: none;
-}
-
-.thinkingStep:hover {
-  background: var(--color-fill-quaternary);
-}
-
-/* 步骤头部 */
-.stepHeader {
+  height: 200px; /* 固定高度 */
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
+  flex-direction: column;
 }
 
-.stepNumber {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-primary);
-  background: var(--color-primary-bg);
-  padding: 2px 8px;
-  border-radius: 12px;
+.stepsContainer {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; /* 防止水平滚动 */
+  padding: 12px;
+  padding-right: 8px; /* 为滚动条预留空间 */
+  /* 确保这是唯一的滚动区域 */
+  position: relative;
+}
+
+/* Steps 组件样式定制 */
+.thinkingSteps {
+  margin: 0;
+  /* 确保Steps组件可以自由伸展，由外层容器控制滚动 */
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* 自定义 Steps 内部样式 */
+.thinkingSteps :global(.ant-steps-item) {
+  padding-bottom: 8px !important;
+}
+
+.thinkingSteps :global(.ant-steps-item-tail) {
+  margin-inline-start: 6px !important;
+  padding-inline-start: 0 !important;
+}
+
+.thinkingSteps :global(.ant-steps-item-icon) {
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 14px !important;
+  font-size: 10px !important;
+  margin-inline-end: 8px !important;
+}
+
+.thinkingSteps :global(.ant-steps-item-content) {
+  min-height: auto !important;
+  margin-inline-start: 24px !important;
+}
+
+.thinkingSteps :global(.ant-steps-item-title) {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--color-primary) !important;
+  margin-bottom: 4px !important;
+  padding-right: 0 !important;
+  line-height: 1.3 !important;
+}
+
+.thinkingSteps :global(.ant-steps-item-description) {
+  color: var(--color-text) !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* 步骤描述内容 */
+.stepDescription {
+  margin: 0;
 }
 
 .stepTime {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--color-text-tertiary);
+  font-size: 11px !important;
+  color: var(--color-text-tertiary) !important;
+  display: block;
+  margin-bottom: 6px;
 }
 
-.stepTime .anticon {
-  font-size: 12px;
-}
-
-/* 步骤内容 */
 .stepContent {
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--color-text);
   background: var(--color-bg-layout);
-  padding: 8px 12px;
-  border-radius: 6px;
-  border-left: 3px solid var(--color-primary);
+  padding: 6px 8px;
+  border-radius: 4px;
+  border-left: 2px solid var(--color-primary);
   word-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  /* 确保单个步骤内容不会单独滚动 */
+  overflow: visible;
+  max-height: none;
 }
 
-/* 思维总结 */
+/* 思维总结 - 紧凑显示 */
 .thinkingSummary {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px 16px;
-  background: var(--color-primary-bg-hover);
-  border-top: 1px solid var(--color-border-secondary);
-  margin-top: 0;
-}
-
-.summaryIcon {
-  font-size: 16px;
-  line-height: 1.5;
   flex-shrink: 0;
+  padding: 8px 12px;
+  background: var(--color-primary-bg-hover);
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .summaryText {
-  flex: 1;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary) !important;
   font-style: italic;
+  margin: 0;
 }
 
 /* 滚动条样式 */
-.thinkingSteps::-webkit-scrollbar {
-  width: 6px;
+.stepsContainer::-webkit-scrollbar {
+  width: 4px;
 }
 
-.thinkingSteps::-webkit-scrollbar-track {
+.stepsContainer::-webkit-scrollbar-track {
   background: var(--color-fill-quaternary);
+  border-radius: 2px;
 }
 
-.thinkingSteps::-webkit-scrollbar-thumb {
+.stepsContainer::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-.thinkingSteps::-webkit-scrollbar-thumb:hover {
+.stepsContainer::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-secondary);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .thinkingHeader {
-    padding: 10px 12px;
+    padding: 6px 10px;
+    min-height: 32px;
   }
 
   .thinkingTitle {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .stepCount {
-    font-size: 11px;
-    height: 18px;
-    min-width: 18px;
-    padding: 0 4px;
+    font-size: 10px;
+    min-width: 14px;
+    height: 14px;
   }
 
-  .thinkingStep {
-    padding: 10px 12px;
+  .thinkingContent {
+    height: 180px; /* 移动设备上稍微减小高度 */
+  }
+
+  .stepsContainer {
+    padding: 10px;
+    padding-right: 6px;
   }
 
   .stepContent {
-    font-size: 12px;
-    padding: 6px 10px;
+    font-size: 11px;
+    padding: 5px 6px;
   }
 
   .thinkingSummary {
-    padding: 10px 12px;
-  }
-
-  .summaryText {
-    font-size: 12px;
+    padding: 6px 10px;
+    font-size: 10px;
   }
 }
 
 /* 暗黑主题适配 */
 @media (prefers-color-scheme: dark) {
   .thinkingChainContainer:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border-color: var(--color-primary-border);
   }
 
   .stepContent {
@@ -250,7 +260,7 @@
   }
 
   .stepContent {
-    border-left-width: 4px;
+    border-left-width: 3px;
   }
 }
 
@@ -258,10 +268,6 @@
 @media (prefers-reduced-motion: reduce) {
   .thinkingChainContainer {
     transition: none;
-  }
-
-  .thinkingContent {
-    animation: none;
   }
 
   .toggleButton {

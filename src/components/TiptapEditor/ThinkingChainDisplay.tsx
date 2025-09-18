@@ -4,14 +4,16 @@
  */
 
 import { memo } from "react";
-import { Button } from "antd";
+import { Button, Steps, Typography } from "antd";
 import {
   EyeOutlined,
   EyeInvisibleOutlined,
-  ClockCircleOutlined,
+  BulbOutlined,
 } from "@ant-design/icons";
 import type { AICustomProperties } from "../../types/ai";
 import styles from "./ThinkingChainDisplay.module.css";
+
+const { Text } = Typography;
 
 interface ThinkingChainDisplayProps {
   /** 思维链数据 */
@@ -53,16 +55,27 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
       });
     };
 
+    // 将思维链步骤转换为 Steps 组件需要的格式
+    const stepsItems = thinkingData.steps.map((step, index) => ({
+      title: `步骤 ${index + 1}`,
+      description: (
+        <div className={styles.stepDescription}>
+          <Text type="secondary" className={styles.stepTime}>
+            {formatTime(step.timestamp)}
+          </Text>
+          <div className={styles.stepContent}>{step.content}</div>
+        </div>
+      ),
+    }));
+
     return (
       <div className={styles.thinkingChainContainer}>
-        {/* 思维链头部 */}
+        {/* 思维链头部 - 更紧凑的设计 */}
         <div className={styles.thinkingHeader}>
           <div className={styles.thinkingHeaderLeft}>
-            <span className={styles.thinkingIcon}>🧠</span>
+            <BulbOutlined className={styles.thinkingIcon} />
             <span className={styles.thinkingTitle}>AI 思维过程</span>
-            <span className={styles.stepCount}>
-              {thinkingData.totalSteps} 步
-            </span>
+            <span className={styles.stepCount}>{thinkingData.totalSteps}</span>
           </div>
           <Button
             type="text"
@@ -74,29 +87,25 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
           />
         </div>
 
-        {/* 思维链内容 */}
+        {/* 思维链内容 - 使用 Ant Design Steps 组件 */}
         {!isCollapsed && (
           <div className={styles.thinkingContent}>
-            <div className={styles.thinkingSteps}>
-              {thinkingData.steps.map((step, index) => (
-                <div key={step.id} className={styles.thinkingStep}>
-                  <div className={styles.stepHeader}>
-                    <span className={styles.stepNumber}>步骤 {index + 1}</span>
-                    <span className={styles.stepTime}>
-                      <ClockCircleOutlined />
-                      {formatTime(step.timestamp)}
-                    </span>
-                  </div>
-                  <div className={styles.stepContent}>{step.content}</div>
-                </div>
-              ))}
+            <div className={styles.stepsContainer}>
+              <Steps
+                direction="vertical"
+                size="small"
+                current={stepsItems.length}
+                items={stepsItems}
+                className={styles.thinkingSteps}
+              />
             </div>
 
-            {/* 思维链总结 */}
+            {/* 思维链总结 - 更紧凑的显示 */}
             {thinkingData.summary && (
               <div className={styles.thinkingSummary}>
-                <div className={styles.summaryIcon}>💡</div>
-                <div className={styles.summaryText}>{thinkingData.summary}</div>
+                <Text type="secondary" className={styles.summaryText}>
+                  💡 {thinkingData.summary}
+                </Text>
               </div>
             )}
           </div>
