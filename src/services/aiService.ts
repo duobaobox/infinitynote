@@ -584,6 +584,7 @@ class DeepSeekProvider implements AIProvider {
 
     let fullContent = "";
     let fullMarkdown = "";
+    let fullReasoning = "";
     const thinkingChain: any[] = [];
     let retryCount = 0;
     const maxRetries = 3;
@@ -648,29 +649,29 @@ class DeepSeekProvider implements AIProvider {
                     delta.thought || // 备选字段名
                     delta["reasoning-content"]; // 可能使用连字符
 
-                  // 如果有思维链内容，记录详细信息
+                  // 累积完整的reasoning内容，不要为每个片段创建独立步骤
                   if (reasoning) {
-                    console.log("🧠 发现思维链内容:", {
-                      fieldName: Object.keys(delta).find(
-                        (key) => key.includes("reason") || key.includes("think")
-                      ),
-                      content: reasoning.substring(0, 100) + "...",
-                    });
+                    fullReasoning += reasoning;
 
-                    thinkingChain.push({
-                      id: `step_${thinkingChain.length + 1}`,
-                      content: reasoning,
-                      timestamp: Date.now(),
-                    });
+                    // 只在第一次收到reasoning时记录调试信息
+                    if (fullReasoning.length === reasoning.length) {
+                      console.log("🧠 开始收集思维链内容:", {
+                        fieldName: Object.keys(delta).find(
+                          (key) =>
+                            key.includes("reason") || key.includes("think")
+                        ),
+                        initialContent: reasoning.substring(0, 50) + "...",
+                      });
+                    }
                   }
                 }
 
-                // 记录调试数据
+                // 记录调试数据 - 传递单个reasoning片段用于调试，但不创建独立步骤
                 aiDebugCollector.recordStreamChunk(
                   debugSessionId,
                   parsed,
                   deltaContent,
-                  reasoning
+                  reasoning // 这里传递片段，但调试收集器需要修改处理逻辑
                 );
 
                 retryCount = 0; // 重置重试计数
@@ -721,29 +722,32 @@ class DeepSeekProvider implements AIProvider {
           originalMarkdown: fullMarkdown,
         };
 
-        // 如果是reasoner模型且有思维链数据
-        if (options.model?.includes("reasoner") && thinkingChain.length > 0) {
-          console.log("🧠 构造思维链数据:", {
+        // 如果是reasoner模型且有完整的reasoning内容
+        if (options.model?.includes("reasoner") && fullReasoning.trim()) {
+          // 将完整的reasoning作为一个思维链步骤，而不是多个碎片
+          const completeThinkingStep = {
+            id: "reasoning_complete",
+            content: fullReasoning.trim(),
+            timestamp: Date.now(),
+          };
+
+          console.log("🧠 构造完整思维链数据:", {
             model: options.model,
-            stepsCount: thinkingChain.length,
-            firstStep: thinkingChain[0]?.content?.substring(0, 50) + "...",
-            lastStep:
-              thinkingChain[thinkingChain.length - 1]?.content?.substring(
-                0,
-                50
-              ) + "...",
+            reasoningLength: fullReasoning.length,
+            reasoningPreview: fullReasoning.substring(0, 100) + "...",
+            totalSteps: 1,
           });
 
           aiData.thinkingChain = {
-            steps: thinkingChain,
-            summary: `通过${thinkingChain.length}步推理完成`,
-            totalSteps: thinkingChain.length,
+            steps: [completeThinkingStep],
+            summary: `完整推理过程 (${fullReasoning.length}字符)`,
+            totalSteps: 1,
           };
         } else {
           console.log("⚠️ 未构造思维链数据:", {
             model: options.model,
             isReasonerModel: options.model?.includes("reasoner"),
-            thinkingChainLength: thinkingChain.length,
+            reasoningLength: fullReasoning?.length || 0,
             showThinking: aiData.showThinking,
           });
         }
