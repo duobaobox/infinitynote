@@ -7,7 +7,6 @@ import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
-import { AIStatusIndicator } from "../AIStatusIndicator";
 import type { ToolbarAction } from "../NoteToolbar/types";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import styles from "./index.module.css";
@@ -42,10 +41,8 @@ export const NoteCard = memo<NoteCardProps>(
       moveNote,
       resizeNote,
       startAIGeneration,
-      cancelAIGeneration,
       aiGenerating,
       aiStreamingData,
-      aiErrors,
     } = useNoteStore(); // 悬浮状态
     const [isHovered, setIsHovered] = useState(false);
 
@@ -704,19 +701,6 @@ export const NoteCard = memo<NoteCardProps>(
             >
               <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
             </div>
-
-            {/* AI状态指示器 */}
-            <AIStatusIndicator
-              noteId={note.id}
-              isGenerating={aiGenerating[note.id]}
-              error={aiErrors[note.id]}
-              onCancel={cancelAIGeneration}
-              onRetry={(noteId: string) => {
-                // 重试逻辑：使用上次的提示词或弹出输入框
-                const lastPrompt = aiData?.prompt || "请继续生成内容";
-                startAIGeneration(noteId, lastPrompt);
-              }}
-            />
 
             {/* 便签内容区域 - 编辑器 */}
             <div className={styles.noteContent}>
