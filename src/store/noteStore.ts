@@ -896,8 +896,8 @@ export const useNoteStore = create<NoteStore>()(
           await aiService.generateNote({
             noteId,
             prompt,
-            onStream: (content) => {
-              get().updateAIStreamingContent(noteId, content);
+            onStream: (content, aiData) => {
+              get().updateAIStreamingContent(noteId, content, aiData);
             },
             onComplete: (finalContent, aiData) => {
               get().completeAIGeneration(noteId, finalContent, aiData);
@@ -919,10 +919,33 @@ export const useNoteStore = create<NoteStore>()(
       },
 
       // 更新流式内容
-      updateAIStreamingContent: (noteId: string, content: string) => {
+      updateAIStreamingContent: (noteId: string, content: string, aiData?: AICustomProperties["ai"]) => {
         set((state) => ({
           aiStreamingData: { ...state.aiStreamingData, [noteId]: content },
         }));
+        
+        // 如果有AI数据（包含思维链），立即更新便签
+        if (aiData) {
+          const note = get().notes.find((n) => n.id === noteId);
+          if (note) {
+            // 直接更新内存中的便签数据，不触发数据库保存
+            set((state) => ({
+              notes: state.notes.map((n) =>
+                n.id === noteId
+                  ? {
+                      ...n,
+                      content: content,
+                      customProperties: {
+                        ...n.customProperties,
+                        ai: aiData,
+                      },
+                      updatedAt: new Date(),
+                    }
+                  : n
+              ),
+            }));
+          }
+        }
       },
 
       // 完成AI生成

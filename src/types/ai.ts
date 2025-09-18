@@ -57,7 +57,7 @@ export interface AIGenerationOptions {
   model?: string;
   temperature?: number;
   maxTokens?: number;
-  onStream?: (content: string) => void;
+  onStream?: (content: string, aiData?: AICustomProperties["ai"]) => void;
   onComplete?: (finalContent: string, aiData: AICustomProperties["ai"]) => void;
   onError?: (error: Error) => void;
 }

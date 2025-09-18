@@ -588,6 +588,7 @@ class DeepSeekProvider implements AIProvider {
     const thinkingChain: any[] = [];
     let retryCount = 0;
     const maxRetries = 3;
+    let hasStartedThinking = false; // 标记是否已开始思维过程
 
     try {
       while (true) {
@@ -652,6 +653,66 @@ class DeepSeekProvider implements AIProvider {
                   // 累积完整的reasoning内容，不要为每个片段创建独立步骤
                   if (reasoning) {
                     fullReasoning += reasoning;
+
+                    // 第一次收到reasoning时，立即显示思维链容器
+                    if (!hasStartedThinking) {
+                      hasStartedThinking = true;
+                      console.log("🧠 开始思维过程，立即显示思维链容器");
+                      
+                      // 创建初始的思维链数据并通过onStream回调
+                      const initialAiData: AICustomProperties["ai"] = {
+                        generated: false, // 标记为正在生成中
+                        model: options.model || "deepseek-reasoner",
+                        provider: "deepseek",
+                        generatedAt: new Date().toISOString(),
+                        prompt: options.prompt,
+                        requestId: `req_${Date.now()}`,
+                        showThinking: true,
+                        thinkingCollapsed: false,
+                        isStreaming: true, // 标记为流式生成中
+                        originalMarkdown: "",
+                        thinkingChain: {
+                          steps: [{
+                            id: "thinking_in_progress",
+                            content: "正在思考中...",
+                            timestamp: Date.now(),
+                          }],
+                          summary: "思维过程进行中",
+                          totalSteps: 1,
+                        },
+                      };
+
+                      // 通过onStream立即显示思维链容器
+                      options.onStream?.("", initialAiData);
+                    }
+
+                    // 实时更新思维链内容
+                    if (hasStartedThinking) {
+                      const updatedAiData: AICustomProperties["ai"] = {
+                        generated: false,
+                        model: options.model || "deepseek-reasoner",
+                        provider: "deepseek",
+                        generatedAt: new Date().toISOString(),
+                        prompt: options.prompt,
+                        requestId: `req_${Date.now()}`,
+                        showThinking: true,
+                        thinkingCollapsed: false,
+                        isStreaming: true,
+                        originalMarkdown: fullMarkdown,
+                        thinkingChain: {
+                          steps: [{
+                            id: "thinking_live",
+                            content: fullReasoning,
+                            timestamp: Date.now(),
+                          }],
+                          summary: `思维过程进行中 (${fullReasoning.length}字符)`,
+                          totalSteps: 1,
+                        },
+                      };
+
+                      // 实时更新思维链内容
+                      options.onStream?.(fullMarkdown, updatedAiData);
+                    }
 
                     // 只在第一次收到reasoning时记录调试信息
                     if (fullReasoning.length === reasoning.length) {

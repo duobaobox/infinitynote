@@ -67,12 +67,13 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       thinkingChainExpanded
     );
 
-    // AI 生成的便签检测
+    // AI 生成的便签检测 - 包括正在生成中的便签
     const isAIGenerated = useMemo(() => {
-      const result = aiData?.generated === true && aiData?.thinkingChain;
+      const result = aiData && aiData.thinkingChain && (aiData.generated === true || aiData.isStreaming === true);
       console.log("🤖 TiptapEditor AI检测:", {
         hasAiData: !!aiData,
         generated: aiData?.generated,
+        isStreaming: aiData?.isStreaming,
         hasThinkingChain: !!aiData?.thinkingChain,
         isAIGenerated: result,
         model: aiData?.model,
