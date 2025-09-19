@@ -72,15 +72,17 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [aiData, note.id]);
 
-    // 思维链展开状态（从便签的 AI 数据中获取，默认展开）
+    // 思维链展开状态（根据AI数据的thinkingCollapsed字段决定默认状态）
     const [thinkingChainExpanded, setThinkingChainExpanded] = useState(
-      aiData?.showThinking ?? true
+      aiData?.showThinking !== false && aiData?.thinkingCollapsed !== true
     );
 
     // 🔧 关键修复：当 AI 数据变化时，同步思维链展开状态
     useEffect(() => {
       if (aiData?.showThinking !== undefined) {
-        setThinkingChainExpanded(aiData.showThinking);
+        // 根据thinkingCollapsed字段决定展开状态
+        const shouldExpand = aiData.showThinking && !aiData.thinkingCollapsed;
+        setThinkingChainExpanded(shouldExpand);
         console.log(
           `🔄 NoteCard ${note.id.slice(-8)} 同步思维链展开状态: ${
             aiData.showThinking

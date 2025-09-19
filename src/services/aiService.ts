@@ -279,13 +279,13 @@ class ZhipuAIProvider implements AIProvider {
         // 构造AI数据
         const aiData: AICustomProperties["ai"] = {
           generated: true,
-          model: options.model || "glm-4",
-          provider: "zhipu",
+          model: options.model || "deepseek-reasoner",
+          provider: "deepseek",
           generatedAt: new Date().toISOString(),
           prompt: options.prompt,
           requestId: `req_${Date.now()}`,
           showThinking: true,
-          thinkingCollapsed: false,
+          thinkingCollapsed: true,
           isStreaming: false,
           originalMarkdown: fullMarkdown,
         };
@@ -658,7 +658,7 @@ class DeepSeekProvider implements AIProvider {
                     if (!hasStartedThinking) {
                       hasStartedThinking = true;
                       console.log("🧠 开始思维过程，立即显示思维链容器");
-                      
+
                       // 创建初始的思维链数据并通过onStream回调
                       const initialAiData: AICustomProperties["ai"] = {
                         generated: false, // 标记为正在生成中
@@ -668,15 +668,17 @@ class DeepSeekProvider implements AIProvider {
                         prompt: options.prompt,
                         requestId: `req_${Date.now()}`,
                         showThinking: true,
-                        thinkingCollapsed: false,
+                        thinkingCollapsed: true,
                         isStreaming: true, // 标记为流式生成中
                         originalMarkdown: "",
                         thinkingChain: {
-                          steps: [{
-                            id: "thinking_in_progress",
-                            content: "正在思考中...",
-                            timestamp: Date.now(),
-                          }],
+                          steps: [
+                            {
+                              id: "thinking_in_progress",
+                              content: "正在思考中...",
+                              timestamp: Date.now(),
+                            },
+                          ],
                           summary: "思维过程进行中",
                           totalSteps: 1,
                         },
@@ -696,15 +698,17 @@ class DeepSeekProvider implements AIProvider {
                         prompt: options.prompt,
                         requestId: `req_${Date.now()}`,
                         showThinking: true,
-                        thinkingCollapsed: false,
+                        thinkingCollapsed: true,
                         isStreaming: true,
                         originalMarkdown: fullMarkdown,
                         thinkingChain: {
-                          steps: [{
-                            id: "thinking_live",
-                            content: fullReasoning,
-                            timestamp: Date.now(),
-                          }],
+                          steps: [
+                            {
+                              id: "thinking_live",
+                              content: fullReasoning,
+                              timestamp: Date.now(),
+                            },
+                          ],
                           summary: `思维过程进行中 (${fullReasoning.length}字符)`,
                           totalSteps: 1,
                         },
@@ -913,7 +917,7 @@ class AlibabaProvider implements AIProvider {
           prompt: options.prompt,
           requestId: `req_${Date.now()}`,
           showThinking: false, // 不支持思维链
-          thinkingCollapsed: false,
+          thinkingCollapsed: true,
           isStreaming: false,
           originalMarkdown: fullMarkdown,
         };
@@ -1029,7 +1033,7 @@ class SiliconFlowProvider implements AIProvider {
           prompt: options.prompt,
           requestId: `req_${Date.now()}`,
           showThinking: false, // 不支持思维链
-          thinkingCollapsed: false,
+          thinkingCollapsed: true,
           isStreaming: false,
           originalMarkdown: fullMarkdown,
         };
@@ -1139,7 +1143,7 @@ class AnthropicProvider implements AIProvider {
           prompt: options.prompt,
           requestId: `req_${Date.now()}`,
           showThinking: false, // 不支持思维链
-          thinkingCollapsed: false,
+          thinkingCollapsed: true,
           isStreaming: false,
           originalMarkdown: fullMarkdown,
         };

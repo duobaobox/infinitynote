@@ -1,77 +1,86 @@
 /**
- * 思维链显示组件 - 精简版
+ * 思考过程显示组件 - 精简版
  */
 
 import { memo } from "react";
-import { Button, Steps } from "antd";
-import { EyeOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
 import type { AICustomProperties } from "../../types/ai";
 import styles from "./ThinkingChainDisplay.module.css";
 
 interface ThinkingChainDisplayProps {
-  /** 思维链数据 */
+  /** 思考链数据 */
   thinkingData: NonNullable<AICustomProperties["ai"]>["thinkingChain"];
   /** 是否折叠 */
   isCollapsed: boolean;
   /** 切换折叠状态回调 */
   onToggle: () => void;
+  /** AI状态信息 */
+  aiStatus?: {
+    isStreaming?: boolean;
+    generated?: boolean;
+  };
 }
 
 /**
- * 思维链显示组件
+ * 思考过程显示组件
  */
 export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
-  ({ thinkingData, isCollapsed, onToggle }) => {
+  ({ thinkingData, isCollapsed, onToggle, aiStatus }) => {
     if (!thinkingData?.steps?.length) return null;
 
-    // 过滤有效的思维步骤
+    // 过滤有效的思考步骤
     const validSteps = thinkingData.steps.filter(
-      step => step?.id && step?.content && typeof step?.timestamp === "number"
+      (step) => step?.id && step?.content && typeof step?.timestamp === "number"
     );
 
     if (!validSteps.length) return null;
 
-    // 格式化时间
-    const formatTime = (timestamp: number) => {
-      return new Date(timestamp).toLocaleTimeString("zh-CN", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-    };
-
-    // 简化的步骤数据
-    const stepsItems = validSteps.map(step => ({
-      title: formatTime(step.timestamp),
-      description: <div className={styles.stepContent}>{step.content}</div>,
-    }));
+    // 判断AI当前状态
+    const isThinking =
+      aiStatus?.isStreaming === true && aiStatus?.generated !== true;
 
     return (
       <div className={styles.thinkingChainContainer}>
-        <div className={styles.thinkingHeader}>
-          <div className={styles.thinkingHeaderLeft}>
-            <span className={styles.thinkingTitle}>AI 思维过程</span>
-          </div>
-          <Button
-            type="text"
-            size="small"
-            icon={isCollapsed ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-            onClick={onToggle}
-            className={styles.toggleButton}
-            title={isCollapsed ? "展开思维过程" : "折叠思维过程"}
-          />
+        <div
+          className={styles.thinkingHeader}
+          onClick={onToggle}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onToggle();
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-expanded={!isCollapsed}
+          aria-label={isCollapsed ? "展开思考过程" : "收起思考过程"}
+        >
+          {isThinking ? (
+            <span
+              className={`${styles.thinkingTitle} ${styles.thinking}`}
+              aria-live="polite"
+            >
+              正在思考
+            </span>
+          ) : (
+            <span className={styles.thinkingTitle}>思考过程</span>
+          )}
+          <span
+            className={`${styles.expandIcon} ${
+              !isCollapsed ? styles.expanded : ""
+            }`}
+            aria-hidden="true"
+          >
+            ▶
+          </span>
         </div>
 
         {!isCollapsed && (
           <div className={styles.thinkingContent}>
-            <Steps
-              direction="vertical"
-              size="small"
-              current={stepsItems.length}
-              items={stepsItems}
-              className={styles.thinkingSteps}
-            />
+            {validSteps.map((step) => (
+              <div key={step.id} className={styles.thinkingText}>
+                {step.content}
+              </div>
+            ))}
           </div>
         )}
       </div>

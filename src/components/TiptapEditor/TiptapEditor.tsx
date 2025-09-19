@@ -62,14 +62,17 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
     const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
 
-    // 思维链展开状态管理
+    // 思维链展开状态管理（根据aiData的thinkingCollapsed或外部thinkingChainExpanded决定）
     const [isThinkingExpanded, setIsThinkingExpanded] = useState(
-      thinkingChainExpanded
+      thinkingChainExpanded ?? (aiData && !aiData.thinkingCollapsed)
     );
 
     // AI 生成的便签检测 - 包括正在生成中的便签
     const isAIGenerated = useMemo(() => {
-      const result = aiData && aiData.thinkingChain && (aiData.generated === true || aiData.isStreaming === true);
+      const result =
+        aiData &&
+        aiData.thinkingChain &&
+        (aiData.generated === true || aiData.isStreaming === true);
       console.log("🤖 TiptapEditor AI检测:", {
         hasAiData: !!aiData,
         generated: aiData?.generated,
@@ -348,6 +351,10 @@ export const TiptapEditor = memo<TiptapEditorProps>(
               thinkingData={aiData.thinkingChain}
               isCollapsed={!isThinkingExpanded}
               onToggle={handleThinkingToggle}
+              aiStatus={{
+                isStreaming: aiData.isStreaming,
+                generated: aiData.generated,
+              }}
             />
           )}
 
