@@ -6,6 +6,7 @@
 
 import type { Note, Size, NoteTemplate } from "../types";
 import { NoteColor } from "../types";
+import { NOTE_DEFAULT_SIZE } from "../types/constants";
 import { NoteService } from "./noteService";
 
 /**
@@ -20,7 +21,7 @@ export const BUILTIN_TEMPLATES: Omit<
     description: "简单的待办事项模板",
     content: "□ 任务1\n□ 任务2\n□ 任务3",
     color: NoteColor.YELLOW,
-    size: { width: 200, height: 150 },
+    size: NOTE_DEFAULT_SIZE, // 使用新的默认尺寸 (270x240像素) 提供更好的显示效果
     contentType: "text",
     isSystem: true,
   },

@@ -45,6 +45,11 @@ export interface AICustomProperties {
     // 流式生成状态
     isStreaming?: boolean; // 是否正在流式生成
     originalMarkdown?: string; // 原始Markdown内容（用于调试）
+
+    // AI生成阶段状态 - 用于区分思维链生成和最终答案生成
+    generationPhase?: AIGenerationPhase; // 当前生成阶段
+    isThinkingPhase?: boolean; // 是否正在思维链生成阶段
+    isAnsweringPhase?: boolean; // 是否正在最终答案生成阶段
   };
 }
 
@@ -123,6 +128,20 @@ export enum AIGenerationStatus {
   COMPLETED = "completed",
   ERROR = "error",
   CANCELLED = "cancelled",
+}
+
+/**
+ * AI 生成阶段枚举 - 用于区分思维链生成和最终答案生成阶段
+ */
+export enum AIGenerationPhase {
+  /** 初始化阶段 */
+  INITIALIZING = "initializing",
+  /** 思维链生成阶段 - 显示"正在思考…" */
+  THINKING = "thinking",
+  /** 最终答案生成阶段 - 显示"正在回复…" */
+  ANSWERING = "answering",
+  /** 生成完成阶段 - 显示"思维过程" */
+  COMPLETED = "completed",
 }
 
 /**

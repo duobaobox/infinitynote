@@ -20,6 +20,7 @@ import { useOptimizedCanvasPan } from "../../utils/dragOptimization";
 import type { IconType } from "../../utils/iconRegistry";
 import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
+import { NOTE_DEFAULT_SIZE } from "../../types/constants";
 import styles from "./index.module.css";
 
 // 创建动态图标组件
@@ -167,7 +168,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           canvasPosition = generateSmartPosition(
             viewport,
             { width: canvasRect.width, height: canvasRect.height },
-            { width: 200, height: 150 }, // 默认便签尺寸
+            NOTE_DEFAULT_SIZE, // 使用配置的默认便签尺寸 (270x240像素)
             canvasNotes
           );
         }
@@ -195,10 +196,10 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         const baseClickPosition = {
           x:
             (e.clientX - canvasRect.left - viewport.offset.x) / viewport.scale -
-            100,
+            NOTE_DEFAULT_SIZE.width / 2, // 使用默认宽度的一半 (135像素) 进行居中定位
           y:
             (e.clientY - canvasRect.top - viewport.offset.y) / viewport.scale -
-            75,
+            NOTE_DEFAULT_SIZE.height / 2, // 使用默认高度的一半 (120像素) 进行居中定位
         };
 
         // 使用智能位置避免重叠
@@ -207,7 +208,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         );
         const clickPosition = getNonOverlappingPosition(
           baseClickPosition,
-          { width: 200, height: 150 }, // 默认便签尺寸
+          NOTE_DEFAULT_SIZE, // 使用配置的默认便签尺寸 (270x240像素)
           canvasNotes
         );
 

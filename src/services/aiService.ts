@@ -10,6 +10,7 @@ import type {
   ZhipuAPIResponse,
   AICustomProperties,
 } from "../types/ai";
+import { AIGenerationPhase } from "../types/ai";
 import { markdownConverter } from "../utils/markdownConverter";
 import { dbOperations, type AIConfigDB } from "../utils/db";
 import { aiDebugCollector } from "../utils/aiDebugCollector";
@@ -589,6 +590,7 @@ class DeepSeekProvider implements AIProvider {
     let retryCount = 0;
     const maxRetries = 3;
     let hasStartedThinking = false; // 标记是否已开始思维过程
+    let hasStartedAnswering = false; // 标记是否已开始回复阶段
 
     try {
       while (true) {
@@ -634,7 +636,52 @@ class DeepSeekProvider implements AIProvider {
                   // 实时转换为HTML
                   fullContent =
                     markdownConverter.convertStreamChunk(fullMarkdown);
-                  options.onStream?.(fullContent);
+
+                  // 检测是否从思维阶段切换到回复阶段
+                  if (
+                    hasStartedThinking &&
+                    !hasStartedAnswering &&
+                    deltaContent.trim()
+                  ) {
+                    // 第一次收到content内容时，切换到回复阶段
+                    hasStartedAnswering = true;
+                    const answeringAiData: AICustomProperties["ai"] = {
+                      generated: false,
+                      model: options.model || "deepseek-reasoner",
+                      provider: "deepseek",
+                      generatedAt: new Date().toISOString(),
+                      prompt: options.prompt,
+                      requestId: `req_${Date.now()}`,
+                      showThinking: true,
+                      thinkingCollapsed: true,
+                      isStreaming: true,
+                      originalMarkdown: fullMarkdown,
+                      // 新增：切换到回复阶段
+                      generationPhase: AIGenerationPhase.ANSWERING, // 最终答案生成阶段
+                      isThinkingPhase: false, // 思维链生成已完成
+                      isAnsweringPhase: true, // 正在最终答案生成阶段
+                      thinkingChain: {
+                        steps: [
+                          {
+                            id: "thinking_complete",
+                            content: fullReasoning,
+                            timestamp: Date.now(),
+                          },
+                        ],
+                        summary: `思考过程完成，正在生成回复 (${fullReasoning.length}字符)`,
+                        totalSteps: 1,
+                      },
+                    };
+
+                    console.log(
+                      "🔄 切换到回复阶段，思维链内容长度:",
+                      fullReasoning.length
+                    );
+                    options.onStream?.(fullContent, answeringAiData);
+                  } else {
+                    // 普通的content更新
+                    options.onStream?.(fullContent);
+                  }
                 }
 
                 // 解析思维链内容 - DeepSeek Reasoner的思维链数据
@@ -657,7 +704,7 @@ class DeepSeekProvider implements AIProvider {
                     // 第一次收到reasoning时，立即显示思维链容器
                     if (!hasStartedThinking) {
                       hasStartedThinking = true;
-                      console.log("🧠 开始思维过程，立即显示思维链容器");
+                      console.log("🧠 开始思考过程，立即显示思维链容器");
 
                       // 创建初始的思维链数据并通过onStream回调
                       const initialAiData: AICustomProperties["ai"] = {
@@ -671,6 +718,10 @@ class DeepSeekProvider implements AIProvider {
                         thinkingCollapsed: true,
                         isStreaming: true, // 标记为流式生成中
                         originalMarkdown: "",
+                        // 新增：生成阶段状态
+                        generationPhase: AIGenerationPhase.THINKING, // 思维链生成阶段
+                        isThinkingPhase: true, // 正在思维链生成阶段
+                        isAnsweringPhase: false, // 尚未进入最终答案生成阶段
                         thinkingChain: {
                           steps: [
                             {
@@ -679,7 +730,7 @@ class DeepSeekProvider implements AIProvider {
                               timestamp: Date.now(),
                             },
                           ],
-                          summary: "思维过程进行中",
+                          summary: "思考过程进行中",
                           totalSteps: 1,
                         },
                       };
@@ -701,6 +752,10 @@ class DeepSeekProvider implements AIProvider {
                         thinkingCollapsed: true,
                         isStreaming: true,
                         originalMarkdown: fullMarkdown,
+                        // 新增：生成阶段状态
+                        generationPhase: AIGenerationPhase.THINKING, // 仍在思维链生成阶段
+                        isThinkingPhase: true, // 正在思维链生成阶段
+                        isAnsweringPhase: false, // 尚未进入最终答案生成阶段
                         thinkingChain: {
                           steps: [
                             {
@@ -709,7 +764,7 @@ class DeepSeekProvider implements AIProvider {
                               timestamp: Date.now(),
                             },
                           ],
-                          summary: `思维过程进行中 (${fullReasoning.length}字符)`,
+                          summary: `思考过程进行中 (${fullReasoning.length}字符)`,
                           totalSteps: 1,
                         },
                       };
@@ -785,6 +840,10 @@ class DeepSeekProvider implements AIProvider {
           thinkingCollapsed: false,
           isStreaming: false,
           originalMarkdown: fullMarkdown,
+          // 新增：最终完成状态
+          generationPhase: AIGenerationPhase.COMPLETED, // 生成完成阶段
+          isThinkingPhase: false, // 思维链生成已完成
+          isAnsweringPhase: false, // 最终答案生成已完成
         };
 
         // 如果是reasoner模型且有完整的reasoning内容
@@ -805,7 +864,7 @@ class DeepSeekProvider implements AIProvider {
 
           aiData.thinkingChain = {
             steps: [completeThinkingStep],
-            summary: `完整推理过程 (${fullReasoning.length}字符)`,
+            summary: `完整思考过程 (${fullReasoning.length}字符)`,
             totalSteps: 1,
           };
         } else {

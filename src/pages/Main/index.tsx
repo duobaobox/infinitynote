@@ -12,6 +12,7 @@ import {
 import { useTheme } from "../../theme";
 import { NoteColor } from "../../types";
 import type { Position, Note } from "../../types";
+import { NOTE_DEFAULT_SIZE } from "../../types/constants";
 // 引入画布组件
 import Canvas from "../Canvas";
 // 引入工具栏组件
@@ -262,7 +263,7 @@ const Main: React.FC = () => {
           canvasPosition = generateSmartPosition(
             viewport,
             { width: window.innerWidth, height: window.innerHeight },
-            { width: 200, height: 150 }, // 默认便签尺寸
+            NOTE_DEFAULT_SIZE, // 使用配置的默认便签尺寸 (270x240像素)
             currentCanvasNotes
           );
         }

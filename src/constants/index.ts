@@ -20,15 +20,15 @@ export const CANVAS_CONFIG = {
 
 // 便签相关常量
 export const NOTE_CONFIG = {
-  DEFAULT_WIDTH: 200,
-  DEFAULT_HEIGHT: 150,
-  MIN_WIDTH: 100,
-  MIN_HEIGHT: 80,
-  MAX_WIDTH: 800,
-  MAX_HEIGHT: 600,
-  RESIZE_HANDLE_SIZE: 10,
-  BORDER_RADIUS: 8,
-  SHADOW: "0 2px 8px rgba(0,0,0,0.1)",
+  DEFAULT_WIDTH: 270, // 便签默认宽度(像素) - 适合显示中等长度的文本内容
+  DEFAULT_HEIGHT: 240, // 便签默认高度(像素) - 提供足够的垂直空间用于多行文本
+  MIN_WIDTH: 100, // 便签最小宽度(像素) - 确保便签内容的可读性
+  MIN_HEIGHT: 80, // 便签最小高度(像素) - 保证基本的显示空间
+  MAX_WIDTH: 800, // 便签最大宽度(像素) - 防止便签过大影响界面布局
+  MAX_HEIGHT: 600, // 便签最大高度(像素) - 限制便签的最大显示范围
+  RESIZE_HANDLE_SIZE: 10, // 调整大小手柄的尺寸(像素)
+  BORDER_RADIUS: 8, // 便签圆角半径(像素) - 提供现代化的视觉效果
+  SHADOW: "0 2px 8px rgba(0,0,0,0.1)", // 便签阴影样式 - 增强立体感
 } as const;
 
 // 拖拽相关常量

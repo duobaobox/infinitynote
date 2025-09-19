@@ -4,6 +4,7 @@
 
 import { memo } from "react";
 import type { AICustomProperties } from "../../types/ai";
+import { AIGenerationPhase } from "../../types/ai";
 import styles from "./ThinkingChainDisplay.module.css";
 
 interface ThinkingChainDisplayProps {
@@ -17,6 +18,9 @@ interface ThinkingChainDisplayProps {
   aiStatus?: {
     isStreaming?: boolean;
     generated?: boolean;
+    generationPhase?: AIGenerationPhase; // 当前生成阶段
+    isThinkingPhase?: boolean; // 是否正在思维链生成阶段
+    isAnsweringPhase?: boolean; // 是否正在最终答案生成阶段
   };
 }
 
@@ -34,9 +38,31 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
 
     if (!validSteps.length) return null;
 
-    // 判断AI当前状态
-    const isThinking =
+    // 判断AI当前状态和生成阶段
+    const isStreaming =
       aiStatus?.isStreaming === true && aiStatus?.generated !== true;
+    const generationPhase = aiStatus?.generationPhase;
+
+    // 根据生成阶段确定头部显示文本
+    const getHeaderText = () => {
+      if (!isStreaming) {
+        return "思考过程"; // 生成完成后显示
+      }
+
+      switch (generationPhase) {
+        case AIGenerationPhase.THINKING:
+          return "正在思考"; // 思维链生成阶段，不包含省略号
+        case AIGenerationPhase.ANSWERING:
+          return "正在回复"; // 最终答案生成阶段，不包含省略号
+        case AIGenerationPhase.COMPLETED:
+          return "思考过程"; // 生成完成阶段
+        default:
+          // 兼容旧版本逻辑
+          return isStreaming ? "正在思考" : "思考过程";
+      }
+    };
+
+    const headerText = getHeaderText();
 
     return (
       <div className={styles.thinkingChainContainer}>
@@ -54,16 +80,14 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
           aria-expanded={!isCollapsed}
           aria-label={isCollapsed ? "展开思考过程" : "收起思考过程"}
         >
-          {isThinking ? (
-            <span
-              className={`${styles.thinkingTitle} ${styles.thinking}`}
-              aria-live="polite"
-            >
-              正在思考
-            </span>
-          ) : (
-            <span className={styles.thinkingTitle}>思考过程</span>
-          )}
+          <span
+            className={`${styles.thinkingTitle} ${
+              isStreaming ? styles.thinking : ""
+            }`}
+            aria-live="polite"
+          >
+            {headerText}
+          </span>
           <span
             className={`${styles.expandIcon} ${
               !isCollapsed ? styles.expanded : ""

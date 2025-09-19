@@ -242,6 +242,6 @@ export enum NoteContentType {
 }
 
 // 便签尺寸常量
-export const NOTE_DEFAULT_SIZE = { width: 200, height: 150 };
-export const NOTE_MIN_SIZE = { width: 100, height: 80 };
-export const NOTE_MAX_SIZE = { width: 800, height: 600 };
+export const NOTE_DEFAULT_SIZE = { width: 270, height: 240 }; // 便签默认尺寸 - 宽270px高240px，适合显示中等长度的文本内容
+export const NOTE_MIN_SIZE = { width: 100, height: 80 }; // 便签最小尺寸 - 确保便签内容的可读性
+export const NOTE_MAX_SIZE = { width: 800, height: 600 }; // 便签最大尺寸 - 防止便签过大影响界面布局

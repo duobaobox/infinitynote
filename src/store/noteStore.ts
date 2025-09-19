@@ -142,7 +142,11 @@ interface NoteActions {
   /** 开始AI生成 */
   startAIGeneration: (noteId: string, prompt: string) => Promise<void>;
   /** 更新流式生成内容 */
-  updateAIStreamingContent: (noteId: string, content: string) => void;
+  updateAIStreamingContent: (
+    noteId: string,
+    content: string,
+    aiData?: AICustomProperties["ai"]
+  ) => void;
   /** 完成AI生成 */
   completeAIGeneration: (
     noteId: string,

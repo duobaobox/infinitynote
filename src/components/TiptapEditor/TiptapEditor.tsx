@@ -354,6 +354,9 @@ export const TiptapEditor = memo<TiptapEditorProps>(
               aiStatus={{
                 isStreaming: aiData.isStreaming,
                 generated: aiData.generated,
+                generationPhase: aiData.generationPhase, // 传递生成阶段信息
+                isThinkingPhase: aiData.isThinkingPhase, // 传递思维链生成阶段状态
+                isAnsweringPhase: aiData.isAnsweringPhase, // 传递最终答案生成阶段状态
               }}
             />
           )}
