@@ -45,7 +45,7 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
   onSettingChange,
 }) => {
   // 使用主题 hook 来直接控制应用主题
-  const { theme: currentTheme, setTheme, isDark } = useTheme();
+  const { theme: currentTheme, setTheme } = useTheme();
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
   // 处理主题切换逻辑
@@ -218,8 +218,8 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
                       style={{
                         borderColor:
                           selectedPreset === preset.value
-                            ? 'var(--color-primary)'
-                            : 'var(--color-border)',
+                            ? "var(--color-primary)"
+                            : "var(--color-border)",
                         borderWidth: selectedPreset === preset.value ? 2 : 1,
                         cursor: "pointer",
                       }}
@@ -231,7 +231,7 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
                             width: "60px",
                             height: "40px",
                             backgroundColor: preset.value,
-                            border: "1px solid #e0e0e0",
+                            border: "1px solid var(--toolbar-border)",
                             borderRadius: "6px",
                             margin: "0 auto 8px auto",
                             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
@@ -249,7 +249,7 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
                         <div
                           style={{
                             fontSize: "10px",
-                            color: "#666",
+                            color: "var(--color-text-secondary)",
                             lineHeight: "1.2",
                           }}
                         >

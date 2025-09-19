@@ -116,14 +116,10 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   const panningRef = useRef(false);
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  
+
   // 使用优化的画布平移Hook
-  const {
-    localOffset,
-    startPan,
-    updatePan,
-    endPan,
-  } = useOptimizedCanvasPan(panCanvas);
+  const { localOffset, startPan, updatePan, endPan } =
+    useOptimizedCanvasPan(panCanvas);
 
   // 获取当前画布的便签（响应式计算）- 优化版本
   const canvasNotes = useMemo(() => {
@@ -164,8 +160,10 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           canvasPosition = position;
         } else {
           // 使用智能位置计算，避免重叠
-          const { generateSmartPosition } = await import("../../utils/notePositioning");
-          
+          const { generateSmartPosition } = await import(
+            "../../utils/notePositioning"
+          );
+
           canvasPosition = generateSmartPosition(
             viewport,
             { width: canvasRect.width, height: canvasRect.height },
@@ -204,7 +202,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         };
 
         // 使用智能位置避免重叠
-        const { getNonOverlappingPosition } = await import("../../utils/notePositioning");
+        const { getNonOverlappingPosition } = await import(
+          "../../utils/notePositioning"
+        );
         const clickPosition = getNonOverlappingPosition(
           baseClickPosition,
           { width: 200, height: 150 }, // 默认便签尺寸
@@ -337,23 +337,26 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     [updatePan]
   );
 
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (panningRef.current) {
-      e.preventDefault();
-      panningRef.current = false;
-      panStartRef.current = null;
-      setIsPanning(false);
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      if (panningRef.current) {
+        e.preventDefault();
+        panningRef.current = false;
+        panStartRef.current = null;
+        setIsPanning(false);
 
-      // 清理动画帧
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
+        // 清理动画帧
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
+
+        // 使用优化的结束拖拽
+        endPan();
       }
-
-      // 使用优化的结束拖拽
-      endPan();
-    }
-  }, [endPan]);
+    },
+    [endPan]
+  );
 
   // 添加全局鼠标事件处理
   useEffect(() => {
@@ -629,7 +632,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         isDark ? styles.darkTheme : styles.lightTheme
       }`}
       style={{
-        backgroundColor: isDark ? '#1a1a1a' : (displaySettings.canvasColor || "#f0f2f5"),
+        backgroundColor: isDark
+          ? "#1a1a1a"
+          : displaySettings.canvasColor || "#f0f2f5",
       }}
     >
       {/* 画布区域 */}
@@ -648,7 +653,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         onTouchEnd={handleTouchEnd}
         style={{
           cursor: isPanning ? "grabbing" : isDragMode ? "grab" : "default",
-          backgroundColor: isDark ? '#1a1a1a' : (displaySettings.canvasColor || "#f0f2f5"),
+          backgroundColor: isDark
+            ? "#1a1a1a"
+            : displaySettings.canvasColor || "#f0f2f5",
         }}
       >
         <DndContext
