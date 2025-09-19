@@ -12,6 +12,7 @@ import {
   App,
   InputNumber,
 } from "antd";
+import { useTheme } from "../../../theme";
 import type { ModelSettings } from "../types";
 import { MODEL_OPTIONS_BY_PROVIDER, API_PROVIDERS } from "../constants";
 import { aiService, securityManager } from "../../../services/aiService";
@@ -30,9 +31,10 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
   onSettingChange,
 }) => {
   const { message } = App.useApp();
+  const { isDark } = useTheme();
 
   const getProviderColor = (providerId: string): string => {
-    const colors: Record<string, string> = {
+    const lightColors: Record<string, string> = {
       zhipu: "#1890ff",
       deepseek: "#722ed1",
       openai: "#10a37f",
@@ -40,7 +42,18 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
       siliconflow: "#13c2c2",
       anthropic: "#eb2f96",
     };
-    return colors[providerId] || "#666";
+
+    const darkColors: Record<string, string> = {
+      zhipu: "#3c9ae8",
+      deepseek: "#9254de",
+      openai: "#2eb88a",
+      alibaba: "#ff9a3e",
+      siliconflow: "#36cfc9",
+      anthropic: "#f759ab",
+    };
+
+    const colors = isDark ? darkColors : lightColors;
+    return colors[providerId] || (isDark ? "#a6a6a6" : "#666");
   };
 
   const [selectedProvider, setSelectedProvider] = useState<string>(
@@ -188,7 +201,9 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "12px 16px",
-          backgroundColor: "#f8f9fa",
+          backgroundColor: isDark
+            ? "var(--bg-elevated)"
+            : "var(--bg-secondary)",
           borderRadius: "6px",
           marginBottom: "16px",
         }}
@@ -237,10 +252,14 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
           <div
             style={{
               padding: "8px 12px",
-              backgroundColor: "#fafafa",
+              backgroundColor: isDark
+                ? "var(--bg-elevated)"
+                : "var(--bg-container)",
               fontSize: "13px",
               fontWeight: 500,
-              color: "#666",
+              color: isDark
+                ? "var(--text-color-secondary)"
+                : "var(--text-color-secondary)",
             }}
           >
             AI提供商
@@ -254,11 +273,13 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                   cursor: "pointer",
                   backgroundColor:
                     selectedProvider === provider.value
-                      ? "#e6f4ff"
+                      ? isDark
+                        ? "var(--primary-color-hover-bg)"
+                        : "var(--primary-color-active-bg)"
                       : "transparent",
                   borderLeft:
                     selectedProvider === provider.value
-                      ? "3px solid #1890ff"
+                      ? `3px solid ${getProviderColor(provider.value)}`
                       : "3px solid transparent",
                 }}
                 onClick={() => {

@@ -45,7 +45,7 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
   onSettingChange,
 }) => {
   // 使用主题 hook 来直接控制应用主题
-  const { theme: currentTheme, setTheme } = useTheme();
+  const { theme: currentTheme, setTheme, isDark } = useTheme();
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
 
   // 处理主题切换逻辑
@@ -218,8 +218,8 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
                       style={{
                         borderColor:
                           selectedPreset === preset.value
-                            ? "#1677ff"
-                            : "#d9d9d9",
+                            ? 'var(--color-primary)'
+                            : 'var(--color-border)',
                         borderWidth: selectedPreset === preset.value ? 2 : 1,
                         cursor: "pointer",
                       }}
