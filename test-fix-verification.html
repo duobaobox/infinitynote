@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>验证流式累积修复</title>
+</head>
+<body>
+    <h1>验证流式累积修复</h1>
+    <div id="output"></div>
+    
+    <script>
+        // 模拟修复后的StreamingMarkdownBuffer
+        class FixedStreamingMarkdownBuffer {
+            constructor() {
+                this.lastCompleteContent = "";
+            }
+            
+            processFullContent(fullContent) {
+                console.log("处理完整内容:", fullContent);
+                
+                // 检查是否有完整的语法结构
+                const completeContent = this.extractCompleteContent(fullContent);
+                
+                if (completeContent !== this.lastCompleteContent) {
+                    const isIncremental = this.lastCompleteContent.length > 0;
+                    this.lastCompleteContent = completeContent;
+                    
+                    return {
+                        shouldConvert: true,
+                        content: completeContent,
+                        isIncremental,
+                    };
+                }
+                
+                return {
+                    shouldConvert: false,
+                    content: fullContent,
+                    isIncremental: false,
+                };
+            }
+            
+            extractCompleteContent(content) {
+                // 简化版本，直接返回内容
+                return content;
+            }
+            
+            reset() {
+                this.lastCompleteContent = "";
+            }
+        }
+        
+        // 模拟修复后的AI服务处理逻辑
+        function testFixedAIService() {
+            const buffer = new FixedStreamingMarkdownBuffer();
+            let fullMarkdown = "";
+            
+            // 模拟AI返回的增量内容
+            const chunks = ["好的", "，我们来", "详细", "解释", "一下"];
+            
+            console.log("=== 修复后的AI服务处理逻辑 ===");
+            
+            chunks.forEach((deltaContent, index) => {
+                console.log(`\n--- 第${index + 1}次处理 ---`);
+                console.log("AI返回的增量内容:", deltaContent);
+                
+                // AI服务层：累积内容
+                fullMarkdown += deltaContent;
+                console.log("AI服务累积的完整内容:", fullMarkdown);
+                
+                // 调用processFullContent（传入完整内容）
+                const result = buffer.processFullContent(fullMarkdown);
+                console.log("转换器返回:", result);
+                
+                if (result.shouldConvert) {
+                    document.getElementById('output').innerHTML += 
+                        `<p>第${index + 1}次更新: ${result.content}</p>`;
+                } else {
+                    console.log("跳过更新（内容未变化）");
+                }
+            });
+        }
+        
+        // 运行测试
+        setTimeout(() => {
+            testFixedAIService();
+        }, 1000);
+    </script>
+</body>
+</html>

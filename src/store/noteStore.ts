@@ -25,6 +25,9 @@ const logWithDedup = (message: string, ...args: any[]) => {
 // 防抖保存便签状态的超时引用映射
 const saveNoteTimeouts = new Map<string, number>();
 
+// 流式更新的时间戳映射，用于节流控制
+const streamingUpdateTimestamps = new Map<string, number>();
+
 /**
  * 防抖保存便签状态到数据库
  * @param noteId 便签ID
@@ -940,6 +943,18 @@ export const useNoteStore = create<NoteStore>()(
         content: string,
         aiData?: AICustomProperties["ai"]
       ) => {
+        // 使用节流机制优化流式更新频率
+        const now = Date.now();
+        const lastUpdate = streamingUpdateTimestamps.get(noteId) || 0;
+        const minInterval = 100; // 最小更新间隔100ms
+
+        // 如果距离上次更新时间太短，跳过此次更新（除非是最终更新）
+        if (now - lastUpdate < minInterval && aiData?.isStreaming !== false) {
+          return;
+        }
+
+        streamingUpdateTimestamps.set(noteId, now);
+
         set((state) => ({
           aiStreamingData: { ...state.aiStreamingData, [noteId]: content },
         }));

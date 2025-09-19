@@ -280,15 +280,48 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     // 当外部 content 改变时更新编辑器
     useEffect(() => {
       if (editor && content !== lastValidContent.current) {
-        const currentContent = editor.getHTML();
-        const cleanedNewContent = cleanHtmlContent(content);
+        // 对于流式内容，使用更轻量的清理方式
+        const isStreamingContent = readonly && content && content.includes("<"); // 简单判断是否为HTML流式内容
+        const cleanedNewContent = isStreamingContent
+          ? content // 流式内容不进行过度清理，保持原始格式
+          : cleanHtmlContent(content); // 非流式内容使用标准清理
 
-        if (currentContent !== cleanedNewContent) {
-          editor.commands.setContent(cleanedNewContent, { emitUpdate: false });
-          lastValidContent.current = cleanedNewContent;
+        // 🔧 修复流式显示问题：改进内容比较逻辑
+        let shouldUpdate = false;
+
+        if (isStreamingContent) {
+          // 流式内容：直接比较文本内容，避免HTML格式差异
+          const currentText = editor.getText();
+          const newText = cleanedNewContent.replace(/<[^>]*>/g, ""); // 移除HTML标签
+          shouldUpdate = currentText !== newText;
+        } else {
+          // 非流式内容：使用标准HTML比较
+          const currentContent = editor.getHTML();
+          shouldUpdate = currentContent !== cleanedNewContent;
+        }
+
+        if (shouldUpdate) {
+          // 使用requestAnimationFrame优化流式更新的渲染性能
+          requestAnimationFrame(() => {
+            if (editor && !editor.isDestroyed) {
+              // 统一使用TipTap的setContent，但针对流式内容优化参数
+              editor.commands.setContent(cleanedNewContent, {
+                emitUpdate: false,
+                preserveWhitespace: "full", // 保持空白字符，提升流式显示效果
+                parseOptions: isStreamingContent
+                  ? {
+                      // 流式内容解析优化：减少不必要的格式化
+                      preserveWhitespace: "full",
+                      slice: false, // 不进行切片处理
+                    }
+                  : undefined,
+              });
+              lastValidContent.current = cleanedNewContent;
+            }
+          });
         }
       }
-    }, [editor, content]);
+    }, [editor, content, readonly]);
 
     // 当只读状态改变时更新编辑器
     useEffect(() => {

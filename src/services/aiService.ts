@@ -11,7 +11,8 @@ import type {
   AICustomProperties,
 } from "../types/ai";
 import { AIGenerationPhase } from "../types/ai";
-import { markdownConverter } from "../utils/markdownConverter";
+// 使用转换器管理器，支持运行时切换和性能监控
+import { markdownConverter } from "../utils/converterManager";
 import { dbOperations, type AIConfigDB } from "../utils/db";
 import { aiDebugCollector } from "../utils/aiDebugCollector";
 
