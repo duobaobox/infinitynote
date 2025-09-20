@@ -30,6 +30,12 @@ export const cssVariables = {
     "--color-border": "#d9d9d9",
     "--color-border-secondary": "#f0f0f0",
 
+    // 填充色（用于背景和交互状态）
+    "--color-fill-quaternary": "#f5f5f5",
+    "--color-fill-tertiary": "#e8e8e8",
+    "--color-fill-secondary": "#d9d9d9",
+    "--color-fill-primary": "#bfbfbf",
+
     // 链接颜色
     "--color-link": "#1890ff",
     "--color-link-hover": "#40a9ff",
@@ -103,6 +109,12 @@ export const cssVariables = {
     // 边框色
     "--color-border": "#434343",
     "--color-border-secondary": "#303030",
+
+    // 填充色（用于背景和交互状态）
+    "--color-fill-quaternary": "#2a2a2a",
+    "--color-fill-tertiary": "#3a3a3a",
+    "--color-fill-secondary": "#4a4a4a",
+    "--color-fill-primary": "#5a5a5a",
 
     // 链接色
     "--color-link": "#177ddc",

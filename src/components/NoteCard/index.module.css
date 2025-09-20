@@ -75,7 +75,6 @@
 /* 只在悬浮时显示拖拽提示颜色 */
 .noteCard.editing .noteHeader:hover {
   background: rgba(22, 119, 255, 0.1);
-  border-bottom: 1px solid rgba(22, 119, 255, 0.2);
   backdrop-filter: blur(4px);
   cursor: grab;
 }
@@ -96,11 +95,15 @@
 
 /* 思维链区域样式 - 独立层级 */
 .thinkingChainSection {
-  padding: 0 12px 8px 12px; /* 与内容区域保持一致的边距，底部留出间距 */
+  padding: 0 12px 0px 12px; /* 与内容区域保持一致的边距，底部留出间距 */
   flex-shrink: 0; /* 不允许收缩，保持固定高度 */
   position: relative; /* 确保层级正确 */
   z-index: 1; /* 确保不被其他元素遮挡 */
   pointer-events: auto; /* 确保可以接收点击事件 */
+  /* 去掉圆角边框和背景色 */
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 .noteTitle {
