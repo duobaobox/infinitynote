@@ -486,13 +486,13 @@ class AIService {
       const apiKey = await this.securityManager.getAPIKey(currentProvider);
       if (!apiKey) {
         const error = createAppError(
-          `API密钥未配置: ${currentProvider}`,
+          "API密钥未配置",
           ErrorType.VALIDATION,
           ErrorSeverity.MEDIUM,
           {
             code: "AI_API_KEY_MISSING",
             context: { provider: currentProvider },
-            userMessage: `请先配置${currentProvider}的API密钥`,
+            userMessage: "请先配置API密钥",
           }
         );
         // 不在这里显示错误通知，让上层调用者处理
@@ -599,12 +599,8 @@ class AIService {
         console.warn("保存AI历史记录失败:", saveError);
       }
 
-      // 显示用户友好的错误通知
-      if (!(error instanceof Error && "type" in error)) {
-        this.errorHandler.showErrorNotification(appError, {
-          retryFn: () => this.generateNote(options),
-        });
-      }
+      // 不在AIService层显示错误通知，交由上层调用者统一处理
+      // 这样可以避免重复显示通知，并让上层有更好的控制权
 
       options.onError?.(appError);
       throw appError;
@@ -667,7 +663,7 @@ class AIService {
       if (!providerRegistry.isValidProviderId(activeConfig.provider)) {
         return {
           status: "error",
-          message: `无效的提供商: ${activeConfig.provider}`,
+          message: "无效的AI提供商",
         };
       }
 
@@ -676,7 +672,7 @@ class AIService {
       if (!hasApiKey) {
         return {
           status: "unconfigured",
-          message: `${activeConfig.provider} 未配置API密钥`,
+          message: "未配置API密钥",
         };
       }
 
@@ -687,7 +683,7 @@ class AIService {
       if (!supportedModels.includes(activeConfig.model)) {
         return {
           status: "error",
-          message: `模型 ${activeConfig.model} 不被 ${activeConfig.provider} 支持`,
+          message: `模型 ${activeConfig.model} 不被当前提供商支持`,
         };
       }
 
@@ -699,13 +695,13 @@ class AIService {
       ) {
         return {
           status: "error",
-          message: `${activeConfig.provider} API密钥格式无效`,
+          message: "API密钥格式无效",
         };
       }
 
       return {
         status: "ready",
-        message: `${activeConfig.provider} ${activeConfig.model} 已就绪`,
+        message: "AI配置已就绪",
       };
     } catch (error) {
       console.error("检查当前配置状态失败:", error);

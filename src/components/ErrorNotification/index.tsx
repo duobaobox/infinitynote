@@ -32,18 +32,28 @@ export interface ErrorNotificationConfig {
  * - 提供恢复操作按钮
  * - 支持自动消失和手动关闭
  * - 防止重复通知
+ * - 支持App上下文的notification实例
  */
 export class ErrorNotificationManager {
   private static instance: ErrorNotificationManager;
   private activeNotifications = new Set<string>();
   private notificationQueue: ErrorNotificationConfig[] = [];
   private isProcessing = false;
+  private notificationApi: any = notification; // 默认使用静态notification，可被覆盖
 
   static getInstance(): ErrorNotificationManager {
     if (!ErrorNotificationManager.instance) {
       ErrorNotificationManager.instance = new ErrorNotificationManager();
     }
     return ErrorNotificationManager.instance;
+  }
+
+  /**
+   * 设置notification实例（来自App上下文）
+   * 这样可以避免静态方法的上下文警告
+   */
+  setNotificationApi(notificationApi: any): void {
+    this.notificationApi = notificationApi;
   }
 
   /**
@@ -66,7 +76,7 @@ export class ErrorNotificationManager {
    * 显示成功通知
    */
   success(message: string, description?: string, duration = 3): void {
-    notification.success({
+    this.notificationApi.success({
       message,
       description,
       duration,
@@ -79,7 +89,7 @@ export class ErrorNotificationManager {
    * 显示信息通知
    */
   info(message: string, description?: string, duration = 3): void {
-    notification.info({
+    this.notificationApi.info({
       message,
       description,
       duration,
@@ -92,7 +102,7 @@ export class ErrorNotificationManager {
    * 显示警告通知
    */
   warning(message: string, description?: string, duration = 4): void {
-    notification.warning({
+    this.notificationApi.warning({
       message,
       description,
       duration,
@@ -153,7 +163,7 @@ export class ErrorNotificationManager {
     const duration = this.getDuration(error, config.duration);
     const actions = this.buildActions(config);
 
-    notification.open({
+    this.notificationApi.open({
       key: notificationKey,
       message: config.title || this.getTitle(error),
       description: (
@@ -290,7 +300,7 @@ export class ErrorNotificationManager {
    * 清除所有通知
    */
   clear(): void {
-    notification.destroy();
+    this.notificationApi.destroy();
     this.activeNotifications.clear();
     this.notificationQueue = [];
   }
@@ -301,7 +311,7 @@ export class ErrorNotificationManager {
   clearByType(errorType: ErrorType): void {
     this.activeNotifications.forEach((key) => {
       if (key.startsWith(errorType)) {
-        notification.destroy(key);
+        this.notificationApi.destroy(key);
         this.activeNotifications.delete(key);
       }
     });

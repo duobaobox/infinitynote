@@ -921,19 +921,48 @@ export const useNoteStore = create<NoteStore>()(
             onComplete: (finalContent, aiData) => {
               get().completeAIGeneration(noteId, finalContent, aiData);
             },
-            onError: (error) => {
+            onError: async (error) => {
+              console.error("AI生成过程中发生错误:", error);
+
+              // 更新错误状态
               set((state) => ({
                 aiErrors: { ...state.aiErrors, [noteId]: error.message },
                 aiGenerating: { ...state.aiGenerating, [noteId]: false },
               }));
+
+              // 显示错误通知到屏幕顶部
+              try {
+                const { AIErrorHandler } = await import(
+                  "../utils/aiErrorHandler"
+                );
+                const errorHandler = AIErrorHandler.getInstance();
+                errorHandler.showErrorNotification(error, {
+                  retryFn: () => get().startAIGeneration(noteId, prompt),
+                });
+              } catch (notificationError) {
+                console.error("显示错误通知失败:", notificationError);
+              }
             },
           });
         } catch (error) {
           console.error("AI生成启动失败:", error);
+
+          // 更新错误状态
           set((state) => ({
             aiErrors: { ...state.aiErrors, [noteId]: (error as Error).message },
             aiGenerating: { ...state.aiGenerating, [noteId]: false },
           }));
+
+          // 显示错误通知到屏幕顶部
+          try {
+            const { AIErrorHandler } = await import("../utils/aiErrorHandler");
+            const errorHandler = AIErrorHandler.getInstance();
+            errorHandler.showErrorNotification(error as Error, {
+              retryFn: () => get().startAIGeneration(noteId, prompt),
+            });
+          } catch (notificationError) {
+            console.error("显示错误通知失败:", notificationError);
+          }
         }
       },
 

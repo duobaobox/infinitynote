@@ -85,8 +85,19 @@ const Main: React.FC = () => {
     string | undefined
   >(undefined);
 
-  // 获取App Context中的modal实例
-  const { modal } = App.useApp();
+  // 获取App Context中的modal和notification实例
+  const { modal, notification } = App.useApp();
+
+  // 设置ErrorNotification使用App上下文的notification实例
+  useEffect(() => {
+    const setupErrorNotification = async () => {
+      const { errorNotification } = await import(
+        "../../components/ErrorNotification"
+      );
+      errorNotification.setNotificationApi(notification);
+    };
+    setupErrorNotification();
+  }, [notification]);
   // 状态管理
   const {
     notes,
@@ -729,29 +740,40 @@ const Main: React.FC = () => {
                 // 有提示词：使用AI生成便签
                 console.log("🤖 AI生成便签，提示:", prompt);
 
-                // 首先检查API密钥是否已配置
-                console.log("🔍 开始检查API密钥...");
+                // 检查AI配置是否完整（包括API密钥和模型配置）
+                console.log("🔍 开始检查AI配置完整性...");
                 const { aiService } = await import("../../services/aiService");
-                const currentProvider = aiService.getCurrentProvider();
-                console.log("🔍 当前提供商:", currentProvider);
-                const hasAPIKey = await aiService.hasAPIKey(currentProvider);
-                console.log("🔍 是否有API密钥:", hasAPIKey);
+                const configStatus =
+                  await aiService.isCurrentConfigurationReady();
+                console.log("🔍 AI配置检查结果:", configStatus);
 
-                if (!hasAPIKey) {
-                  console.log("❌ 没有API密钥，显示错误提醒...");
-                  // 显示API密钥未配置的错误提醒
-                  const { notification } = await import("antd");
+                if (configStatus.status !== "ready") {
+                  console.log("❌ AI配置不完整，显示错误提醒...");
+
+                  // 根据不同的错误状态显示相应的错误信息
+                  let errorMessage = "🔑 AI功能需要配置";
+                  let errorDescription = configStatus.message || "请检查AI配置";
+
+                  if (configStatus.status === "unconfigured") {
+                    errorMessage = "🔑 API密钥未配置";
+                    errorDescription = "请先配置API密钥才能使用AI功能";
+                  } else if (configStatus.status === "error") {
+                    errorMessage = "⚙️ AI配置错误";
+                    errorDescription = "AI配置存在问题，请重新配置";
+                  }
+
+                  // 显示配置错误提醒
                   notification.error({
-                    message: "🔑 AI功能需要配置",
-                    description: `请先配置 ${currentProvider} 的API密钥才能使用AI功能`,
+                    message: errorMessage,
+                    description: errorDescription,
                     duration: 0, // 不自动关闭
-                    key: "api-key-missing", // 防止重复显示
+                    key: "ai-config-error", // 防止重复显示
                     placement: "topRight",
                     btn: (
                       <button
                         onClick={() => {
                           setSettingsOpen(true);
-                          notification.destroy("api-key-missing");
+                          notification.destroy("ai-config-error");
                         }}
                         style={{
                           background: "#1890ff",
@@ -814,7 +836,6 @@ const Main: React.FC = () => {
 
               // 显示通用错误提醒（API密钥错误已在前面处理）
               if (error instanceof Error) {
-                const { notification } = await import("antd");
                 notification.error({
                   message: "❌ 操作失败",
                   description: error.message || "操作失败，请重试",
