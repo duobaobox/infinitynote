@@ -9,6 +9,10 @@ import { ActiveModelStatus } from "./ActiveModelStatus";
 import { ModelConfiguration } from "./ModelConfiguration";
 import { aiService } from "../../../services/aiService";
 import { API_PROVIDERS, MODEL_OPTIONS_BY_PROVIDER } from "../constants";
+import {
+  providerRegistry,
+  type ProviderId,
+} from "../../../services/ai/ProviderRegistry";
 import type { AIActiveConfig, AIConfigurationState } from "../../../types/ai";
 import { useTheme } from "../../../theme";
 
@@ -49,27 +53,77 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
 
   // 获取提供商颜色
   const getProviderColor = (providerId: string): string => {
-    const lightColors: Record<string, string> = {
-      zhipu: "#1890ff",
-      deepseek: "#722ed1",
-      openai: "#10a37f",
-      alibaba: "#ff7a00",
-      siliconflow: "#13c2c2",
-      anthropic: "#eb2f96",
-    };
-
-    const darkColors: Record<string, string> = {
-      zhipu: "#3c9ae8",
-      deepseek: "#9254de",
-      openai: "#2eb88a",
-      alibaba: "#ff9a3e",
-      siliconflow: "#36cfc9",
-      anthropic: "#f759ab",
-    };
-
-    const colors = isDark ? darkColors : lightColors;
-    return colors[providerId] || (isDark ? "#a6a6a6" : "#666");
+    try {
+      return providerRegistry.getProviderColor(
+        providerId as ProviderId,
+        isDark ? "dark" : "light"
+      );
+    } catch {
+      return isDark ? "#a6a6a6" : "#666";
+    }
   };
+
+  // 加载指定提供商的API密钥
+  const loadProviderApiKey = useCallback(
+    async (provider: string): Promise<string> => {
+      try {
+        const apiKey = await aiService.getAPIKey(provider);
+        return apiKey || "";
+      } catch (error) {
+        console.error(`❌ 加载${provider}的API密钥失败:`, error);
+        return "";
+      }
+    },
+    []
+  );
+
+  // 加载指定提供商的首选模型
+  const loadProviderModel = useCallback(
+    async (provider: string): Promise<string> => {
+      try {
+        const savedModel = await aiService.getProviderModel(provider);
+        if (savedModel) {
+          return savedModel;
+        }
+
+        // 如果没有保存的模型，返回该提供商的默认模型
+        const providerModels =
+          MODEL_OPTIONS_BY_PROVIDER[
+            provider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
+          ];
+        return providerModels?.[0]?.value || "";
+      } catch (error) {
+        console.error(`❌ 加载${provider}的首选模型失败:`, error);
+        // 返回默认模型
+        const providerModels =
+          MODEL_OPTIONS_BY_PROVIDER[
+            provider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
+          ];
+        return providerModels?.[0]?.value || "";
+      }
+    },
+    []
+  );
+
+  // 检查当前活跃配置状态
+  const checkCurrentConfigurationStatus = useCallback(async () => {
+    try {
+      const configStatus = await aiService.isCurrentConfigurationReady();
+      setConnectionStatus(configStatus.status);
+
+      console.log("🔍 当前配置状态检查:", {
+        status: configStatus.status,
+        message: configStatus.message,
+        activeConfig: aiService.getActiveConfig(),
+      });
+
+      return configStatus;
+    } catch (error) {
+      console.error("❌ 检查配置状态失败:", error);
+      setConnectionStatus("error");
+      return { status: "error" as const, message: "状态检查失败" };
+    }
+  }, []);
 
   // 初始化数据
   useEffect(() => {
@@ -82,24 +136,30 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
         setActiveConfig(currentActiveConfig);
         setGlobalShowThinking(aiService.getGlobalShowThinking());
 
+        // 加载当前提供商的API密钥和首选模型
+        const currentApiKey = await loadProviderApiKey(
+          currentActiveConfig.provider
+        );
+        const currentModel = await loadProviderModel(
+          currentActiveConfig.provider
+        );
+
         // 初始化配置状态
         setConfigState({
           selectedProvider: currentActiveConfig.provider,
-          selectedModel: currentActiveConfig.model,
-          apiKey: "", // 不显示已保存的密钥
+          selectedModel: currentModel || currentActiveConfig.model, // 优先使用保存的模型
+          apiKey: currentApiKey, // 加载已保存的密钥
           connectionStatus: "idle",
           isConfigured: true,
         });
 
-        // 检查连接状态
-        const hasApiKey = await aiService.hasAPIKey(
-          currentActiveConfig.provider
-        );
-        setConnectionStatus(hasApiKey ? "ready" : "unconfigured");
+        // 检查当前活跃配置的完整状态
+        await checkCurrentConfigurationStatus();
 
         console.log("✅ 模型设置容器初始化完成", {
           currentActiveConfig,
           settings,
+          hasApiKey: !!currentApiKey,
         });
       } catch (error) {
         console.error("❌ 模型设置容器初始化失败:", error);
@@ -108,7 +168,7 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
     };
 
     initializeData();
-  }, []);
+  }, [loadProviderApiKey, loadProviderModel, checkCurrentConfigurationStatus]);
 
   // 处理思维链开关
   const handleThinkingToggle = useCallback(
@@ -131,10 +191,60 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
 
   // 处理配置变更
   const handleConfigChange = useCallback(
-    (config: Partial<AIConfigurationState>) => {
-      setConfigState((prev) => ({ ...prev, ...config }));
+    async (config: Partial<AIConfigurationState>) => {
+      // 如果提供商发生变化，需要加载对应的API密钥
+      if (
+        config.selectedProvider &&
+        config.selectedProvider !== configState.selectedProvider
+      ) {
+        try {
+          const providerApiKey = await loadProviderApiKey(
+            config.selectedProvider
+          );
+          const providerModel = await loadProviderModel(
+            config.selectedProvider
+          );
+          setConfigState((prev) => ({
+            ...prev,
+            ...config,
+            selectedModel: providerModel, // 自动加载对应提供商的首选模型
+            apiKey: providerApiKey, // 自动加载对应提供商的API密钥
+            connectionStatus: "idle",
+            errorMessage: undefined,
+          }));
+
+          // 注意：这里不检查状态，因为用户还在配置中
+          // 状态检测应该基于实际应用的活跃配置，而不是临时选择的配置
+          // setConnectionStatus("idle"); // 不改变全局连接状态
+
+          console.log(`✅ 切换到${config.selectedProvider}，已加载配置:`, {
+            hasApiKey: !!providerApiKey,
+            model: providerModel,
+          });
+        } catch (error) {
+          console.error(`❌ 切换提供商时加载配置失败:`, error);
+          // 获取默认模型作为备选
+          const defaultModel =
+            MODEL_OPTIONS_BY_PROVIDER[
+              config.selectedProvider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
+            ]?.[0]?.value || "";
+
+          setConfigState((prev) => ({
+            ...prev,
+            ...config,
+            selectedModel: defaultModel, // 使用默认模型
+            apiKey: "",
+            connectionStatus: "idle",
+            errorMessage: undefined,
+          }));
+          setConnectionStatus("unconfigured");
+        }
+      } else {
+        // 其他配置变更，直接更新
+        setConfigState((prev) => ({ ...prev, ...config }));
+      }
     },
-    []
+    [configState.selectedProvider, loadProviderApiKey, loadProviderModel]
   );
 
   // 处理保存并测试
@@ -164,7 +274,10 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
         // 更新状态
         const newActiveConfig = aiService.getActiveConfig();
         setActiveConfig(newActiveConfig);
-        setConnectionStatus("ready");
+
+        // 重新检查当前配置状态（基于新应用的活跃配置）
+        await checkCurrentConfigurationStatus();
+
         setConfigState((prev) => ({
           ...prev,
           connectionStatus: "success",

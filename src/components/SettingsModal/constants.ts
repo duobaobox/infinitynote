@@ -69,58 +69,31 @@ export const MENU_ITEMS: SettingMenuItem[] = [
 
 // ==================== 选项配置 ====================
 
-/**
- * API 提供商选项
- */
-export const API_PROVIDERS = [
-  { value: "zhipu", label: "智谱AI", description: "国产AI模型，支持思维链" },
-  {
-    value: "deepseek",
-    label: "深度求索",
-    description: "高性能推理模型，支持思维链",
-  },
-  { value: "siliconflow", label: "硅基流动", description: "高性价比AI服务" },
-  { value: "alibaba", label: "阿里百炼", description: "阿里云AI服务" },
-  { value: "openai", label: "OpenAI", description: "GPT系列模型" },
-  { value: "anthropic", label: "Anthropic", description: "Claude系列模型" },
-] as const;
+import { providerRegistry } from "../../services/ai/ProviderRegistry";
 
 /**
- * 模型选项配置 - 按提供商分组
+ * API 提供商选项 - 从注册中心动态生成
  */
-export const MODEL_OPTIONS_BY_PROVIDER = {
-  zhipu: [
-    { value: "glm-4-plus", label: "glm-4-plus" },
-    { value: "glm-4-0520", label: "glm-4-0520" },
-    { value: "glm-4-air", label: "glm-4-air" },
-    { value: "glm-4-airx", label: "glm-4-airx" },
-    { value: "glm-4-flash", label: "glm-4-flash" },
-  ],
-  deepseek: [
-    { value: "deepseek-chat", label: "deepseek-chat" },
-    { value: "deepseek-reasoner", label: "deepseek-reasoner" },
-  ],
-  siliconflow: [
-    { value: "deepseek-llm-67b-chat", label: "deepseek-llm-67b-chat" },
-    { value: "qwen-72b-chat", label: "qwen-72b-chat" },
-    { value: "internlm2_5-7b-chat", label: "internlm2_5-7b-chat" },
-  ],
-  alibaba: [
-    { value: "qwen-plus", label: "qwen-plus" },
-    { value: "qwen-turbo", label: "qwen-turbo" },
-    { value: "qwen-max", label: "qwen-max" },
-  ],
-  openai: [
-    { value: "gpt-4", label: "gpt-4" },
-    { value: "gpt-4-turbo", label: "gpt-4-turbo" },
-    { value: "gpt-3.5-turbo", label: "gpt-3.5-turbo" },
-  ],
-  anthropic: [
-    { value: "claude-3-opus", label: "claude-3-opus" },
-    { value: "claude-3-sonnet", label: "claude-3-sonnet" },
-    { value: "claude-3-haiku", label: "claude-3-haiku" },
-  ],
-} as const;
+export const API_PROVIDERS = providerRegistry
+  .getAllProviderMetadata()
+  .map((metadata) => ({
+    value: metadata.id,
+    label: metadata.name,
+    description: metadata.description,
+  }));
+
+/**
+ * 模型选项配置 - 从注册中心动态生成
+ */
+export const MODEL_OPTIONS_BY_PROVIDER = Object.fromEntries(
+  providerRegistry.getAllProviderIds().map((providerId) => [
+    providerId,
+    providerRegistry.getSupportedModels(providerId).map((model) => ({
+      value: model,
+      label: model,
+    })),
+  ])
+);
 
 /**
  * 语言选项配置

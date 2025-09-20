@@ -4,7 +4,12 @@
  * 重构后的版本，使用BaseAIProvider架构
  */
 
-import type { AIProvider, AIGenerationOptions, AISettings } from "../types/ai";
+import type {
+  AIProvider,
+  AIGenerationOptions,
+  AISettings,
+  AIActiveConfig,
+} from "../types/ai";
 import { dbOperations, type AIConfigDB, type AIHistoryDB } from "../utils/db";
 import {
   createAppError,
@@ -13,6 +18,7 @@ import {
   type AppError,
 } from "../utils/errorHandler";
 import { AIErrorHandler } from "../utils/aiErrorHandler";
+import { providerRegistry, type ProviderId } from "./ai/ProviderRegistry";
 
 // AI提供商将通过动态导入加载，减少初始包大小
 
@@ -72,17 +78,10 @@ export class SecurityManager {
    * 验证API密钥格式
    */
   validateAPIKey(provider: string, key: string): boolean {
-    const patterns = {
-      zhipu: /^[a-zA-Z0-9]{32,}$/,
-      openai: /^sk-[a-zA-Z0-9]{48}$/,
-      deepseek: /^sk-[a-zA-Z0-9]{32,}$/,
-      alibaba: /^sk-[a-zA-Z0-9]{20,}$/,
-      siliconflow: /^sk-[a-zA-Z0-9]{32,}$/,
-      anthropic: /^sk-ant-api03-[a-zA-Z0-9\-_]{93}$/,
-    };
-
-    const pattern = patterns[provider as keyof typeof patterns];
-    return pattern ? pattern.test(key) : key.length > 20;
+    if (!providerRegistry.isValidProviderId(provider)) {
+      return key.length > 20; // 兜底验证
+    }
+    return providerRegistry.validateApiKey(provider as ProviderId, key);
   }
 
   /**
@@ -224,7 +223,10 @@ class AIService {
       this.currentSettings.provider = provider;
       this.currentSettings.defaultModel = model;
 
-      // 保存设置
+      // 保存提供商的首选模型配置
+      await this.saveProviderModel(provider, model);
+
+      // 保存全局设置
       await this.saveSettings({
         activeConfig: this.currentSettings.activeConfig,
         provider,
@@ -322,7 +324,7 @@ class AIService {
 
   /**
    * 懒加载获取AI提供商
-   * 只在第一次使用时才动态导入和实例化
+   * 使用注册中心统一管理提供商加载
    */
   private async getProvider(providerName: string): Promise<AIProvider> {
     // 检查是否已经加载
@@ -330,54 +332,17 @@ class AIService {
       return this.providers.get(providerName)!;
     }
 
-    // 动态导入并实例化提供商
+    // 验证提供商ID
+    if (!providerRegistry.isValidProviderId(providerName)) {
+      throw new Error(`不支持的AI提供商: ${providerName}`);
+    }
+
     try {
-      let ProviderClass: any;
-
-      switch (providerName) {
-        case "zhipu":
-          const { ZhipuAIProvider } = await import(
-            /* webpackChunkName: "ai-zhipu" */ "./ai/ZhipuAIProvider"
-          );
-          ProviderClass = ZhipuAIProvider;
-          break;
-        case "deepseek":
-          const { DeepSeekProvider } = await import(
-            /* webpackChunkName: "ai-deepseek" */ "./ai/DeepSeekProvider"
-          );
-          ProviderClass = DeepSeekProvider;
-          break;
-        case "openai":
-          const { OpenAIProvider } = await import(
-            /* webpackChunkName: "ai-openai" */ "./ai/OpenAIProvider"
-          );
-          ProviderClass = OpenAIProvider;
-          break;
-        case "alibaba":
-          const { AlibabaProvider } = await import(
-            /* webpackChunkName: "ai-alibaba" */ "./ai/AlibabaProvider"
-          );
-          ProviderClass = AlibabaProvider;
-          break;
-        case "siliconflow":
-          const { SiliconFlowProvider } = await import(
-            /* webpackChunkName: "ai-siliconflow" */ "./ai/SiliconFlowProvider"
-          );
-          ProviderClass = SiliconFlowProvider;
-          break;
-        case "anthropic":
-          const { AnthropicProvider } = await import(
-            /* webpackChunkName: "ai-anthropic" */ "./ai/AnthropicProvider"
-          );
-          ProviderClass = AnthropicProvider;
-          break;
-        default:
-          throw new Error(`不支持的AI提供商: ${providerName}`);
-      }
-
-      const provider = new ProviderClass();
+      // 使用注册中心加载提供商
+      const provider = await providerRegistry.loadProvider(
+        providerName as ProviderId
+      );
       this.providers.set(providerName, provider);
-      console.log(`✅ AI提供商 ${providerName} 懒加载完成`);
       return provider;
     } catch (error) {
       console.error(`❌ 加载AI提供商 ${providerName} 失败:`, error);
@@ -521,13 +486,13 @@ class AIService {
       const apiKey = await this.securityManager.getAPIKey(currentProvider);
       if (!apiKey) {
         const error = createAppError(
-          `API密钥未配置: ${this.currentProvider}`,
+          `API密钥未配置: ${currentProvider}`,
           ErrorType.VALIDATION,
           ErrorSeverity.MEDIUM,
           {
             code: "AI_API_KEY_MISSING",
-            context: { provider: this.currentProvider },
-            userMessage: `请先配置${this.currentProvider}的API密钥`,
+            context: { provider: currentProvider },
+            userMessage: `请先配置${currentProvider}的API密钥`,
           }
         );
         // 不在这里显示错误通知，让上层调用者处理
@@ -613,7 +578,7 @@ class AIService {
               {
                 code: "AI_GENERATION_FAILED",
                 context: {
-                  provider: this.currentProvider,
+                  provider: activeConfig.provider,
                   model: historyRecord.model,
                   prompt: options.prompt.slice(0, 100) + "...",
                 },
@@ -670,15 +635,8 @@ class AIService {
   }
 
   getAvailableProviders(): string[] {
-    // 返回所有支持的提供商列表
-    return [
-      "zhipu",
-      "deepseek",
-      "openai",
-      "alibaba",
-      "siliconflow",
-      "anthropic",
-    ];
+    // 使用注册中心获取所有支持的提供商列表
+    return providerRegistry.getAllProviderIds();
   }
 
   /**
@@ -691,6 +649,129 @@ class AIService {
     } catch (error) {
       console.error(`检查API密钥失败 (${provider}):`, error);
       return false;
+    }
+  }
+
+  /**
+   * 检查当前活跃配置是否就绪
+   * 检查当前正在使用的提供商+模型是否完全配置好并可用
+   */
+  async isCurrentConfigurationReady(): Promise<{
+    status: "ready" | "unconfigured" | "error";
+    message?: string;
+  }> {
+    try {
+      const activeConfig = this.getActiveConfig();
+
+      // 1. 检查提供商是否有效
+      if (!providerRegistry.isValidProviderId(activeConfig.provider)) {
+        return {
+          status: "error",
+          message: `无效的提供商: ${activeConfig.provider}`,
+        };
+      }
+
+      // 2. 检查是否有API密钥
+      const hasApiKey = await this.hasAPIKey(activeConfig.provider);
+      if (!hasApiKey) {
+        return {
+          status: "unconfigured",
+          message: `${activeConfig.provider} 未配置API密钥`,
+        };
+      }
+
+      // 3. 检查模型是否在支持列表中
+      const supportedModels = providerRegistry.getSupportedModels(
+        activeConfig.provider as ProviderId
+      );
+      if (!supportedModels.includes(activeConfig.model)) {
+        return {
+          status: "error",
+          message: `模型 ${activeConfig.model} 不被 ${activeConfig.provider} 支持`,
+        };
+      }
+
+      // 4. 验证API密钥格式
+      const apiKey = await this.getAPIKey(activeConfig.provider);
+      if (
+        !apiKey ||
+        !this.securityManager.validateAPIKey(activeConfig.provider, apiKey)
+      ) {
+        return {
+          status: "error",
+          message: `${activeConfig.provider} API密钥格式无效`,
+        };
+      }
+
+      return {
+        status: "ready",
+        message: `${activeConfig.provider} ${activeConfig.model} 已就绪`,
+      };
+    } catch (error) {
+      console.error("检查当前配置状态失败:", error);
+      return {
+        status: "error",
+        message: "配置检查失败",
+      };
+    }
+  }
+
+  /**
+   * 获取提供商的API密钥
+   * @param provider 提供商名称
+   * @returns API密钥字符串，如果未配置则返回null
+   */
+  async getAPIKey(provider: string): Promise<string | null> {
+    try {
+      return await this.securityManager.getAPIKey(provider);
+    } catch (error) {
+      console.error(`获取API密钥失败 (${provider}):`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 保存提供商的首选模型配置
+   * @param provider 提供商名称
+   * @param model 模型名称
+   */
+  async saveProviderModel(provider: string, model: string): Promise<void> {
+    try {
+      const config: AIConfigDB = {
+        id: `provider_model_${provider}`,
+        type: "settings",
+        provider,
+        value: JSON.stringify({ model, updatedAt: new Date().toISOString() }),
+        encrypted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await dbOperations.saveAIConfig(config);
+      console.log(`✅ 保存提供商模型配置: ${provider} -> ${model}`);
+    } catch (error) {
+      console.error(`❌ 保存提供商模型配置失败 (${provider}):`, error);
+      throw new Error("保存提供商模型配置失败");
+    }
+  }
+
+  /**
+   * 获取提供商的首选模型配置
+   * @param provider 提供商名称
+   * @returns 模型名称，如果未配置则返回null
+   */
+  async getProviderModel(provider: string): Promise<string | null> {
+    try {
+      const config = await dbOperations.getAIConfig(
+        `provider_model_${provider}`
+      );
+      if (config?.value) {
+        const data = JSON.parse(config.value);
+        return data.model || null;
+      }
+      return null;
+    } catch (error) {
+      console.error(`❌ 获取提供商模型配置失败 (${provider}):`, error);
+      return null;
     }
   }
 
@@ -809,7 +890,7 @@ class AIService {
 
       // 准备保存的设置（排除敏感信息）
       const settingsToSave = { ...this.currentSettings };
-      delete settingsToSave.apiKeys;
+      delete (settingsToSave as any).apiKeys;
 
       const config: AIConfigDB = {
         id: "ai_settings",

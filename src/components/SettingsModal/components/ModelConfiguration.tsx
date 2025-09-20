@@ -272,9 +272,8 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
                 placeholder="请选择预设模型或输入自定义模型名称"
                 showSearch
                 allowClear
-                mode="combobox"
                 filterOption={(input, option) =>
-                  (option?.children as string)
+                  (option?.label as string)
                     ?.toLowerCase()
                     .includes(input.toLowerCase())
                 }
