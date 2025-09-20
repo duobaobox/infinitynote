@@ -89,14 +89,15 @@ class DeepSeekResponseParser implements ResponseParser {
 
         try {
           const parsed = JSON.parse(data);
-          // DeepSeek reasoning模型使用reasoning字段
-          const reasoning = parsed.choices?.[0]?.delta?.reasoning;
-          if (reasoning) {
+          // DeepSeek reasoning模型使用reasoning_content字段
+          const reasoningContent =
+            parsed.choices?.[0]?.delta?.reasoning_content;
+          if (reasoningContent) {
             console.log(
               "🧠 DeepSeek思维链内容:",
-              reasoning.substring(0, 100) + "..."
+              reasoningContent.substring(0, 100) + "..."
             );
-            return reasoning;
+            return reasoningContent;
           }
 
           // 调试：检查是否有其他可能的思维链字段

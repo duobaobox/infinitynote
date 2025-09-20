@@ -210,7 +210,14 @@ export abstract class BaseAIProvider implements AIProvider {
           if (deltaContent) {
             fullMarkdown += deltaContent;
             const html = markdownConverter.convertStreamChunk(fullMarkdown);
-            options.onStream?.(html);
+
+            // 构建实时AI数据，包含当前的思维链信息
+            const currentAIData = this.buildStreamingAIData(
+              options,
+              fullMarkdown,
+              thinkingChain
+            );
+            options.onStream?.(html, currentAIData);
           }
 
           // 提取思维链（如果支持）
@@ -222,11 +229,28 @@ export abstract class BaseAIProvider implements AIProvider {
               this.responseParser.extractThinkingFromChunk(chunk);
             if (thinking) {
               fullThinking += thinking;
-              thinkingChain.push({
-                id: `step_${thinkingChain.length + 1}`,
-                content: thinking,
-                timestamp: Date.now(),
-              });
+
+              // 更新或创建思维链步骤 - 使用累积方式而非分段方式
+              if (thinkingChain.length === 0) {
+                // 创建第一个思维步骤
+                thinkingChain.push({
+                  id: `thinking_step_1`,
+                  content: fullThinking,
+                  timestamp: Date.now(),
+                });
+              } else {
+                // 更新现有的思维步骤内容
+                thinkingChain[0].content = fullThinking;
+              }
+
+              // 思维链数据更新时也要通知
+              const html = markdownConverter.convertStreamChunk(fullMarkdown);
+              const currentAIData = this.buildStreamingAIData(
+                options,
+                fullMarkdown,
+                thinkingChain
+              );
+              options.onStream?.(html, currentAIData);
             }
           }
 
@@ -278,6 +302,43 @@ export abstract class BaseAIProvider implements AIProvider {
       aiData.thinkingChain = {
         steps: thinkingChain,
         summary: `通过${thinkingChain.length}步推理完成`,
+        totalSteps: thinkingChain.length,
+      };
+    }
+
+    return aiData;
+  }
+
+  /**
+   * 构建流式生成过程中的AI数据
+   * 与buildAIData类似，但标记为正在生成状态
+   */
+  protected buildStreamingAIData(
+    options: AIGenerationOptions,
+    fullMarkdown: string,
+    thinkingChain: any[]
+  ): AICustomProperties["ai"] {
+    const aiData: AICustomProperties["ai"] = {
+      generated: false, // 还在生成中
+      model: options.model || this.config.defaultModel,
+      provider: this.name,
+      generatedAt: new Date().toISOString(),
+      prompt: options.prompt,
+      requestId: `req_${Date.now()}`,
+      showThinking: this.config.supportsThinking, // 支持思维链就显示
+      thinkingCollapsed: false, // 生成过程中默认展开
+      isStreaming: true, // 正在流式生成
+      originalMarkdown: fullMarkdown,
+    };
+
+    // 添加思维链数据（即使为空也添加结构）
+    if (this.config.supportsThinking) {
+      aiData.thinkingChain = {
+        steps: thinkingChain,
+        summary:
+          thinkingChain.length > 0
+            ? `已生成${thinkingChain.length}步推理`
+            : "正在生成思维链",
         totalSteps: thinkingChain.length,
       };
     }

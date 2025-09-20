@@ -29,19 +29,22 @@ interface ThinkingChainDisplayProps {
  */
 export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
   ({ thinkingData, isCollapsed, onToggle, aiStatus }) => {
-    if (!thinkingData?.steps?.length) return null;
-
-    // 过滤有效的思考步骤
-    const validSteps = thinkingData.steps.filter(
-      (step) => step?.id && step?.content && typeof step?.timestamp === "number"
-    );
-
-    if (!validSteps.length) return null;
-
     // 判断AI当前状态和生成阶段
     const isStreaming =
       aiStatus?.isStreaming === true && aiStatus?.generated !== true;
     const generationPhase = aiStatus?.generationPhase;
+
+    // 如果没有思维链数据且不在生成过程中，不显示组件
+    if (!thinkingData?.steps?.length && !isStreaming) {
+      return null;
+    }
+
+    // 过滤有效的思考步骤
+    const validSteps =
+      thinkingData?.steps?.filter(
+        (step) =>
+          step?.id && step?.content && typeof step?.timestamp === "number"
+      ) || [];
 
     // 根据生成阶段确定头部显示文本
     const getHeaderText = () => {
@@ -100,11 +103,19 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
 
         {!isCollapsed && (
           <div className={styles.thinkingContent}>
-            {validSteps.map((step) => (
-              <div key={step.id} className={styles.thinkingText}>
-                {step.content}
+            {validSteps.length > 0 ? (
+              validSteps.map((step) => (
+                <div key={step.id} className={styles.thinkingText}>
+                  {step.content}
+                </div>
+              ))
+            ) : isStreaming ? (
+              <div className={styles.thinkingText}>
+                <span className={styles.thinking}>正在生成思维链</span>
               </div>
-            ))}
+            ) : (
+              <div className={styles.thinkingText}>暂无思维链数据</div>
+            )}
           </div>
         )}
       </div>

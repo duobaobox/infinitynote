@@ -67,16 +67,19 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       thinkingChainExpanded ?? (aiData && !aiData.thinkingCollapsed)
     );
 
-    // AI 生成的便签检测 - 包括正在生成中的便签
+    // AI 生成的便签检测 - 支持生成过程中和生成完成后的显示
     const isAIGenerated = useMemo(() => {
-      const result =
+      const result = !!(
         aiData &&
-        aiData.thinkingChain &&
-        (aiData.generated === true || aiData.isStreaming === true);
+        (aiData.generated === true || // 生成完成
+          aiData.isStreaming === true || // 正在生成
+          aiData.provider) // 有AI提供商信息就视为AI便签
+      );
       console.log("🤖 TiptapEditor AI检测:", {
         hasAiData: !!aiData,
         generated: aiData?.generated,
         isStreaming: aiData?.isStreaming,
+        hasProvider: !!aiData?.provider,
         hasThinkingChain: !!aiData?.thinkingChain,
         isAIGenerated: result,
         model: aiData?.model,
@@ -307,12 +310,10 @@ export const TiptapEditor = memo<TiptapEditorProps>(
               // 统一使用TipTap的setContent，但针对流式内容优化参数
               editor.commands.setContent(cleanedNewContent, {
                 emitUpdate: false,
-                preserveWhitespace: "full", // 保持空白字符，提升流式显示效果
                 parseOptions: isStreamingContent
                   ? {
-                      // 流式内容解析优化：减少不必要的格式化
+                      // 流式内容解析优化：保持空白字符格式
                       preserveWhitespace: "full",
-                      slice: false, // 不进行切片处理
                     }
                   : undefined,
               });
@@ -379,7 +380,7 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       <TiptapEditorErrorBoundary>
         <div className={containerClassName} style={editorStyle}>
           {/* 思维链显示 - 位于编辑器内容上方 */}
-          {isAIGenerated && aiData?.thinkingChain && (
+          {isAIGenerated && (aiData?.thinkingChain || aiData?.isStreaming) && (
             <ThinkingChainDisplay
               thinkingData={aiData.thinkingChain}
               isCollapsed={!isThinkingExpanded}
