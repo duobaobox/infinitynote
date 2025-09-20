@@ -34,10 +34,10 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
       aiStatus?.isStreaming === true && aiStatus?.generated !== true;
     const generationPhase = aiStatus?.generationPhase;
 
-    // 如果没有思维链数据且不在生成过程中，不显示组件
-    if (!thinkingData?.steps?.length && !isStreaming) {
-      return null;
-    }
+    // 注释掉这个逻辑，让头部始终显示
+    // if (!thinkingData?.steps?.length && !isStreaming) {
+    //   return null;
+    // }
 
     // 过滤有效的思考步骤
     const validSteps =
@@ -71,10 +71,15 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
       <div className={styles.thinkingChainContainer}>
         <div
           className={styles.thinkingHeader}
-          onClick={onToggle}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggle();
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
+              e.stopPropagation();
               onToggle();
             }
           }}

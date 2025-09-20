@@ -86,7 +86,7 @@
 }
 
 .noteContent {
-  padding: 8px 12px 12px 12px;
+  padding: 0px 12px 12px 12px;
   flex: 1; /* 自动填充剩余空间 */
   display: flex;
   flex-direction: column;
@@ -96,8 +96,11 @@
 
 /* 思维链区域样式 - 独立层级 */
 .thinkingChainSection {
-  padding: 0 12px 0px 12px; /* 与内容区域保持一致的边距，底部留出间距 */
+  padding: 0 12px 8px 12px; /* 与内容区域保持一致的边距，底部留出间距 */
   flex-shrink: 0; /* 不允许收缩，保持固定高度 */
+  position: relative; /* 确保层级正确 */
+  z-index: 1; /* 确保不被其他元素遮挡 */
+  pointer-events: auto; /* 确保可以接收点击事件 */
 }
 
 .noteTitle {

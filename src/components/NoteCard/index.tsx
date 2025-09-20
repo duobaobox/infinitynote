@@ -78,24 +78,17 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [aiData, note.id]);
 
-    // 思维链展开状态（根据AI数据的thinkingCollapsed字段决定默认状态）
-    const [thinkingChainExpanded, setThinkingChainExpanded] = useState(
-      aiData?.showThinking !== false && aiData?.thinkingCollapsed !== true
-    );
+    // 思维链展开状态（默认折叠）
+    const [thinkingChainExpanded, setThinkingChainExpanded] = useState(false);
 
-    // 🔧 关键修复：当 AI 数据变化时，同步思维链展开状态
-    useEffect(() => {
-      if (aiData?.showThinking !== undefined) {
-        // 根据thinkingCollapsed字段决定展开状态
-        const shouldExpand = aiData.showThinking && !aiData.thinkingCollapsed;
-        setThinkingChainExpanded(shouldExpand);
-        console.log(
-          `🔄 NoteCard ${note.id.slice(-8)} 同步思维链展开状态: ${
-            aiData.showThinking
-          }`
-        );
-      }
-    }, [aiData?.showThinking, note.id]);
+    // 思维链默认保持折叠状态，不自动展开
+    // useEffect(() => {
+    //   if (aiData?.showThinking !== undefined) {
+    //     // 根据thinkingCollapsed字段决定展开状态
+    //     const shouldExpand = aiData.showThinking && !aiData.thinkingCollapsed;
+    //     setThinkingChainExpanded(shouldExpand);
+    //   }
+    // }, [aiData?.showThinking, note.id]);
 
     // 缩放状态
     const [isResizing, setIsResizing] = useState(false);
@@ -244,20 +237,14 @@ export const NoteCard = memo<NoteCardProps>(
     const handleThinkingChainToggle = useCallback(
       (expanded: boolean) => {
         setThinkingChainExpanded(expanded);
-        // 同时更新便签的 AI 数据
-        if (aiData) {
-          updateNote(note.id, {
-            customProperties: {
-              ...note.customProperties,
-              ai: {
-                ...aiData,
-                showThinking: expanded,
-              },
-            },
-          });
-        }
+        // 注意：不修改 showThinking 字段，showThinking 控制思维链功能的整体开关
+        // expanded 只控制当前便签的思维链内容区域展开/折叠状态
+        // 这样可以确保点击头部折叠时，只隐藏内容区域而不是整个思维链容器
       },
-      [note.id, note.customProperties, aiData, updateNote]
+      [
+        // 移除不必要的依赖项，简化依赖数组
+        thinkingChainExpanded,
+      ]
     );
 
     // 删除这个函数，合并到 handleMouseUp 中
@@ -766,24 +753,24 @@ export const NoteCard = memo<NoteCardProps>(
             </div>
 
             {/* 思维链显示区域 - 独立层级 */}
-            {aiData &&
-              aiData.showThinking !== false &&
-              (aiData.thinkingChain || aiData.isStreaming) && (
-                <div className={styles.thinkingChainSection}>
-                  <ThinkingChainDisplay
-                    thinkingData={aiData.thinkingChain}
-                    isCollapsed={!thinkingChainExpanded}
-                    onToggle={handleThinkingChainToggle}
-                    aiStatus={{
-                      isStreaming: aiData.isStreaming,
-                      generated: aiData.generated,
-                      generationPhase: aiData.generationPhase,
-                      isThinkingPhase: aiData.isThinkingPhase,
-                      isAnsweringPhase: aiData.isAnsweringPhase,
-                    }}
-                  />
-                </div>
-              )}
+            {aiData && aiData.showThinking !== false && (
+              <div className={styles.thinkingChainSection}>
+                <ThinkingChainDisplay
+                  thinkingData={aiData.thinkingChain}
+                  isCollapsed={!thinkingChainExpanded}
+                  onToggle={() =>
+                    handleThinkingChainToggle(!thinkingChainExpanded)
+                  }
+                  aiStatus={{
+                    isStreaming: aiData.isStreaming,
+                    generated: aiData.generated,
+                    generationPhase: aiData.generationPhase,
+                    isThinkingPhase: aiData.isThinkingPhase,
+                    isAnsweringPhase: aiData.isAnsweringPhase,
+                  }}
+                />
+              </div>
+            )}
 
             {/* 便签内容区域 - 编辑器 */}
             <div className={styles.noteContent}>
