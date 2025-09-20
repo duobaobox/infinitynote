@@ -70,7 +70,7 @@ class AlibabaResponseParser implements ResponseParser {
     }
   }
 
-  extractThinkingFromChunk(chunk: string): string | null {
+  extractThinkingFromChunk(_chunk: string): string | null {
     // 阿里百炼暂时不支持思维链
     return null;
   }

@@ -94,6 +94,12 @@
   min-height: 0; /* 允许flex收缩 */
 }
 
+/* 思维链区域样式 - 独立层级 */
+.thinkingChainSection {
+  padding: 0 12px 0px 12px; /* 与内容区域保持一致的边距，底部留出间距 */
+  flex-shrink: 0; /* 不允许收缩，保持固定高度 */
+}
+
 .noteTitle {
   font-size: 14px;
   font-weight: 600;
@@ -199,7 +205,8 @@
   z-index: 10000 !important;
   /* 使用与选中状态统一的外环，紧贴卡片边缘以避免视觉割裂 */
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-primary, #1677ff), 0 0 10px rgba(22, 119, 255, 0.3);
+  box-shadow: 0 0 0 2px var(--color-primary, #1677ff),
+    0 0 10px rgba(22, 119, 255, 0.3);
 }
 
 /* 编辑时隐藏额外的 selectionBorder，防止重复的外环造成间隙感 */

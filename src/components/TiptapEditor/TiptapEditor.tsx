@@ -22,7 +22,6 @@ import { Toolbar, DEFAULT_TOOLBAR_CONFIG } from "./toolbar/Toolbar";
 import type { ToolbarConfig } from "./toolbar/Toolbar";
 import { useOptimizedDebounce } from "./performance";
 import { TiptapEditorErrorBoundary } from "./ErrorBoundary";
-import { ThinkingChainDisplay } from "./ThinkingChainDisplay";
 import "./TiptapEditor.css";
 
 /**
@@ -50,10 +49,6 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     debounceDelay = DEFAULT_CONFIG.DEBOUNCE_DELAY,
     // enableHistory = true, // 历史记录功能暂时保留
     enableShortcuts = true,
-    // AI 功能相关属性
-    aiData,
-    thinkingChainExpanded = false,
-    onThinkingChainToggle,
   }) => {
     const { isDark } = useTheme();
     const editorId = useRef(generateEditorId());
@@ -61,40 +56,6 @@ export const TiptapEditor = memo<TiptapEditorProps>(
 
     // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
     const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
-
-    // 思维链展开状态管理（根据aiData的thinkingCollapsed或外部thinkingChainExpanded决定）
-    const [isThinkingExpanded, setIsThinkingExpanded] = useState(
-      thinkingChainExpanded ?? (aiData && !aiData.thinkingCollapsed)
-    );
-
-    // AI 生成的便签检测 - 支持生成过程中和生成完成后的显示
-    const isAIGenerated = useMemo(() => {
-      const result = !!(
-        aiData &&
-        (aiData.generated === true || // 生成完成
-          aiData.isStreaming === true || // 正在生成
-          aiData.provider) // 有AI提供商信息就视为AI便签
-      );
-      console.log("🤖 TiptapEditor AI检测:", {
-        hasAiData: !!aiData,
-        generated: aiData?.generated,
-        isStreaming: aiData?.isStreaming,
-        hasProvider: !!aiData?.provider,
-        hasThinkingChain: !!aiData?.thinkingChain,
-        isAIGenerated: result,
-        model: aiData?.model,
-        showThinking: aiData?.showThinking,
-        thinkingSteps: aiData?.thinkingChain?.totalSteps || 0,
-      });
-      return result;
-    }, [aiData]);
-
-    // 处理思维链展开/收起
-    const handleThinkingToggle = () => {
-      const newExpanded = !isThinkingExpanded;
-      setIsThinkingExpanded(newExpanded);
-      onThinkingChainToggle?.(newExpanded);
-    };
 
     // TipTap 官方推荐的扩展配置方式 - 直接配置，简洁明了
     const extensions = useMemo(
@@ -331,11 +292,6 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       }
     }, [editor, readonly]);
 
-    // 当外部思维链展开状态改变时同步内部状态
-    useEffect(() => {
-      setIsThinkingExpanded(thinkingChainExpanded);
-    }, [thinkingChainExpanded]);
-
     // 清理函数
     useEffect(() => {
       return () => {
@@ -379,22 +335,6 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     return (
       <TiptapEditorErrorBoundary>
         <div className={containerClassName} style={editorStyle}>
-          {/* 思维链显示 - 位于编辑器内容上方 */}
-          {isAIGenerated && (aiData?.thinkingChain || aiData?.isStreaming) && (
-            <ThinkingChainDisplay
-              thinkingData={aiData.thinkingChain}
-              isCollapsed={!isThinkingExpanded}
-              onToggle={handleThinkingToggle}
-              aiStatus={{
-                isStreaming: aiData.isStreaming,
-                generated: aiData.generated,
-                generationPhase: aiData.generationPhase, // 传递生成阶段信息
-                isThinkingPhase: aiData.isThinkingPhase, // 传递思维链生成阶段状态
-                isAnsweringPhase: aiData.isAnsweringPhase, // 传递最终答案生成阶段状态
-              }}
-            />
-          )}
-
           {/* 编辑器内容区域 - 充满主要空间 */}
           <EditorContent editor={editor} className="tiptap-editor-content" />
 

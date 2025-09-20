@@ -6,6 +6,7 @@ import { NOTE_MIN_SIZE } from "../../types/constants";
 import { useNoteStore } from "../../store/noteStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
+import { ThinkingChainDisplay } from "../TiptapEditor/ThinkingChainDisplay";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
 import type { ToolbarAction } from "../NoteToolbar/types";
 import { PromptTemplateSelector } from "../PromptTemplateSelector";
@@ -764,6 +765,26 @@ export const NoteCard = memo<NoteCardProps>(
               <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
             </div>
 
+            {/* 思维链显示区域 - 独立层级 */}
+            {aiData &&
+              aiData.showThinking !== false &&
+              (aiData.thinkingChain || aiData.isStreaming) && (
+                <div className={styles.thinkingChainSection}>
+                  <ThinkingChainDisplay
+                    thinkingData={aiData.thinkingChain}
+                    isCollapsed={!thinkingChainExpanded}
+                    onToggle={handleThinkingChainToggle}
+                    aiStatus={{
+                      isStreaming: aiData.isStreaming,
+                      generated: aiData.generated,
+                      generationPhase: aiData.generationPhase,
+                      isThinkingPhase: aiData.isThinkingPhase,
+                      isAnsweringPhase: aiData.isAnsweringPhase,
+                    }}
+                  />
+                </div>
+              )}
+
             {/* 便签内容区域 - 编辑器 */}
             <div className={styles.noteContent}>
               <TiptapEditor
@@ -789,10 +810,6 @@ export const NoteCard = memo<NoteCardProps>(
                 onBlur={handleEditorBlur}
                 onEscape={handleEditorEscape}
                 debounceDelay={300}
-                // AI 功能相关属性
-                aiData={aiData}
-                thinkingChainExpanded={thinkingChainExpanded}
-                onThinkingChainToggle={handleThinkingChainToggle}
               />
             </div>
 
