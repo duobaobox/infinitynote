@@ -98,21 +98,33 @@ export class SecurityManager {
 }
 
 /**
- * AI 服务主类
+ * AI 服务主类 - 重构版本
  */
 class AIService {
   private providers: Map<string, AIProvider> = new Map();
-  private currentProvider: string = "zhipu";
   private securityManager: SecurityManager;
   private errorHandler: AIErrorHandler;
+
+  // 新的状态管理架构
   private currentSettings: AISettings = {
-    provider: "zhipu",
-    apiKeys: {},
-    defaultModel: "glm-4",
+    // 活跃配置 - 当前正在使用的配置
+    activeConfig: {
+      provider: "zhipu",
+      model: "glm-4",
+      appliedAt: new Date().toISOString(),
+    },
+    // 全局思维链控制
+    globalShowThinking: true,
+    // 生成参数
     temperature: 0.7,
     maxTokens: 1000,
-    showThinking: true,
     autoSave: true,
+
+    // 向后兼容字段
+    provider: "zhipu",
+    defaultModel: "glm-4",
+    showThinking: true,
+    apiKeys: {},
   };
 
   constructor() {
@@ -122,6 +134,181 @@ class AIService {
     this.loadUserSettings().catch((error: any) => {
       console.error("初始化时加载AI设置失败:", error);
     });
+  }
+
+  /**
+   * 获取当前活跃的配置
+   */
+  getActiveConfig(): AIActiveConfig {
+    return this.currentSettings.activeConfig;
+  }
+
+  /**
+   * 获取当前使用的提供商
+   */
+  getCurrentProvider(): string {
+    return this.currentSettings.activeConfig.provider;
+  }
+
+  /**
+   * 获取当前使用的模型
+   */
+  getCurrentModel(): string {
+    return this.currentSettings.activeConfig.model;
+  }
+
+  /**
+   * 测试配置（不影响当前使用状态）
+   * @param provider 提供商名称
+   * @param model 模型名称
+   * @param apiKey API密钥
+   * @returns 测试结果
+   */
+  async testConfiguration(
+    provider: string,
+    model: string,
+    apiKey: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`🧪 测试配置: ${provider} - ${model}`);
+
+      // 验证API密钥格式
+      if (!this.securityManager.validateAPIKey(provider, apiKey)) {
+        return {
+          success: false,
+          error: "API密钥格式不正确",
+        };
+      }
+
+      // 临时保存API密钥用于测试
+      await this.securityManager.setAPIKey(provider, apiKey);
+
+      // 测试提供商连接
+      const testResult = await this.testProvider(provider);
+
+      if (testResult) {
+        console.log(`✅ 配置测试成功: ${provider} - ${model}`);
+        return { success: true };
+      } else {
+        return {
+          success: false,
+          error: "连接测试失败，请检查API密钥是否正确",
+        };
+      }
+    } catch (error) {
+      console.error(`❌ 配置测试失败:`, error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "未知错误",
+      };
+    }
+  }
+
+  /**
+   * 应用配置（测试成功后调用）
+   * @param provider 提供商名称
+   * @param model 模型名称
+   */
+  async applyConfiguration(provider: string, model: string): Promise<void> {
+    try {
+      console.log(`🔄 应用配置: ${provider} - ${model}`);
+
+      // 更新活跃配置
+      this.currentSettings.activeConfig = {
+        provider,
+        model,
+        appliedAt: new Date().toISOString(),
+      };
+
+      // 更新向后兼容字段
+      this.currentSettings.provider = provider;
+      this.currentSettings.defaultModel = model;
+
+      // 保存设置
+      await this.saveSettings({
+        activeConfig: this.currentSettings.activeConfig,
+        provider,
+        defaultModel: model,
+      });
+
+      console.log(`✅ 配置应用成功: ${provider} - ${model}`);
+    } catch (error) {
+      console.error(`❌ 配置应用失败:`, error);
+      throw new Error("配置应用失败");
+    }
+  }
+
+  /**
+   * 获取全局思维链显示设置
+   */
+  getGlobalShowThinking(): boolean {
+    return this.currentSettings.globalShowThinking;
+  }
+
+  /**
+   * 设置全局思维链显示
+   * @param enabled 是否启用思维链显示
+   */
+  async setGlobalShowThinking(enabled: boolean): Promise<void> {
+    try {
+      console.log(`🧠 设置全局思维链显示: ${enabled}`);
+
+      this.currentSettings.globalShowThinking = enabled;
+      // 更新向后兼容字段
+      this.currentSettings.showThinking = enabled;
+
+      // 保存设置
+      await this.saveSettings({
+        globalShowThinking: enabled,
+        showThinking: enabled,
+      });
+
+      console.log(`✅ 全局思维链设置已更新: ${enabled}`);
+    } catch (error) {
+      console.error(`❌ 更新思维链设置失败:`, error);
+      throw new Error("更新思维链设置失败");
+    }
+  }
+
+  /**
+   * 思维链支持的模型配置
+   * 便于维护和扩展新的支持思维链的模型
+   */
+  private static readonly THINKING_SUPPORTED_MODELS = {
+    deepseek: ["reasoner"], // DeepSeek 的推理模型支持思维链
+    zhipu: ["think"], // 智谱AI的思维模式模型支持思维链
+    // 未来可以添加其他提供商的支持：
+    // openai: ["o1-preview", "o1-mini"], // OpenAI 的推理模型
+    // anthropic: ["claude-3-reasoning"], // Anthropic 的推理模型
+  };
+
+  /**
+   * 判断当前模型是否支持思维链
+   */
+  currentModelSupportsThinking(): boolean {
+    const currentProvider = this.getCurrentProvider();
+    const currentModel = this.getCurrentModel();
+
+    const supportedKeywords =
+      AIService.THINKING_SUPPORTED_MODELS[
+        currentProvider as keyof typeof AIService.THINKING_SUPPORTED_MODELS
+      ];
+    if (!supportedKeywords) {
+      return false;
+    }
+
+    // 检查模型名称是否包含支持思维链的关键词
+    return supportedKeywords.some((keyword) =>
+      currentModel.toLowerCase().includes(keyword.toLowerCase())
+    );
+  }
+
+  /**
+   * 判断是否应该显示思维链
+   * 综合考虑全局设置和模型能力
+   */
+  shouldShowThinking(): boolean {
+    return this.getGlobalShowThinking() && this.currentModelSupportsThinking();
   }
 
   /**
@@ -198,21 +385,93 @@ class AIService {
     }
   }
 
+  /**
+   * 验证和修复模型设置
+   * 确保模型名称与提供商支持的模型匹配
+   */
+  private async validateAndFixModelSettings(settings: any): Promise<any> {
+    const fixedSettings = { ...settings };
+
+    if (fixedSettings.provider && fixedSettings.defaultModel) {
+      try {
+        const provider = await this.getProvider(fixedSettings.provider);
+        const supportedModels = provider.supportedModels;
+
+        // 检查当前模型是否在支持列表中
+        if (!supportedModels.includes(fixedSettings.defaultModel)) {
+          console.warn(
+            `⚠️ 模型 ${fixedSettings.defaultModel} 不被 ${fixedSettings.provider} 支持，自动修复为: ${supportedModels[0]}`
+          );
+          fixedSettings.defaultModel = supportedModels[0];
+        }
+      } catch (error) {
+        console.warn(`⚠️ 验证模型设置时出错:`, error);
+      }
+    }
+
+    return fixedSettings;
+  }
+
   private async loadUserSettings(): Promise<void> {
     try {
       await dbOperations.migrateAIConfigsFromLocalStorage();
       const settingsConfig = await dbOperations.getAIConfig("ai_settings");
       if (settingsConfig?.value) {
         const savedSettings = JSON.parse(settingsConfig.value);
-        this.currentSettings = { ...this.currentSettings, ...savedSettings };
-        if (savedSettings.provider) {
-          this.currentProvider = savedSettings.provider;
+
+        // 迁移旧版本设置到新结构
+        const migratedSettings =
+          this.migrateSettingsToNewStructure(savedSettings);
+
+        // 验证和修复模型设置
+        const fixedSettings = await this.validateAndFixModelSettings(
+          migratedSettings
+        );
+
+        this.currentSettings = { ...this.currentSettings, ...fixedSettings };
+
+        // 如果设置被修复或迁移，保存修复后的设置
+        if (JSON.stringify(savedSettings) !== JSON.stringify(fixedSettings)) {
+          console.log("🔧 检测到设置需要迁移或修复，已自动处理");
+          await this.saveSettings(fixedSettings);
         }
+
         console.log("✅ AI设置加载成功:", this.currentSettings);
       }
     } catch (error) {
       console.error("加载AI设置失败:", error);
     }
+  }
+
+  /**
+   * 迁移旧版本设置到新结构
+   */
+  private migrateSettingsToNewStructure(oldSettings: any): Partial<AISettings> {
+    const newSettings: Partial<AISettings> = { ...oldSettings };
+
+    // 如果没有 activeConfig，从旧字段创建
+    if (
+      !newSettings.activeConfig &&
+      (oldSettings.provider || oldSettings.defaultModel)
+    ) {
+      newSettings.activeConfig = {
+        provider: oldSettings.provider || "zhipu",
+        model: oldSettings.defaultModel || "glm-4",
+        appliedAt: new Date().toISOString(),
+      };
+      console.log("🔄 迁移活跃配置:", newSettings.activeConfig);
+    }
+
+    // 如果没有 globalShowThinking，从旧字段迁移
+    if (
+      newSettings.globalShowThinking === undefined &&
+      oldSettings.showThinking !== undefined
+    ) {
+      newSettings.globalShowThinking = oldSettings.showThinking;
+      console.log("🔄 迁移思维链设置:", newSettings.globalShowThinking);
+    }
+
+    return newSettings;
   }
 
   async generateNote(options: AIGenerationOptions): Promise<void> {
@@ -221,13 +480,14 @@ class AIService {
       .toString(36)
       .substr(2, 9)}`;
 
-    // 创建历史记录
+    // 创建历史记录 - 使用新的活跃配置
+    const activeConfig = this.getActiveConfig();
     const historyRecord: AIHistoryDB = {
       id: historyId,
       noteId: options.noteId,
       prompt: options.prompt,
-      provider: this.currentProvider,
-      model: options.model || this.currentSettings.defaultModel,
+      provider: activeConfig.provider,
+      model: options.model || activeConfig.model,
       temperature: options.temperature ?? this.currentSettings.temperature,
       maxTokens: options.maxTokens ?? this.currentSettings.maxTokens,
       generatedContent: "",
@@ -237,16 +497,17 @@ class AIService {
     };
 
     try {
-      // 懒加载获取提供商
-      const provider = await this.getProvider(this.currentProvider);
+      // 懒加载获取提供商 - 使用活跃配置
+      const currentProvider = this.getCurrentProvider();
+      const provider = await this.getProvider(currentProvider);
       if (!provider) {
         const error = createAppError(
-          `AI提供商 ${this.currentProvider} 不可用`,
+          `AI提供商 ${currentProvider} 不可用`,
           ErrorType.NOT_FOUND,
           ErrorSeverity.HIGH,
           {
             code: "AI_PROVIDER_NOT_FOUND",
-            context: { provider: this.currentProvider },
+            context: { provider: currentProvider },
             userMessage: `当前AI服务提供商不可用，请检查配置`,
           }
         );
@@ -257,7 +518,7 @@ class AIService {
       }
 
       // 检查API密钥
-      const apiKey = await this.securityManager.getAPIKey(this.currentProvider);
+      const apiKey = await this.securityManager.getAPIKey(currentProvider);
       if (!apiKey) {
         const error = createAppError(
           `API密钥未配置: ${this.currentProvider}`,
@@ -269,8 +530,28 @@ class AIService {
             userMessage: `请先配置${this.currentProvider}的API密钥`,
           }
         );
-        this.errorHandler.showErrorNotification(error);
+        // 不在这里显示错误通知，让上层调用者处理
+        // this.errorHandler.showErrorNotification(error);
         throw error;
+      }
+
+      // 检查思维链功能提示 - 使用新的全局控制逻辑
+      if (this.getGlobalShowThinking()) {
+        const currentProvider = this.getCurrentProvider();
+        const currentModel = this.getCurrentModel();
+
+        if (
+          currentProvider === "deepseek" &&
+          !currentModel.includes("reasoner")
+        ) {
+          console.warn(
+            `💡 提示: 当前使用的是 ${currentModel} 模型，该模型不支持思维链功能。如需使用思维链，请在设置中切换到 deepseek-reasoner 模型。`
+          );
+        } else if (!this.currentModelSupportsThinking()) {
+          console.warn(
+            `💡 提示: 当前模型 ${currentProvider}/${currentModel} 不支持思维链功能。`
+          );
+        }
       }
 
       const completeOptions: AIGenerationOptions = {
@@ -365,7 +646,11 @@ class AIService {
     }
   }
 
+  /**
+   * @deprecated 使用 applyConfiguration 替代
+   */
   setProvider(providerName: string): void {
+    console.warn("⚠️ setProvider 方法已废弃，请使用 applyConfiguration 方法");
     // 检查是否为支持的提供商
     const supportedProviders = [
       "zhipu",
@@ -376,15 +661,12 @@ class AIService {
       "anthropic",
     ];
     if (supportedProviders.includes(providerName)) {
-      this.currentProvider = providerName;
+      // 更新活跃配置
+      this.currentSettings.activeConfig.provider = providerName;
       this.currentSettings.provider = providerName;
     } else {
       throw new Error(`不支持的AI提供商: ${providerName}`);
     }
-  }
-
-  getCurrentProvider(): string {
-    return this.currentProvider;
   }
 
   getAvailableProviders(): string[] {
@@ -397,6 +679,19 @@ class AIService {
       "siliconflow",
       "anthropic",
     ];
+  }
+
+  /**
+   * 检查提供商是否已配置API密钥
+   */
+  async hasAPIKey(provider: string): Promise<boolean> {
+    try {
+      const apiKey = await this.securityManager.getAPIKey(provider);
+      return !!apiKey;
+    } catch (error) {
+      console.error(`检查API密钥失败 (${provider}):`, error);
+      return false;
+    }
   }
 
   async getProviderInfo(providerName: string): Promise<AIProvider | undefined> {
@@ -466,24 +761,26 @@ class AIService {
 
   async getSettings(): Promise<AISettings> {
     await this.loadUserSettings();
+    const activeConfig = this.getActiveConfig();
+
     return {
       ...this.currentSettings,
-      provider: this.currentProvider,
-      defaultModel:
-        this.currentSettings.defaultModel ||
-        this.providers.get(this.currentProvider)?.supportedModels[0] ||
-        "",
+      // 确保向后兼容字段与活跃配置同步
+      provider: activeConfig.provider,
+      defaultModel: activeConfig.model,
+      showThinking: this.currentSettings.globalShowThinking,
     };
   }
 
   getSettingsSync(): AISettings {
+    const activeConfig = this.getActiveConfig();
+
     return {
       ...this.currentSettings,
-      provider: this.currentProvider,
-      defaultModel:
-        this.currentSettings.defaultModel ||
-        this.providers.get(this.currentProvider)?.supportedModels[0] ||
-        "",
+      // 确保向后兼容字段与活跃配置同步
+      provider: activeConfig.provider,
+      defaultModel: activeConfig.model,
+      showThinking: this.currentSettings.globalShowThinking,
     };
   }
 
@@ -497,14 +794,21 @@ class AIService {
         }
       }
 
+      // 更新当前设置
       this.currentSettings = { ...this.currentSettings, ...settings };
 
-      if (settings.provider && settings.provider !== this.currentProvider) {
-        this.currentProvider = settings.provider;
-        this.currentSettings.provider = settings.provider;
+      // 同步向后兼容字段
+      if (settings.activeConfig) {
+        this.currentSettings.provider = settings.activeConfig.provider;
+        this.currentSettings.defaultModel = settings.activeConfig.model;
       }
 
-      const settingsToSave = { ...settings };
+      if (settings.globalShowThinking !== undefined) {
+        this.currentSettings.showThinking = settings.globalShowThinking;
+      }
+
+      // 准备保存的设置（排除敏感信息）
+      const settingsToSave = { ...this.currentSettings };
       delete settingsToSave.apiKeys;
 
       const config: AIConfigDB = {

@@ -729,6 +729,47 @@ const Main: React.FC = () => {
                 // 有提示词：使用AI生成便签
                 console.log("🤖 AI生成便签，提示:", prompt);
 
+                // 首先检查API密钥是否已配置
+                console.log("🔍 开始检查API密钥...");
+                const { aiService } = await import("../../services/aiService");
+                const currentProvider = aiService.getCurrentProvider();
+                console.log("🔍 当前提供商:", currentProvider);
+                const hasAPIKey = await aiService.hasAPIKey(currentProvider);
+                console.log("🔍 是否有API密钥:", hasAPIKey);
+
+                if (!hasAPIKey) {
+                  console.log("❌ 没有API密钥，显示错误提醒...");
+                  // 显示API密钥未配置的错误提醒
+                  const { notification } = await import("antd");
+                  notification.error({
+                    message: "🔑 AI功能需要配置",
+                    description: `请先配置 ${currentProvider} 的API密钥才能使用AI功能`,
+                    duration: 0, // 不自动关闭
+                    key: "api-key-missing", // 防止重复显示
+                    placement: "topRight",
+                    btn: (
+                      <button
+                        onClick={() => {
+                          setSettingsOpen(true);
+                          notification.destroy("api-key-missing");
+                        }}
+                        style={{
+                          background: "#1890ff",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "4px 12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        打开设置
+                      </button>
+                    ),
+                  });
+                  console.log("✅ 错误提醒已显示");
+                  return; // 阻止便签创建
+                }
+
                 // 获取智能位置
                 const { generateSmartPosition } = await import(
                   "../../utils/notePositioning"
@@ -770,7 +811,17 @@ const Main: React.FC = () => {
               console.error("❌ 添加便签失败:", error);
               // 清理状态
               setCurrentGeneratingNoteId(undefined);
-              // 可以在这里添加用户提示
+
+              // 显示通用错误提醒（API密钥错误已在前面处理）
+              if (error instanceof Error) {
+                const { notification } = await import("antd");
+                notification.error({
+                  message: "❌ 操作失败",
+                  description: error.message || "操作失败，请重试",
+                  duration: 4, // 4秒后自动关闭
+                  placement: "topRight",
+                });
+              }
             }
           }}
         />

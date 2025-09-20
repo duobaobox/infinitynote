@@ -39,24 +39,6 @@ export const AI_TOOLBAR_BUTTONS: ToolbarButton[] = [
     tooltip: "使用AI生成内容",
   },
   {
-    id: "ai-edit-content",
-    label: "编辑AI内容",
-    icon: "EditOutlined",
-    tooltip: "编辑AI生成的内容",
-  },
-  {
-    id: "ai-regenerate",
-    label: "重新生成",
-    icon: "ReloadOutlined",
-    tooltip: "重新生成AI内容",
-  },
-  {
-    id: "ai-finish-editing",
-    label: "完成编辑",
-    icon: "CheckOutlined",
-    tooltip: "完成AI内容编辑",
-  },
-  {
     id: "ai-config",
     label: "AI设置",
     icon: "SettingOutlined",

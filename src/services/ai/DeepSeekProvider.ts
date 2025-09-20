@@ -18,8 +18,19 @@ import { AIGenerationPhase } from "../../types/ai";
  */
 class DeepSeekRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
+    // 验证和修复模型名称
+    let model = options.model || "deepseek-chat";
+    const validModels = ["deepseek-chat", "deepseek-reasoner"];
+
+    if (!validModels.includes(model)) {
+      console.warn(
+        `⚠️ 无效的DeepSeek模型名称: ${model}，自动修复为: deepseek-chat`
+      );
+      model = "deepseek-chat";
+    }
+
     return {
-      model: options.model || "deepseek-chat",
+      model,
       messages: [
         {
           role: "user",
@@ -81,7 +92,19 @@ class DeepSeekResponseParser implements ResponseParser {
           // DeepSeek reasoning模型使用reasoning字段
           const reasoning = parsed.choices?.[0]?.delta?.reasoning;
           if (reasoning) {
+            console.log(
+              "🧠 DeepSeek思维链内容:",
+              reasoning.substring(0, 100) + "..."
+            );
             return reasoning;
+          }
+
+          // 调试：检查是否有其他可能的思维链字段
+          if (parsed.choices?.[0]?.delta) {
+            const delta = parsed.choices[0].delta;
+            if (Object.keys(delta).length > 0 && !delta.content) {
+              console.log("🔍 DeepSeek响应结构:", Object.keys(delta));
+            }
           }
         } catch (parseError) {
           continue;
@@ -131,6 +154,14 @@ export class DeepSeekProvider extends BaseAIProvider {
 
     // DeepSeek特定的配置
     const isReasoningModel = options.model?.includes("reasoner");
+
+    console.log("🔧 DeepSeek AI数据构建:", {
+      model: options.model,
+      isReasoningModel,
+      thinkingChainLength: thinkingChain.length,
+      hasThinkingSteps: thinkingChain.length > 0,
+      willShowThinking: isReasoningModel && thinkingChain.length > 0,
+    });
 
     // 更新思维链显示设置
     if (aiData) {

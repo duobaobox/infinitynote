@@ -107,16 +107,58 @@ export interface ZhipuAPIResponse {
 }
 
 /**
- * AI 设置接口
+ * AI 活跃配置接口 - 当前正在使用的配置
+ */
+export interface AIActiveConfig {
+  /** 当前使用的提供商 */
+  provider: string;
+  /** 当前使用的模型 */
+  model: string;
+  /** 配置生效时间 */
+  appliedAt: string;
+}
+
+/**
+ * AI 配置状态接口 - 配置界面的临时状态
+ */
+export interface AIConfigurationState {
+  /** 选择的提供商 */
+  selectedProvider: string;
+  /** 选择的模型 */
+  selectedModel: string;
+  /** API密钥 */
+  apiKey: string;
+  /** 连接状态 */
+  connectionStatus: "idle" | "testing" | "success" | "error";
+  /** 是否已配置 */
+  isConfigured: boolean;
+  /** 测试错误信息 */
+  errorMessage?: string;
+}
+
+/**
+ * AI 设置接口 - 重构后的完整设置
  */
 export interface AISettings {
-  provider: string;
-  apiKeys: Record<string, string>;
-  defaultModel: string;
+  /** 当前活跃的配置 */
+  activeConfig: AIActiveConfig;
+  /** 全局思维链显示控制 */
+  globalShowThinking: boolean;
+  /** 生成参数 */
   temperature: number;
   maxTokens: number;
-  showThinking: boolean;
+  /** 是否自动保存AI生成的内容 */
   autoSave: boolean;
+
+  // 向后兼容字段（将逐步废弃）
+  /** @deprecated 使用 activeConfig.provider 替代 */
+  provider: string;
+  /** @deprecated 使用 activeConfig.model 替代 */
+  defaultModel: string;
+  /** @deprecated 使用 globalShowThinking 替代 */
+  showThinking: boolean;
+  /** @deprecated API密钥现在独立管理 */
+  apiKeys: Record<string, string>;
 }
 
 /**

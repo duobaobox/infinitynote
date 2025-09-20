@@ -90,83 +90,35 @@ export const API_PROVIDERS = [
  */
 export const MODEL_OPTIONS_BY_PROVIDER = {
   zhipu: [
-    {
-      value: "glm-4-plus",
-      label: "GLM-4 Plus",
-      description: "最新旗舰模型，支持思维链",
-    },
-    { value: "glm-4-0520", label: "GLM-4", description: "平衡性能与成本" },
-    { value: "glm-4-air", label: "GLM-4 Air", description: "轻量级模型" },
-    { value: "glm-4-airx", label: "GLM-4 AirX", description: "超快响应" },
-    { value: "glm-4-flash", label: "GLM-4 Flash", description: "极速推理" },
+    { value: "glm-4-plus", label: "glm-4-plus" },
+    { value: "glm-4-0520", label: "glm-4-0520" },
+    { value: "glm-4-air", label: "glm-4-air" },
+    { value: "glm-4-airx", label: "glm-4-airx" },
+    { value: "glm-4-flash", label: "glm-4-flash" },
   ],
   deepseek: [
-    {
-      value: "deepseek-chat",
-      label: "DeepSeek Chat",
-      description: "对话生成模型",
-    },
-    {
-      value: "deepseek-reasoner",
-      label: "DeepSeek Reasoner",
-      description: "支持思维链的推理模型",
-    },
+    { value: "deepseek-chat", label: "deepseek-chat" },
+    { value: "deepseek-reasoner", label: "deepseek-reasoner" },
   ],
   siliconflow: [
-    {
-      value: "deepseek-llm-67b-chat",
-      label: "DeepSeek 67B",
-      description: "大参数对话模型",
-    },
-    {
-      value: "qwen-72b-chat",
-      label: "通义千问 72B",
-      description: "阿里大模型",
-    },
-    {
-      value: "internlm2_5-7b-chat",
-      label: "InternLM 7B",
-      description: "上海AI实验室",
-    },
+    { value: "deepseek-llm-67b-chat", label: "deepseek-llm-67b-chat" },
+    { value: "qwen-72b-chat", label: "qwen-72b-chat" },
+    { value: "internlm2_5-7b-chat", label: "internlm2_5-7b-chat" },
   ],
   alibaba: [
-    {
-      value: "qwen-plus",
-      label: "通义千问 Plus",
-      description: "增强版对话模型",
-    },
-    {
-      value: "qwen-turbo",
-      label: "通义千问 Turbo",
-      description: "快速响应版本",
-    },
-    { value: "qwen-max", label: "通义千问 Max", description: "顶级性能模型" },
+    { value: "qwen-plus", label: "qwen-plus" },
+    { value: "qwen-turbo", label: "qwen-turbo" },
+    { value: "qwen-max", label: "qwen-max" },
   ],
   openai: [
-    { value: "gpt-4", label: "GPT-4", description: "OpenAI旗舰模型" },
-    { value: "gpt-4-turbo", label: "GPT-4 Turbo", description: "更快的GPT-4" },
-    {
-      value: "gpt-3.5-turbo",
-      label: "GPT-3.5 Turbo",
-      description: "经济实用选择",
-    },
+    { value: "gpt-4", label: "gpt-4" },
+    { value: "gpt-4-turbo", label: "gpt-4-turbo" },
+    { value: "gpt-3.5-turbo", label: "gpt-3.5-turbo" },
   ],
   anthropic: [
-    {
-      value: "claude-3-opus",
-      label: "Claude-3 Opus",
-      description: "最强推理能力",
-    },
-    {
-      value: "claude-3-sonnet",
-      label: "Claude-3 Sonnet",
-      description: "平衡选择",
-    },
-    {
-      value: "claude-3-haiku",
-      label: "Claude-3 Haiku",
-      description: "快速响应",
-    },
+    { value: "claude-3-opus", label: "claude-3-opus" },
+    { value: "claude-3-sonnet", label: "claude-3-sonnet" },
+    { value: "claude-3-haiku", label: "claude-3-haiku" },
   ],
 } as const;
 

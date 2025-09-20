@@ -54,9 +54,6 @@ export const NoteCard = memo<NoteCardProps>(
     // 工具栏显示状态
     const [showToolbar, setShowToolbar] = useState(false);
 
-    // AI内容编辑状态
-    const [isEditingAIContent, setIsEditingAIContent] = useState(false);
-
     // 提示词模板选择器状态
     const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
@@ -79,23 +76,6 @@ export const NoteCard = memo<NoteCardProps>(
         });
       }
     }, [aiData, note.id]);
-
-    // AI生成完成后自动进入编辑模式
-    useEffect(() => {
-      const wasGenerating = aiGenerating[note.id];
-      const isCurrentlyGenerating = aiGenerating[note.id];
-
-      // 如果AI刚刚完成生成（从生成中变为非生成中），且有AI数据，自动进入编辑模式
-      if (!isCurrentlyGenerating && aiData?.generated && note.content) {
-        // 延迟一点时间让用户看到生成完成的效果
-        const timer = setTimeout(() => {
-          setIsEditingAIContent(true);
-          setIsEditing(true);
-        }, 500);
-
-        return () => clearTimeout(timer);
-      }
-    }, [aiGenerating, note.id, aiData, note.content]);
 
     // 思维链展开状态（根据AI数据的thinkingCollapsed字段决定默认状态）
     const [thinkingChainExpanded, setThinkingChainExpanded] = useState(
@@ -369,38 +349,6 @@ export const NoteCard = memo<NoteCardProps>(
       setShowToolbar(false); // 关闭工具栏
     }, []);
 
-    // 处理编辑AI内容
-    const handleEditAIContent = useCallback(() => {
-      setIsEditingAIContent(true);
-      setIsEditing(true);
-      setShowToolbar(false);
-    }, []);
-
-    // 处理重新生成AI内容
-    const handleRegenerateAI = useCallback(async () => {
-      if (!aiData?.prompt) {
-        // 如果没有原始提示词，询问用户
-        const prompt = window.prompt("请输入新的提示词:", aiData?.prompt || "");
-        if (!prompt?.trim()) return;
-
-        console.log(`🔄 重新生成便签 ${note.id.slice(-8)} 的AI内容`);
-        await startAIGeneration(note.id, prompt.trim());
-      } else {
-        // 使用原始提示词重新生成
-        console.log(
-          `🔄 使用原提示词重新生成便签 ${note.id.slice(-8)} 的AI内容`
-        );
-        await startAIGeneration(note.id, aiData.prompt);
-      }
-      setShowToolbar(false);
-    }, [note.id, aiData, startAIGeneration]);
-
-    // 处理完成AI内容编辑
-    const handleFinishEditingAI = useCallback(() => {
-      setIsEditingAIContent(false);
-      setIsEditing(false);
-    }, []);
-
     // 处理工具栏操作
     const handleToolbarAction = useCallback(
       (action: ToolbarAction, data?: any) => {
@@ -428,29 +376,12 @@ export const NoteCard = memo<NoteCardProps>(
           case "ai-config":
             handleAIConfig();
             break;
-          case "ai-edit-content":
-            handleEditAIContent();
-            break;
-          case "ai-regenerate":
-            handleRegenerateAI();
-            break;
-          case "ai-finish-editing":
-            handleFinishEditingAI();
-            break;
+
           default:
             console.log("Unhandled action:", action);
         }
       },
-      [
-        note.id,
-        updateNote,
-        deleteNote,
-        handleAIGenerate,
-        handleAIConfig,
-        handleEditAIContent,
-        handleRegenerateAI,
-        handleFinishEditingAI,
-      ]
+      [note.id, updateNote, deleteNote, handleAIGenerate, handleAIConfig]
     ); // 关闭工具栏
     const handleCloseToolbar = useCallback(() => {
       setShowToolbar(false);
@@ -853,9 +784,7 @@ export const NoteCard = memo<NoteCardProps>(
                 height="100%"
                 className={styles.noteText}
                 autoFocus={isEditing}
-                readonly={
-                  (!isEditing && !isEditingAIContent) || aiGenerating[note.id]
-                }
+                readonly={!isEditing || aiGenerating[note.id]}
                 onFocus={handleEditorFocus}
                 onBlur={handleEditorBlur}
                 onEscape={handleEditorEscape}
@@ -892,7 +821,6 @@ export const NoteCard = memo<NoteCardProps>(
                 onClose={handleCloseToolbar}
                 hasAIContent={!!aiData?.generated}
                 isAIGenerating={!!aiGenerating[note.id]}
-                isEditingAIContent={isEditingAIContent}
               />
             </div>
           )}

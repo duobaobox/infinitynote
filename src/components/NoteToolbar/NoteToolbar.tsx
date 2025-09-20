@@ -6,9 +6,6 @@ import {
   DeleteOutlined,
   RobotOutlined,
   SettingOutlined,
-  EditOutlined,
-  ReloadOutlined,
-  CheckOutlined,
 } from "@ant-design/icons";
 import type { NoteToolbarProps, ToolbarAction } from "./types";
 import {
@@ -27,9 +24,6 @@ const IconMap: Record<string, React.ComponentType<any>> = {
   DeleteOutlined,
   RobotOutlined,
   SettingOutlined,
-  EditOutlined,
-  ReloadOutlined,
-  CheckOutlined,
 };
 
 const renderIcon = (iconName: string) => {
@@ -56,7 +50,6 @@ export const NoteToolbar = memo<NoteToolbarProps>(
     color,
     hasAIContent = false,
     isAIGenerating = false,
-    isEditingAIContent = false,
   }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     // const [showAIGeneration, setShowAIGeneration] = useState(false);
@@ -73,23 +66,7 @@ export const NoteToolbar = memo<NoteToolbarProps>(
         // 正在生成时，只显示AI设置
         buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
       } else if (hasAIContent) {
-        if (isEditingAIContent) {
-          // 正在编辑AI内容时
-          buttons.push(
-            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-finish-editing")!
-          );
-          buttons.push(
-            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-regenerate")!
-          );
-        } else {
-          // 有AI内容但未编辑时
-          buttons.push(
-            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-edit-content")!
-          );
-          buttons.push(
-            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-regenerate")!
-          );
-        }
+        // 有AI内容时，只显示AI设置
         buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
       } else {
         // 没有AI内容时
@@ -103,7 +80,7 @@ export const NoteToolbar = memo<NoteToolbarProps>(
       buttons.push(...BASE_TOOLBAR_BUTTONS);
 
       return buttons.filter(Boolean);
-    }, [hasAIContent, isAIGenerating, isEditingAIContent]); // 处理按钮点击
+    }, [hasAIContent, isAIGenerating]); // 处理按钮点击
     const handleButtonClick = useCallback(
       (action: ToolbarAction) => {
         if (action === "color") {

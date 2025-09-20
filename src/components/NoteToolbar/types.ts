@@ -6,10 +6,7 @@ export type ToolbarAction =
   | "delete"
   | "ai-generate"
   | "ai-config"
-  | "ai-content-generated"
-  | "ai-edit-content"
-  | "ai-regenerate"
-  | "ai-finish-editing";
+  | "ai-content-generated";
 
 // 工具栏事件数据
 export interface ToolbarActionData {
@@ -27,7 +24,6 @@ export interface NoteToolbarProps {
   // AI相关状态
   hasAIContent?: boolean; // 是否有AI生成的内容
   isAIGenerating?: boolean; // 是否正在AI生成
-  isEditingAIContent?: boolean; // 是否正在编辑AI内容
 }
 export interface ToolbarButton {
   id: ToolbarAction;
