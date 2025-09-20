@@ -157,6 +157,31 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     [selectedProvider]
   );
 
+  const testExistingConnection = useCallback(async () => {
+    setConnectionStatus((prev) => ({ ...prev, [selectedProvider]: "testing" }));
+
+    try {
+      const testResult = await aiService.testProvider(selectedProvider);
+
+      if (testResult) {
+        setConnectionStatus((prev) => ({
+          ...prev,
+          [selectedProvider]: "success",
+        }));
+        message.success("🎉 连接测试成功");
+      } else {
+        setConnectionStatus((prev) => ({
+          ...prev,
+          [selectedProvider]: "error",
+        }));
+        message.error("❌ 连接测试失败");
+      }
+    } catch (error: any) {
+      setConnectionStatus((prev) => ({ ...prev, [selectedProvider]: "error" }));
+      message.error(`❌ 测试失败: ${error?.message || "未知错误"}`);
+    }
+  }, [selectedProvider, message]);
+
   const saveAndTestApiKey = useCallback(async () => {
     const apiKey = apiKeyInputs[selectedProvider];
     if (!apiKey) {
@@ -167,7 +192,20 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     setConnectionStatus((prev) => ({ ...prev, [selectedProvider]: "testing" }));
 
     try {
+      // 验证API密钥格式
+      if (!securityManager.validateAPIKey(selectedProvider, apiKey)) {
+        setConnectionStatus((prev) => ({
+          ...prev,
+          [selectedProvider]: "error",
+        }));
+        message.error("❌ API密钥格式不正确，请检查后重试");
+        return;
+      }
+
+      // 保存API密钥
       await securityManager.setAPIKey(selectedProvider, apiKey);
+
+      // 测试连接
       const testResult = await aiService.testProvider(selectedProvider);
 
       if (testResult) {
@@ -175,17 +213,24 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
           ...prev,
           [selectedProvider]: "success",
         }));
-        message.success("✅ 验证成功");
+        message.success("🎉 连接测试成功，模型可以使用");
+
+        // 自动保存设置
+        await aiService.saveSettings({
+          provider: selectedProvider,
+          apiKeys: { [selectedProvider]: apiKey },
+        });
       } else {
         setConnectionStatus((prev) => ({
           ...prev,
           [selectedProvider]: "error",
         }));
-        message.error("❌ 验证失败");
+        message.error("❌ 连接测试失败，请检查API密钥是否正确");
       }
-    } catch (error) {
+    } catch (error: any) {
       setConnectionStatus((prev) => ({ ...prev, [selectedProvider]: "error" }));
-      message.error("验证失败");
+      const errorMessage = error?.message || "未知错误";
+      message.error(`❌ 验证失败: ${errorMessage}`);
     }
   }, [selectedProvider, apiKeyInputs, message]);
 
@@ -327,8 +372,35 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
             gap: "16px",
           }}
         >
-          {/* API密钥 */}
-          <Card size="small" title="API密钥">
+          {/* API密钥配置 */}
+          <Card
+            size="small"
+            title={
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span>API密钥配置</span>
+                {connectionStatus[selectedProvider] === "success" && (
+                  <span style={{ color: "#52c41a", fontSize: "12px" }}>
+                    ✅ 已连接
+                  </span>
+                )}
+                {connectionStatus[selectedProvider] === "error" && (
+                  <span style={{ color: "#ff4d4f", fontSize: "12px" }}>
+                    ❌ 连接失败
+                  </span>
+                )}
+              </div>
+            }
+          >
+            <div style={{ marginBottom: "12px" }}>
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                请输入{" "}
+                {API_PROVIDERS.find((p) => p.value === selectedProvider)?.label}{" "}
+                的 API 密钥， 输入后将自动验证连接状态
+              </Text>
+            </div>
+
             <Space.Compact style={{ width: "100%" }}>
               <Input.Password
                 placeholder={`输入 ${
@@ -338,15 +410,71 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                 onChange={(e) => handleApiKeyChange(e.target.value)}
                 onPressEnter={saveAndTestApiKey}
                 style={{ flex: 1 }}
+                status={
+                  connectionStatus[selectedProvider] === "error"
+                    ? "error"
+                    : undefined
+                }
               />
               <Button
                 onClick={saveAndTestApiKey}
                 type="primary"
                 loading={connectionStatus[selectedProvider] === "testing"}
+                disabled={!apiKeyInputs[selectedProvider]?.trim()}
               >
-                验证
+                {connectionStatus[selectedProvider] === "testing"
+                  ? "验证中..."
+                  : "保存并测试"}
               </Button>
             </Space.Compact>
+
+            {/* 连接状态提示 */}
+            {connectionStatus[selectedProvider] === "success" && (
+              <div
+                style={{
+                  marginTop: "8px",
+                  padding: "8px 12px",
+                  backgroundColor: "#f6ffed",
+                  border: "1px solid #b7eb8f",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  color: "#389e0d",
+                }}
+              >
+                🎉 连接成功！现在可以使用AI生成功能了
+              </div>
+            )}
+
+            {connectionStatus[selectedProvider] === "error" && (
+              <div
+                style={{
+                  marginTop: "8px",
+                  padding: "8px 12px",
+                  backgroundColor: "#fff2f0",
+                  border: "1px solid #ffccc7",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  color: "#cf1322",
+                }}
+              >
+                ❌ 连接失败，请检查API密钥是否正确或网络连接是否正常
+              </div>
+            )}
+
+            {/* 已保存密钥的测试按钮 */}
+            {!apiKeyInputs[selectedProvider] &&
+              connectionStatus[selectedProvider] !== "testing" && (
+                <div style={{ marginTop: "12px", textAlign: "center" }}>
+                  <Button
+                    type="dashed"
+                    onClick={testExistingConnection}
+                    loading={connectionStatus[selectedProvider] === "testing"}
+                    style={{ width: "100%" }}
+                  >
+                    测试已保存的API密钥连接
+                  </Button>
+                </div>
+              )}
           </Card>
 
           {/* 模型设置 */}

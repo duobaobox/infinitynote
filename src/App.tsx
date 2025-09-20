@@ -1,3 +1,5 @@
+// 引入React和相关hooks
+import { useEffect } from "react";
 // 引入主页面组件
 import Main from "./pages/Main";
 // 引入主题系统
@@ -6,10 +8,7 @@ import { ThemeProvider } from "./theme";
 import ErrorBoundary from "./components/ErrorBoundary";
 // 引入Ant Design App组件
 import { App as AntdApp } from "antd";
-// 引入AI调试面板
-import { AIDebugPanel } from "./components/AIDebugPanel";
-// 引入AI调试开关
-import { AIDebugToggle } from "./components/AIDebugToggle";
+
 // 引入全局样式
 import "./App.css";
 import "./theme/global.css";
@@ -33,6 +32,31 @@ import "./theme/global.css";
  * - 性能优化配置
  */
 function App() {
+  // 初始化错误处理系统
+  useEffect(() => {
+    // 监听全局未捕获的错误
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("未处理的Promise拒绝:", event.reason);
+      // 可以在这里添加错误上报逻辑
+    };
+
+    const handleError = (event: ErrorEvent) => {
+      console.error("全局错误:", event.error);
+      // 可以在这里添加错误上报逻辑
+    };
+
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    window.addEventListener("error", handleError);
+
+    return () => {
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection
+      );
+      window.removeEventListener("error", handleError);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
@@ -53,10 +77,6 @@ function App() {
           <ErrorBoundary>
             <AntdApp>
               <Main />
-              {/* AI调试面板 - 仅在开发环境显示 */}
-              <AIDebugPanel />
-              {/* AI调试开关按钮 */}
-              <AIDebugToggle />
             </AntdApp>
           </ErrorBoundary>
         </div>

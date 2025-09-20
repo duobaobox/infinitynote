@@ -1,20 +1,12 @@
 import type { ToolbarButton, ColorOption } from "./types";
 
-// 工具栏按钮配置 - 添加AI功能
-export const TOOLBAR_BUTTONS: ToolbarButton[] = [
-  {
-    id: "ai-config",
-    label: "AI设置",
-    icon: "SettingOutlined",
-    tooltip: "AI功能设置",
-    separator: true, // 在AI功能前添加分隔符
-  },
+// 基础工具栏按钮配置
+export const BASE_TOOLBAR_BUTTONS: ToolbarButton[] = [
   {
     id: "color",
     label: "更改颜色",
     icon: "BgColorsOutlined",
     tooltip: "更改便签颜色",
-    separator: true, // 在颜色功能前添加分隔符
   },
   {
     id: "duplicate",
@@ -36,6 +28,47 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     danger: true,
     separator: true, // 在删除功能前添加分隔符
   },
+];
+
+// AI相关按钮配置
+export const AI_TOOLBAR_BUTTONS: ToolbarButton[] = [
+  {
+    id: "ai-generate",
+    label: "AI生成",
+    icon: "RobotOutlined",
+    tooltip: "使用AI生成内容",
+  },
+  {
+    id: "ai-edit-content",
+    label: "编辑AI内容",
+    icon: "EditOutlined",
+    tooltip: "编辑AI生成的内容",
+  },
+  {
+    id: "ai-regenerate",
+    label: "重新生成",
+    icon: "ReloadOutlined",
+    tooltip: "重新生成AI内容",
+  },
+  {
+    id: "ai-finish-editing",
+    label: "完成编辑",
+    icon: "CheckOutlined",
+    tooltip: "完成AI内容编辑",
+  },
+  {
+    id: "ai-config",
+    label: "AI设置",
+    icon: "SettingOutlined",
+    tooltip: "AI功能设置",
+    separator: true, // 在AI设置前添加分隔符
+  },
+];
+
+// 工具栏按钮配置 - 兼容性保持
+export const TOOLBAR_BUTTONS: ToolbarButton[] = [
+  ...AI_TOOLBAR_BUTTONS,
+  ...BASE_TOOLBAR_BUTTONS,
 ];
 
 // 颜色选项配置

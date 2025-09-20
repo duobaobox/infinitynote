@@ -57,6 +57,18 @@ export const AIInlineControl: React.FC<AIInlineControlProps> = ({
       })
     : null;
 
+  // 显示详细错误通知（仅在严重错误时）
+  React.useEffect(() => {
+    if (
+      error &&
+      (errorInfo?.severity === "high" || errorInfo?.severity === "critical")
+    ) {
+      errorHandler.showErrorNotification(error, {
+        retryFn: () => onRetry?.(noteId),
+      });
+    }
+  }, [error, errorInfo, errorHandler, onRetry, noteId]);
+
   // AI生成中状态
   if (isGenerating) {
     return (

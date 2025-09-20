@@ -6,9 +6,16 @@ import {
   DeleteOutlined,
   RobotOutlined,
   SettingOutlined,
+  EditOutlined,
+  ReloadOutlined,
+  CheckOutlined,
 } from "@ant-design/icons";
 import type { NoteToolbarProps, ToolbarAction } from "./types";
-import { TOOLBAR_BUTTONS, COLOR_OPTIONS } from "./constants";
+import {
+  BASE_TOOLBAR_BUTTONS,
+  AI_TOOLBAR_BUTTONS,
+  COLOR_OPTIONS,
+} from "./constants";
 // import { AIGenerationControl } from "../AIGenerationControl";
 import styles from "./index.module.css";
 
@@ -20,6 +27,9 @@ const IconMap: Record<string, React.ComponentType<any>> = {
   DeleteOutlined,
   RobotOutlined,
   SettingOutlined,
+  EditOutlined,
+  ReloadOutlined,
+  CheckOutlined,
 };
 
 const renderIcon = (iconName: string) => {
@@ -38,12 +48,62 @@ const renderIcon = (iconName: string) => {
  * - 动画效果和交互反馈
  */
 export const NoteToolbar = memo<NoteToolbarProps>(
-  ({ noteId, visible, onAction, onClose, color }) => {
+  ({
+    noteId,
+    visible,
+    onAction,
+    onClose,
+    color,
+    hasAIContent = false,
+    isAIGenerating = false,
+    isEditingAIContent = false,
+  }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
     // const [showAIGeneration, setShowAIGeneration] = useState(false);
     const [currentNoteColor, setCurrentNoteColor] = useState(color); // 用 props.color 初始化
     const toolbarRef = useRef<HTMLDivElement>(null);
-    const colorPickerRef = useRef<HTMLDivElement>(null); // 处理按钮点击
+    const colorPickerRef = useRef<HTMLDivElement>(null);
+
+    // 动态生成按钮列表
+    const getVisibleButtons = useCallback(() => {
+      const buttons = [];
+
+      // AI相关按钮
+      if (isAIGenerating) {
+        // 正在生成时，只显示AI设置
+        buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
+      } else if (hasAIContent) {
+        if (isEditingAIContent) {
+          // 正在编辑AI内容时
+          buttons.push(
+            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-finish-editing")!
+          );
+          buttons.push(
+            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-regenerate")!
+          );
+        } else {
+          // 有AI内容但未编辑时
+          buttons.push(
+            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-edit-content")!
+          );
+          buttons.push(
+            AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-regenerate")!
+          );
+        }
+        buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
+      } else {
+        // 没有AI内容时
+        buttons.push(
+          AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-generate")!
+        );
+        buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
+      }
+
+      // 基础功能按钮
+      buttons.push(...BASE_TOOLBAR_BUTTONS);
+
+      return buttons.filter(Boolean);
+    }, [hasAIContent, isAIGenerating, isEditingAIContent]); // 处理按钮点击
     const handleButtonClick = useCallback(
       (action: ToolbarAction) => {
         if (action === "color") {
@@ -130,7 +190,7 @@ export const NoteToolbar = memo<NoteToolbarProps>(
         onClick={(e) => e.stopPropagation()}
         data-note-toolbar
       >
-        {TOOLBAR_BUTTONS.map((button, index) => (
+        {getVisibleButtons().map((button, index) => (
           <React.Fragment key={button.id}>
             {button.separator && index > 0 && (
               <div className={styles.separator} />

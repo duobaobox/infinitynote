@@ -8,6 +8,8 @@ import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
 import type { ToolbarAction } from "../NoteToolbar/types";
+import { PromptTemplateSelector } from "../PromptTemplateSelector";
+import type { PromptTemplate } from "../../config/promptTemplates";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import styles from "./index.module.css";
 
@@ -52,6 +54,12 @@ export const NoteCard = memo<NoteCardProps>(
     // 工具栏显示状态
     const [showToolbar, setShowToolbar] = useState(false);
 
+    // AI内容编辑状态
+    const [isEditingAIContent, setIsEditingAIContent] = useState(false);
+
+    // 提示词模板选择器状态
+    const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+
     // AI 数据提取
     const aiData = note.customProperties?.ai as
       | AICustomProperties["ai"]
@@ -71,6 +79,23 @@ export const NoteCard = memo<NoteCardProps>(
         });
       }
     }, [aiData, note.id]);
+
+    // AI生成完成后自动进入编辑模式
+    useEffect(() => {
+      const wasGenerating = aiGenerating[note.id];
+      const isCurrentlyGenerating = aiGenerating[note.id];
+
+      // 如果AI刚刚完成生成（从生成中变为非生成中），且有AI数据，自动进入编辑模式
+      if (!isCurrentlyGenerating && aiData?.generated && note.content) {
+        // 延迟一点时间让用户看到生成完成的效果
+        const timer = setTimeout(() => {
+          setIsEditingAIContent(true);
+          setIsEditing(true);
+        }, 500);
+
+        return () => clearTimeout(timer);
+      }
+    }, [aiGenerating, note.id, aiData, note.content]);
 
     // 思维链展开状态（根据AI数据的thinkingCollapsed字段决定默认状态）
     const [thinkingChainExpanded, setThinkingChainExpanded] = useState(
@@ -282,17 +307,59 @@ export const NoteCard = memo<NoteCardProps>(
     // 处理AI生成
     const handleAIGenerate = useCallback(async () => {
       try {
-        const prompt = window.prompt("请输入AI生成提示词:");
-        if (!prompt?.trim()) return;
-
-        console.log(`🤖 开始为便签 ${note.id.slice(-8)} 生成AI内容`);
-        await startAIGeneration(note.id, prompt.trim());
+        // 打开提示词模板选择器
+        setShowTemplateSelector(true);
         setShowToolbar(false); // 关闭工具栏
       } catch (error) {
         console.error("AI生成失败:", error);
         // 可以在这里显示错误提示
       }
-    }, [note.id, startAIGeneration]);
+    }, []);
+
+    // 处理模板选择
+    const handleTemplateSelect = useCallback(
+      async (template: PromptTemplate) => {
+        try {
+          let finalPrompt = template.prompt;
+
+          // 处理模板中的变量替换
+          if (template.prompt.includes("{{")) {
+            // 提取模板变量
+            const variables = template.prompt.match(/\{\{(\w+)\}\}/g);
+            if (variables) {
+              const variableValues: Record<string, string> = {};
+
+              // 为每个变量请求用户输入
+              for (const variable of variables) {
+                const varName = variable.replace(/[{}]/g, "");
+                const value = window.prompt(`请输入 ${varName}:`);
+                if (value === null) return; // 用户取消
+                variableValues[varName] = value || "";
+              }
+
+              // 替换模板中的变量
+              finalPrompt = template.prompt.replace(
+                /\{\{(\w+)\}\}/g,
+                (match, varName) => {
+                  return variableValues[varName] || match;
+                }
+              );
+            }
+          }
+
+          console.log(
+            `🤖 使用模板"${template.name}"为便签 ${note.id.slice(
+              -8
+            )} 生成AI内容`
+          );
+          await startAIGeneration(note.id, finalPrompt);
+        } catch (error) {
+          console.error("AI生成失败:", error);
+          // 可以在这里显示错误提示
+        }
+      },
+      [note.id, startAIGeneration]
+    );
 
     // 处理AI配置
     const handleAIConfig = useCallback(() => {
@@ -300,6 +367,38 @@ export const NoteCard = memo<NoteCardProps>(
       // TODO: 打开设置模态框的AI标签页
       // 这里可以通过事件总线或上下文来打开设置
       setShowToolbar(false); // 关闭工具栏
+    }, []);
+
+    // 处理编辑AI内容
+    const handleEditAIContent = useCallback(() => {
+      setIsEditingAIContent(true);
+      setIsEditing(true);
+      setShowToolbar(false);
+    }, []);
+
+    // 处理重新生成AI内容
+    const handleRegenerateAI = useCallback(async () => {
+      if (!aiData?.prompt) {
+        // 如果没有原始提示词，询问用户
+        const prompt = window.prompt("请输入新的提示词:", aiData?.prompt || "");
+        if (!prompt?.trim()) return;
+
+        console.log(`🔄 重新生成便签 ${note.id.slice(-8)} 的AI内容`);
+        await startAIGeneration(note.id, prompt.trim());
+      } else {
+        // 使用原始提示词重新生成
+        console.log(
+          `🔄 使用原提示词重新生成便签 ${note.id.slice(-8)} 的AI内容`
+        );
+        await startAIGeneration(note.id, aiData.prompt);
+      }
+      setShowToolbar(false);
+    }, [note.id, aiData, startAIGeneration]);
+
+    // 处理完成AI内容编辑
+    const handleFinishEditingAI = useCallback(() => {
+      setIsEditingAIContent(false);
+      setIsEditing(false);
     }, []);
 
     // 处理工具栏操作
@@ -329,11 +428,29 @@ export const NoteCard = memo<NoteCardProps>(
           case "ai-config":
             handleAIConfig();
             break;
+          case "ai-edit-content":
+            handleEditAIContent();
+            break;
+          case "ai-regenerate":
+            handleRegenerateAI();
+            break;
+          case "ai-finish-editing":
+            handleFinishEditingAI();
+            break;
           default:
             console.log("Unhandled action:", action);
         }
       },
-      [note.id, updateNote, deleteNote, handleAIGenerate, handleAIConfig]
+      [
+        note.id,
+        updateNote,
+        deleteNote,
+        handleAIGenerate,
+        handleAIConfig,
+        handleEditAIContent,
+        handleRegenerateAI,
+        handleFinishEditingAI,
+      ]
     ); // 关闭工具栏
     const handleCloseToolbar = useCallback(() => {
       setShowToolbar(false);
@@ -736,7 +853,9 @@ export const NoteCard = memo<NoteCardProps>(
                 height="100%"
                 className={styles.noteText}
                 autoFocus={isEditing}
-                readonly={!isEditing || aiGenerating[note.id]}
+                readonly={
+                  (!isEditing && !isEditingAIContent) || aiGenerating[note.id]
+                }
                 onFocus={handleEditorFocus}
                 onBlur={handleEditorBlur}
                 onEscape={handleEditorEscape}
@@ -771,10 +890,19 @@ export const NoteCard = memo<NoteCardProps>(
                 color={note.color}
                 onAction={handleToolbarAction}
                 onClose={handleCloseToolbar}
+                hasAIContent={!!aiData?.generated}
+                isAIGenerating={!!aiGenerating[note.id]}
+                isEditingAIContent={isEditingAIContent}
               />
             </div>
           )}
         </div>
+        {/* 提示词模板选择器 */}
+        <PromptTemplateSelector
+          visible={showTemplateSelector}
+          onClose={() => setShowTemplateSelector(false)}
+          onSelect={handleTemplateSelect}
+        />
       </>
     );
   }

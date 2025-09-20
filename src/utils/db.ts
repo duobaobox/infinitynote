@@ -45,10 +45,35 @@ export interface AIConfigDB {
   updatedAt: Date;
 }
 
+/**
+ * AI生成历史记录数据库接口
+ */
+export interface AIHistoryDB {
+  id: string; // 历史记录唯一标识
+  noteId?: string; // 关联的便签ID（可选，用于便签内AI生成）
+  prompt: string; // 用户输入的提示词
+  provider: string; // 使用的AI提供商
+  model: string; // 使用的模型
+  temperature: number; // 生成参数
+  maxTokens: number; // 最大token数
+  generatedContent: string; // 生成的内容
+  thinkingChain?: string; // 思维链内容（JSON字符串）
+  status: "success" | "error" | "cancelled"; // 生成状态
+  errorMessage?: string; // 错误信息（如果有）
+  duration: number; // 生成耗时（毫秒）
+  tokenUsage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  }; // token使用统计
+  createdAt: Date; // 创建时间
+}
+
 class InfinityNoteDatabase extends Dexie {
   notes!: Table<NoteDB>;
   canvases!: Table<CanvasDB>;
   aiConfigs!: Table<AIConfigDB>;
+  aiHistory!: Table<AIHistoryDB>;
 
   constructor() {
     super("InfinityNoteDatabase");
@@ -106,6 +131,17 @@ class InfinityNoteDatabase extends Dexie {
             );
           });
       });
+
+    // 版本4：添加AI生成历史记录表
+    this.version(4).stores({
+      notes:
+        "id, title, content, color, zIndex, canvasId, createdAt, updatedAt, position.x, position.y, size.width, size.height, tags, priority, reminderAt, isPinned, isArchived, isFavorite, contentType, permission, templateId, parentNoteId, lastAccessedAt, version, isDeleted, deletedAt, customProperties",
+      canvases:
+        "id, name, scale, backgroundColor, createdAt, updatedAt, isDefault, offset.x, offset.y",
+      aiConfigs: "id, type, provider, value, encrypted, createdAt, updatedAt",
+      aiHistory:
+        "id, noteId, prompt, provider, model, status, createdAt, duration",
+    });
   }
 }
 
@@ -684,6 +720,166 @@ export const dbOperations = {
       console.error("❌ AI配置迁移失败:", error);
       // 迁移失败不抛出错误，避免阻止应用启动
       console.warn("⚠️ AI配置迁移失败，将使用默认配置");
+    }
+  },
+
+  // === AI历史记录操作 ===
+
+  // 保存AI生成历史记录
+  async saveAIHistory(history: AIHistoryDB): Promise<void> {
+    try {
+      await withDbRetry(async () => {
+        await db.aiHistory.put(history);
+        console.log(`✅ AI历史记录保存成功: ${history.id.slice(-8)}`);
+      });
+    } catch (error) {
+      console.error(`❌ 保存AI历史记录失败 ${history.id}:`, error);
+      throw new Error(
+        `保存AI历史记录失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
+      );
+    }
+  },
+
+  // 获取AI历史记录（分页）
+  async getAIHistory(
+    options: {
+      limit?: number;
+      offset?: number;
+      provider?: string;
+      status?: "success" | "error" | "cancelled";
+    } = {}
+  ): Promise<AIHistoryDB[]> {
+    try {
+      return await withDbRetry(async () => {
+        let query = db.aiHistory.orderBy("createdAt").reverse();
+
+        // 按提供商筛选
+        if (options.provider) {
+          query = query.filter((h) => h.provider === options.provider);
+        }
+
+        // 按状态筛选
+        if (options.status) {
+          query = query.filter((h) => h.status === options.status);
+        }
+
+        // 分页
+        if (options.offset) {
+          query = query.offset(options.offset);
+        }
+
+        if (options.limit) {
+          query = query.limit(options.limit);
+        }
+
+        return await query.toArray();
+      });
+    } catch (error) {
+      console.error("❌ 获取AI历史记录失败:", error);
+      return [];
+    }
+  },
+
+  // 获取特定便签的AI历史记录
+  async getAIHistoryByNoteId(noteId: string): Promise<AIHistoryDB[]> {
+    try {
+      return await withDbRetry(async () => {
+        return await db.aiHistory
+          .where("noteId")
+          .equals(noteId)
+          .reverse()
+          .sortBy("createdAt");
+      });
+    } catch (error) {
+      console.error(`❌ 获取便签AI历史记录失败 ${noteId}:`, error);
+      return [];
+    }
+  },
+
+  // 删除AI历史记录
+  async deleteAIHistory(id: string): Promise<void> {
+    try {
+      await withDbRetry(async () => {
+        await db.aiHistory.delete(id);
+        console.log(`✅ AI历史记录删除成功: ${id.slice(-8)}`);
+      });
+    } catch (error) {
+      console.error(`❌ 删除AI历史记录失败 ${id}:`, error);
+      throw new Error(
+        `删除AI历史记录失败: ${
+          error instanceof Error ? error.message : "未知错误"
+        }`
+      );
+    }
+  },
+
+  // 清理旧的AI历史记录（保留最近N条）
+  async cleanupAIHistory(keepCount: number = 100): Promise<void> {
+    try {
+      await withDbRetry(async () => {
+        const allHistory = await db.aiHistory
+          .orderBy("createdAt")
+          .reverse()
+          .toArray();
+
+        if (allHistory.length > keepCount) {
+          const toDelete = allHistory.slice(keepCount);
+          const idsToDelete = toDelete.map((h) => h.id);
+
+          await db.aiHistory.bulkDelete(idsToDelete);
+          console.log(`✅ 清理了${idsToDelete.length}条旧的AI历史记录`);
+        }
+      });
+    } catch (error) {
+      console.error("❌ 清理AI历史记录失败:", error);
+    }
+  },
+
+  // 获取AI使用统计
+  async getAIUsageStats(): Promise<{
+    totalGenerations: number;
+    successfulGenerations: number;
+    failedGenerations: number;
+    totalTokens: number;
+    providerStats: Record<string, number>;
+  }> {
+    try {
+      return await withDbRetry(async () => {
+        const allHistory = await db.aiHistory.toArray();
+
+        const stats = {
+          totalGenerations: allHistory.length,
+          successfulGenerations: allHistory.filter(
+            (h) => h.status === "success"
+          ).length,
+          failedGenerations: allHistory.filter((h) => h.status === "error")
+            .length,
+          totalTokens: allHistory.reduce(
+            (sum, h) => sum + (h.tokenUsage?.totalTokens || 0),
+            0
+          ),
+          providerStats: {} as Record<string, number>,
+        };
+
+        // 统计各提供商使用次数
+        allHistory.forEach((h) => {
+          stats.providerStats[h.provider] =
+            (stats.providerStats[h.provider] || 0) + 1;
+        });
+
+        return stats;
+      });
+    } catch (error) {
+      console.error("❌ 获取AI使用统计失败:", error);
+      return {
+        totalGenerations: 0,
+        successfulGenerations: 0,
+        failedGenerations: 0,
+        totalTokens: 0,
+        providerStats: {},
+      };
     }
   },
 };

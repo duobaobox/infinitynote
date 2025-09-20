@@ -1,0 +1,233 @@
+/* 提示词模板选择器样式 */
+
+.templateModal {
+  /* 模态框样式 */
+}
+
+.modalContent {
+  padding: 0;
+}
+
+.searchSection {
+  margin-bottom: 20px;
+}
+
+.searchResults {
+  margin-bottom: 20px;
+}
+
+.searchResults > span {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.templateTabs {
+  /* 标签页样式 */
+}
+
+.templateTabs .ant-tabs-tab {
+  padding: 8px 16px;
+}
+
+.categoryDescription {
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: var(--color-bg-secondary);
+  border-radius: 6px;
+}
+
+.templateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.templateCard {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.templateCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.templateCard .ant-card-meta-avatar {
+  font-size: 20px;
+  color: var(--color-primary);
+}
+
+.templateCard .ant-card-meta-title {
+  margin-bottom: 8px;
+}
+
+.description {
+  margin-bottom: 8px !important;
+  color: var(--color-text-secondary);
+}
+
+.example {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-text-tertiary);
+}
+
+.customSection {
+  padding: 20px;
+  background: var(--color-bg-secondary);
+  border-radius: 8px;
+}
+
+.customSection > span {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.customInput {
+  margin: 12px 0;
+}
+
+.customActions {
+  text-align: right;
+}
+
+/* 暗黑模式适配 */
+[data-theme="dark"] .categoryDescription {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .customSection {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .templateCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .templateGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .templateCard {
+    margin-bottom: 0;
+  }
+}
+
+/* 动画效果 */
+.templateCard {
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 标签样式 */
+.templateCard .ant-tag {
+  margin: 0 4px 0 0;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+/* 按钮样式 */
+.templateCard .ant-card-actions {
+  background: var(--color-bg-container);
+  border-top: 1px solid var(--color-border);
+}
+
+.templateCard .ant-card-actions > li {
+  margin: 8px 0;
+}
+
+.templateCard .ant-card-actions button {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* 搜索结果高亮 */
+.searchResults .templateGrid {
+  margin-top: 12px;
+}
+
+/* 空状态样式 */
+.searchResults .ant-empty {
+  margin: 20px 0;
+}
+
+/* 标签页内容区域 */
+.templateTabs .ant-tabs-content-holder {
+  padding-top: 8px;
+}
+
+/* 自定义输入区域 */
+.customInput.ant-input {
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.customActions .ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* 模板卡片内容布局 */
+.templateCard .ant-card-body {
+  padding: 16px;
+}
+
+.templateCard .ant-card-meta-description {
+  margin-top: 8px;
+}
+
+/* 图标样式 */
+.templateCard .ant-card-meta-avatar .anticon {
+  font-size: 18px;
+  color: var(--color-primary);
+}
+
+.templateTabs .ant-tabs-tab .anticon {
+  margin-right: 6px;
+}
+
+/* 悬浮效果 */
+.templateCard .ant-card-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+}
+
+/* 加载状态 */
+.templateGrid.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 选中状态 */
+.templateCard.selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 禁用状态 */
+.templateCard.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.templateCard.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
