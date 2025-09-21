@@ -1,0 +1,145 @@
+/* 连接点组件样式 */
+
+.connectionPoint {
+  position: absolute;
+  bottom: 8px; /* 调整到便签内部，距离底部8px */
+  left: 8px; /* 调整到便签内部，距离左边8px */
+  width: 20px; /* 增大点击区域 */
+  height: 20px; /* 增大点击区域 */
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(22, 119, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0; /* 默认隐藏，悬停时显示 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100; /* 大幅提高z-index确保在最上层 */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); /* 增加阴影增强可见性 */
+}
+
+/* 连接点内部的圆点 */
+.connectionDot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #52c41a; /* 改为绿色，对应设计稿 */
+  border: 1px solid rgba(255, 255, 255, 1);
+  transition: all 0.2s ease;
+  margin: auto;
+}
+
+/* 已连接状态的连接点 */
+.connectionPoint.connected {
+  opacity: 1; /* 已连接时始终显示 */
+  background: rgba(82, 196, 26, 0.1);
+  border-color: rgba(82, 196, 26, 0.5);
+}
+
+.connectionPoint.connected .connectionDot {
+  background: #52c41a; /* 绿色表示已连接 */
+  border-color: rgba(255, 255, 255, 1);
+  animation: connectedPulse 4s ease-in-out infinite;
+}
+
+/* 连接状态脉冲动画 */
+@keyframes connectedPulse {
+  0%,
+  100% {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 0 0 0 rgba(82, 196, 26, 0.2);
+  }
+  50% {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 0 0 3px rgba(82, 196, 26, 0.15);
+  }
+}
+
+/* 源连接状态样式 */
+.connectionPoint.hasSource {
+  background: rgba(255, 165, 0, 0.1);
+  border-color: rgba(255, 165, 0, 0.5);
+}
+
+.connectionPoint.hasSource .connectionDot {
+  background: #ffa500; /* 橙色表示作为源便签 */
+}
+
+.connectionPoint.sourceActive {
+  opacity: 1;
+  background: rgba(255, 165, 0, 0.2);
+  border-color: rgba(255, 165, 0, 0.8);
+}
+
+.connectionPoint.sourceConnected {
+  opacity: 1;
+}
+
+.connectionPoint.beingSourceConnected {
+  opacity: 1;
+  background: rgba(255, 165, 0, 0.2);
+  border-color: rgba(255, 165, 0, 0.8);
+  animation: sourceConnectingPulse 2s ease-in-out infinite;
+}
+
+/* 源连接脉冲动画 */
+@keyframes sourceConnectingPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(255, 165, 0, 0.2);
+  }
+}
+
+/* 编辑时隐藏 */
+.connectionPoint.editingHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 便签悬停时显示 */
+.connectionPoint.noteHovered {
+  opacity: 1 !important;
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(22, 119, 255, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 悬停效果 */
+.connectionPoint:hover {
+  opacity: 1 !important;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.connectionPoint:hover .connectionDot {
+  transform: scale(1.1);
+}
+
+/* 活跃状态 */
+.connectionPoint:active {
+  transform: scale(0.95);
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .connectionPoint {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(22, 119, 255, 0.4);
+  }
+
+  .connectionPoint.connected {
+    background: rgba(82, 196, 26, 0.2);
+    border-color: rgba(82, 196, 26, 0.6);
+  }
+
+  .connectionPoint.hasSource,
+  .connectionPoint.sourceActive {
+    background: rgba(255, 165, 0, 0.2);
+    border-color: rgba(255, 165, 0, 0.6);
+  }
+}

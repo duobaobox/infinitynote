@@ -1,0 +1,28 @@
+/* 连接线可视化组件样式 */
+
+.connectionCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.connectionLine {
+  animation: connectionFlow 3s ease-in-out infinite;
+}
+
+/* 连接线流动动画 */
+@keyframes connectionFlow {
+  0%,
+  100% {
+    stroke-dasharray: 0;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 10;
+    stroke-dashoffset: -10;
+  }
+}

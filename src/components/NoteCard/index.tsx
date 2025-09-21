@@ -12,6 +12,8 @@ import type { ToolbarAction } from "../NoteToolbar/types";
 import { PromptTemplateSelector } from "../PromptTemplateSelector";
 import type { PromptTemplate } from "../../config/promptTemplates";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
+import { ConnectionPoint } from "../ConnectionPoint";
+import { useConnectionStore } from "../../store/connectionStore";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -46,7 +48,11 @@ export const NoteCard = memo<NoteCardProps>(
       startAIGeneration,
       aiGenerating,
       aiStreamingData,
-    } = useNoteStore(); // 悬浮状态
+    } = useNoteStore();
+
+    // 连接状态
+    const { isNoteConnected, addConnection, canAddConnection } =
+      useConnectionStore();
     const [isHovered, setIsHovered] = useState(false);
 
     // 编辑状态
@@ -162,6 +168,14 @@ export const NoteCard = memo<NoteCardProps>(
       (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
 
+        // 如果点击的是连接点，不处理 - 让连接点自己处理
+        if (
+          target.closest("[data-note-connection-point]") ||
+          target.hasAttribute("data-note-connection-point")
+        ) {
+          return;
+        }
+
         // 如果点击的是缩放控件，不处理
         if (
           target.closest(`.${styles.resizeHandle}`) ||
@@ -201,6 +215,14 @@ export const NoteCard = memo<NoteCardProps>(
         if (e.button !== 0) return;
 
         const target = e.target as HTMLElement;
+
+        // 如果点击的是连接点，不处理 - 让连接点自己处理
+        if (
+          target.closest("[data-note-connection-point]") ||
+          target.hasAttribute("data-note-connection-point")
+        ) {
+          return;
+        }
 
         // 如果点击的是缩放控件，不进入编辑模式
         if (
@@ -337,7 +359,29 @@ export const NoteCard = memo<NoteCardProps>(
       setShowToolbar(false); // 关闭工具栏
     }, []);
 
-    // 处理工具栏操作
+    // 处理连接点点击
+    const handleConnectionClick = useCallback(
+      (noteId: string) => {
+        // 检查是否已经连接
+        if (isNoteConnected(noteId)) {
+          return;
+        }
+
+        // 检查是否可以添加连接
+        if (!canAddConnection()) {
+          return;
+        }
+
+        // 添加连接
+        const success = addConnection(note);
+        if (success) {
+          console.log("✅ 便签连接成功");
+        } else {
+          console.log("❌ 便签连接失败");
+        }
+      },
+      [note, isNoteConnected, canAddConnection, addConnection]
+    ); // 处理工具栏操作
     const handleToolbarAction = useCallback(
       (action: ToolbarAction, data?: any) => {
         switch (action) {
@@ -799,6 +843,15 @@ export const NoteCard = memo<NoteCardProps>(
                 debounceDelay={300}
               />
             </div>
+
+            {/* 连接点组件 - 左下角 */}
+            <ConnectionPoint
+              noteId={note.id}
+              isConnected={isNoteConnected(note.id)}
+              onConnect={handleConnectionClick}
+              isEditingHidden={isEditing}
+              isNoteHovered={isHovered}
+            />
 
             {/* 缩放控件 - 只显示右下角，悬浮或选中时显示 */}
             {(isSelected || isHovered || isResizing) && (

@@ -141,36 +141,33 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
       className={styles.consoleContainer}
       data-loading={loading || status === "loading"}
     >
-      {/* 主输入区域 */}
-      <div className={styles.consoleInputArea}>
-        {/* 输入框容器 */}
-        <div className={styles.consoleInputContainer}>
-          <Input
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder={dynamicPlaceholder}
-            disabled={disabled || isAnyAIGenerating} // AI生成时禁用输入框
-            className={styles.consoleInput}
-            autoComplete="off"
-          />
-        </div>
+      {/* 输入框容器 */}
+      <div className={styles.consoleInputContainer}>
+        <Input
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder={dynamicPlaceholder}
+          disabled={disabled || isAnyAIGenerating}
+          className={styles.consoleInput}
+          autoComplete="off"
+          size="small"
+        />
+      </div>
 
-        {/* 外部按钮容器 */}
-        <div className={styles.consoleExternalButtons}>
-          <Button
-            type="primary"
-            shape="circle"
-            icon={hasPrompt ? <RobotOutlined /> : <PlusOutlined />}
-            loading={isAnyAIGenerating}
-            onClick={handleButtonClick}
-            disabled={isButtonDisabled}
-            title={getTooltipText()}
-            className={
-              isAnyAIGenerating ? styles.aiGeneratingButton : undefined
-            }
-          />
-        </div>
+      {/* 按钮容器 */}
+      <div className={styles.consoleExternalButtons}>
+        <Button
+          type="primary"
+          shape="circle"
+          size="small"
+          icon={hasPrompt ? <RobotOutlined /> : <PlusOutlined />}
+          loading={isAnyAIGenerating}
+          onClick={handleButtonClick}
+          disabled={isButtonDisabled}
+          title={getTooltipText()}
+          className={styles.addExternalButton}
+        />
       </div>
     </div>
   );

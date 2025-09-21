@@ -11,8 +11,11 @@ import { DndContext } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { VirtualizedNoteContainer } from "../../components/VirtualizedNoteContainer";
 import { ZoomIndicator } from "../../components/ZoomIndicator";
+import { SlotContainer } from "../../components/SlotContainer";
+import { ConnectionVisualizer } from "../../components/ConnectionVisualizer";
 import { useNoteStore } from "../../store/noteStore";
 import { useCanvasStore } from "../../store/canvasStore";
+import { useConnectionStore } from "../../store/connectionStore";
 import { useTheme, canvasGridThemes } from "../../theme";
 import { loadSettingsFromStorage } from "../../components/SettingsModal/utils";
 import { iconRegistry } from "../../utils/iconRegistry";
@@ -112,6 +115,15 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     zoomOut,
     panCanvas,
   } = useCanvasStore();
+
+  // 连接状态管理
+  const {
+    connectedNotes,
+    connectionMode,
+    setConnectionMode,
+    removeConnection,
+    clearAllConnections,
+  } = useConnectionStore();
 
   // 使用 useRef 来避免频繁的状态更新
   const panningRef = useRef(false);
@@ -716,6 +728,18 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
 
       {/* 独立的缩放指示器 */}
       <ZoomIndicator />
+
+      {/* 插槽容器 - 固定在画布底部 */}
+      <SlotContainer
+        connectedNotes={connectedNotes}
+        connectionMode={connectionMode}
+        onModeChange={setConnectionMode}
+        onRemoveConnection={removeConnection}
+        onClearAllConnections={clearAllConnections}
+      />
+
+      {/* 连接线可视化 */}
+      <ConnectionVisualizer containerRef={canvasRef} />
 
       {/* 拖动模式提示 */}
       {isDragMode && (

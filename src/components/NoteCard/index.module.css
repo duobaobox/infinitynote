@@ -36,6 +36,11 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22), 0 0 0 2px #1677ff;
 }
 
+/* 便签悬停时显示连接点 - 使用属性选择器 */
+.noteCard:hover [data-note-connection-point] {
+  opacity: 1 !important;
+}
+
 .noteCard.dragging {
   cursor: grabbing;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 0 0 2px #1677ff;
