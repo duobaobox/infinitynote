@@ -11,6 +11,163 @@
 }
 
 .connectionLine {
+  animation: none; /* 移除动画以提升性能 */
+  will-change: auto;
+}
+
+/* CSS连接线容器 */
+.cssConnectionContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* CSS S形连接线 */
+.sConnectionLine {
+  position: absolute;
+  pointer-events: none;
+
+  /* CSS变量定义起始和结束坐标 */
+  --start-x: 0px;
+  --start-y: 0px;
+  --end-x: 100px;
+  --end-y: 100px;
+
+  /* 计算中间控制点 */
+  --mid-x: calc((var(--start-x) + var(--end-x)) / 2);
+  --mid-y: calc((var(--start-y) + var(--end-y)) / 2);
+  --delta-x: calc(var(--end-x) - var(--start-x));
+  --delta-y: calc(var(--end-y) - var(--start-y));
+
+  /* S形曲线的控制点偏移 */
+  --control1-x: calc(var(--start-x) + var(--delta-x) * 0.3);
+  --control1-y: calc(var(--start-y) + var(--delta-y) * 0.1);
+  --control2-x: calc(var(--end-x) - var(--delta-x) * 0.3);
+  --control2-y: calc(var(--end-y) - var(--delta-y) * 0.1);
+}
+
+.sConnectionLine::before {
+  content: "";
+  position: absolute;
+  top: var(--start-y);
+  left: var(--start-x);
+  width: calc(abs(var(--delta-x)));
+  height: calc(abs(var(--delta-y)));
+
+  /* 使用SVG路径创建S形曲线 */
+  background: none;
+  border: none;
+
+  /* 创建SVG路径作为背景 */
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M 0 0 C 30 10, 70 -10, 100 100" stroke="%2352c41a" stroke-width="2" fill="none" stroke-linecap="round" stroke-opacity="0.8"/></svg>');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+
+  /* 平滑过渡 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 优化的S形连接线 - 使用clip-path */
+.sConnectionLineOptimized {
+  position: absolute;
+  pointer-events: none;
+
+  --start-x: 0px;
+  --start-y: 0px;
+  --end-x: 100px;
+  --end-y: 100px;
+
+  top: min(var(--start-y), var(--end-y));
+  left: min(var(--start-x), var(--end-x));
+  width: calc(abs(var(--end-x) - var(--start-x)) + 4px);
+  height: calc(abs(var(--end-y) - var(--start-y)) + 4px);
+
+  background: linear-gradient(
+    to bottom right,
+    transparent 0%,
+    #52c41a 2%,
+    #52c41a 98%,
+    transparent 100%
+  );
+
+  /* 创建S形路径 */
+  clip-path: polygon(
+    0% 50%,
+    20% 40%,
+    40% 45%,
+    60% 55%,
+    80% 60%,
+    100% 50%,
+    100% 52%,
+    80% 62%,
+    60% 57%,
+    40% 47%,
+    20% 42%,
+    0% 52%
+  );
+
+  opacity: 0.8;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 流动动画效果 */
+.sConnectionLineAnimated::before {
+  animation: sLineFlow 2s ease-in-out infinite;
+}
+
+/* S形连接线流动动画 */
+@keyframes sLineFlow {
+  0%,
+  100% {
+    opacity: 0.8;
+    filter: none;
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px #52c41a)
+      drop-shadow(0 0 12px rgba(82, 196, 26, 0.3));
+  }
+}
+
+/* CSS连接线全局样式 */
+.css-connection-line {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* S形连接线路径动画 */
+@keyframes sLinePathFlow {
+  0% {
+    stroke-dasharray: 0 1000;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 100 1000;
+    stroke-dashoffset: -50;
+  }
+  100% {
+    stroke-dasharray: 0 1000;
+    stroke-dashoffset: -100;
+  }
+}
+
+/* 可选：鼠标悬停时的轻微效果 */
+.connectionLine:hover {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+/* 连接线流动动画 - 仅在需要时启用 */
+.connectionLineAnimated {
   animation: connectionFlow 3s ease-in-out infinite;
 }
 

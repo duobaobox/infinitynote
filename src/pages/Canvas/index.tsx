@@ -12,7 +12,7 @@ import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { VirtualizedNoteContainer } from "../../components/VirtualizedNoteContainer";
 import { ZoomIndicator } from "../../components/ZoomIndicator";
 import { SlotContainer } from "../../components/SlotContainer";
-import { ConnectionVisualizer } from "../../components/ConnectionVisualizer";
+import { LeaderLineVisualizer } from "../../components/LeaderLineVisualizer";
 import { useNoteStore } from "../../store/noteStore";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useConnectionStore } from "../../store/connectionStore";
@@ -24,6 +24,7 @@ import type { IconType } from "../../utils/iconRegistry";
 import type { Position, Note } from "../../types";
 import { NoteColor } from "../../types";
 import { NOTE_DEFAULT_SIZE } from "../../types/constants";
+import { Alert } from "antd";
 import styles from "./index.module.css";
 
 // 创建动态图标组件
@@ -94,6 +95,43 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     });
   }, [displaySettings]);
 
+  // 监听便签编辑连接断开事件
+  useEffect(() => {
+    const handleEditConnectionBreak = (event: CustomEvent) => {
+      const { noteId, noteTitle } = event.detail;
+      setEditAlert({
+        show: true,
+        noteTitle,
+        noteId,
+      });
+
+      // 6秒后自动隐藏
+      setTimeout(() => {
+        setEditAlert((prev) =>
+          prev.noteId === noteId
+            ? {
+                show: false,
+                noteTitle: "",
+                noteId: "",
+              }
+            : prev
+        );
+      }, 6000);
+    };
+
+    window.addEventListener(
+      "noteEditConnectionBreak",
+      handleEditConnectionBreak as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        "noteEditConnectionBreak",
+        handleEditConnectionBreak as EventListener
+      );
+    };
+  }, []);
+
   // 状态管理
   const {
     notes, // 直接订阅 notes 数组
@@ -124,6 +162,17 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     removeConnection,
     clearAllConnections,
   } = useConnectionStore();
+
+  // 编辑状态全局提醒
+  const [editAlert, setEditAlert] = useState<{
+    show: boolean;
+    noteTitle: string;
+    noteId: string;
+  }>({
+    show: false,
+    noteTitle: "",
+    noteId: "",
+  });
 
   // 使用 useRef 来避免频繁的状态更新
   const panningRef = useRef(false);
@@ -729,6 +778,21 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       {/* 独立的缩放指示器 */}
       <ZoomIndicator />
 
+      {/* 全局编辑状态提醒 */}
+      {editAlert.show && (
+        <div className={styles.globalEditAlert}>
+          <Alert
+            message={`「${editAlert.noteTitle}」编辑中，连接已断开`}
+            type="info"
+            showIcon
+            closable
+            onClose={() =>
+              setEditAlert({ show: false, noteTitle: "", noteId: "" })
+            }
+          />
+        </div>
+      )}
+
       {/* 插槽容器 - 固定在画布底部 */}
       <SlotContainer
         connectedNotes={connectedNotes}
@@ -739,7 +803,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       />
 
       {/* 连接线可视化 */}
-      <ConnectionVisualizer containerRef={canvasRef} />
+      <LeaderLineVisualizer containerRef={canvasRef} />
 
       {/* 拖动模式提示 */}
       {isDragMode && (
