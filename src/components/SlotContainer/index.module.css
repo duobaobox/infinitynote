@@ -89,8 +89,8 @@
 
 /* 修长型插槽 - 完全匹配设计稿 */
 .slotCircle {
-  width: 32px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 10px;
   background: var(--color-fill-quaternary);
   border: 1px solid var(--color-border);
