@@ -169,36 +169,39 @@
 }
 
 .tiptap-editor-prose code {
-  background: var(--color-fill-quaternary, #f0f0f0);
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
-    monospace;
-  font-size: 0.9em;
+  background: #f5f2f0;
+  color: #eb5757;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
+    Menlo, Courier, monospace;
+  font-size: 0.95em;
+  font-weight: 400;
 }
 
 .tiptap-editor-prose pre {
-  background: #00000031; /* 浅黑色背景 */
-  color: #ffffff; /* 白色文字 */
-  padding: 12px;
-  border-radius: 6px;
-  overflow-x: auto; /* 只保留水平滚动 */
-  overflow-y: hidden; /* 关闭垂直滚动 */
-  max-height: none; /* 取消最大高度限制 */
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
-    monospace;
-  font-size: 0.9em;
-  line-height: 1.4;
-  text-align: left; /* 确保文本左对齐 */
-  white-space: pre; /* 保持代码格式 */
+  background: #f5f2f0;
+  color: #222;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
+    Menlo, Courier, monospace;
+  font-size: 0.95em;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre;
+  margin: 0.5em 0;
 }
 
 .tiptap-editor-prose pre code {
   background: none;
   padding: 0;
   border-radius: 0;
-  color: inherit; /* 继承父元素的白色文字 */
-  text-align: left; /* 确保代码文本左对齐 */
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  text-align: left;
 }
 
 .tiptap-editor-prose blockquote {
