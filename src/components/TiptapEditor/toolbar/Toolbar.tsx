@@ -191,8 +191,22 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
     title: "插入图片",
     group: "media",
     onClick: (editor) => {
-      const url = window.prompt("请输入图片URL");
-      if (url) editor.chain().focus().setImage({ src: url }).run();
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = () => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          if (typeof result === 'string') {
+            editor.chain().focus().setImage({ src: result }).run();
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
     },
   },
 

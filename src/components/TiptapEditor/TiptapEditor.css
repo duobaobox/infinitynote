@@ -488,16 +488,16 @@
   max-width: 100%;
   height: auto;
   margin: 12px 0;
-  border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  /* border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); */
 }
-.ProseMirror-image.ProseMirror-selectednode {
+/* .ProseMirror-image.ProseMirror-selectednode {
   outline: 2px solid var(--color-primary, #1677ff);
   outline-offset: 2px;
 }
 .tiptap-editor-dark .ProseMirror-image {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
-}
+} */
 
 /* 滚动条样式 */
 .tiptap-editor-content::-webkit-scrollbar {
