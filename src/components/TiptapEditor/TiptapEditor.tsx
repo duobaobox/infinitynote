@@ -10,6 +10,11 @@ import { Color } from "@tiptap/extension-color";
 import { ListItem } from "@tiptap/extension-list-item";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { TaskList, TaskItem } from "@tiptap/extension-list";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { Image } from "@tiptap/extension-image";
 import type { TiptapEditorProps } from "./types/index";
 import { DEFAULT_CONFIG, CSS_CLASSES } from "./constants";
 import {
@@ -142,6 +147,19 @@ export const TiptapEditor = memo<TiptapEditorProps>(
           HTMLAttributes: {
             class: "ProseMirror-taskItem",
           },
+        }),
+        // 添加表格支持
+        Table.configure({
+          resizable: true,
+          HTMLAttributes: { class: "ProseMirror-table" },
+        }),
+        TableRow,
+        TableCell,
+        TableHeader,
+        // 图片扩展
+        Image.configure({
+          HTMLAttributes: { class: "ProseMirror-image" },
+          allowBase64: true,
         }),
       ],
       []

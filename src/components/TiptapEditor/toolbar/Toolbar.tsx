@@ -86,6 +86,66 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
     onClick: (editor) => editor.chain().focus().toggleCodeBlock().run(),
   },
 
+  // 表格功能
+  {
+    id: "insertTable",
+    icon: "表",
+    title: "插入表格",
+    group: "table",
+    onClick: (editor) =>
+      editor
+        .chain()
+        .focus()
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run(),
+  },
+  {
+    id: "addColumnBefore",
+    icon: "列+",
+    title: "左侧插入列",
+    group: "table",
+    onClick: (editor) => editor.chain().focus().addColumnBefore().run(),
+  },
+  {
+    id: "addColumnAfter",
+    icon: "列++",
+    title: "右侧插入列",
+    group: "table",
+    onClick: (editor) => editor.chain().focus().addColumnAfter().run(),
+  },
+  {
+    id: "addRowBefore",
+    icon: "行+",
+    title: "上方插入行",
+    group: "table",
+    onClick: (editor) => editor.chain().focus().addRowBefore().run(),
+  },
+  {
+    id: "addRowAfter",
+    icon: "行++",
+    title: "下方插入行",
+    group: "table",
+    onClick: (editor) => editor.chain().focus().addRowAfter().run(),
+  },
+  {
+    id: "deleteTable",
+    icon: "删表",
+    title: "删除表格",
+    group: "table",
+    onClick: (editor) => editor.chain().focus().deleteTable().run(),
+  },
+  // 图片功能
+  {
+    id: "insertImage",
+    icon: "🖼️",
+    title: "插入图片",
+    group: "media",
+    onClick: (editor) => {
+      const url = window.prompt("请输入图片URL");
+      if (url) editor.chain().focus().setImage({ src: url }).run();
+    },
+  },
+
   // 历史操作
   {
     id: "undo",
@@ -136,6 +196,15 @@ export const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
     "taskList", // 添加任务列表
     // 块级元素
     "blockquote",
+    // 表格功能
+    "insertTable",
+    "addColumnBefore",
+    "addColumnAfter",
+    "addRowBefore",
+    "addRowAfter",
+    "deleteTable",
+    // 图片功能
+    "insertImage",
     // 历史操作
     "undo",
     "redo",
