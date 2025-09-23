@@ -202,9 +202,9 @@ export const noteColorThemes = {
     green: "#f5fffa",
     pink: "#fff9f8",
     purple: "#fdf9ff",
-    orange: "#fdf9ff",
-    red: "#FFD6D6",
-    gray: "#F0F0F0",
+  orange: "#FFE7D4", // 橙色
+    red: "#FFECEC", // 红色
+    gray: "#ffffff", // 白色
     lightBlue: "#E6F7FF",
     lightGreen: "#F6FFED",
     lightPink: "#FFF0F6",

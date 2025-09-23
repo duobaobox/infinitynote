@@ -161,9 +161,9 @@ export const DEFAULT_NOTE_COLORS = [
   "#E6F3FF", // 蓝色
   "#E6FFE6", // 绿色
   "#F0E6FF", // 紫色
-  "#FFE6CC", // 橙色
-  "#FFD6D6", // 红色
-  "#F0F0F0", // 灰色
+  "#FFE7D4", // 橙色
+  "#FFECEC", // 红色
+  "#ffffff", // 白色
 ] as const;
 
 /**

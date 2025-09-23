@@ -713,14 +713,14 @@ export const NoteCard = memo<NoteCardProps>(
 
       // 十六进制颜色到颜色名称的映射
       const colorHexToName: Record<string, keyof typeof themeColors> = {
-        "#FFF2CC": "yellow",
-        "#FFE6E6": "pink",
-        "#E6F3FF": "blue",
-        "#E6FFE6": "green",
-        "#F0E6FF": "purple",
-        "#FFE6CC": "orange",
-        "#FFD6D6": "red",
-        "#F0F0F0": "gray",
+  "#FFF2CC": "yellow",
+  "#FFE6E6": "pink",
+  "#E6F3FF": "blue",
+  "#E6FFE6": "green",
+  "#F0E6FF": "purple",
+  "#FFE7D4": "orange", // 橙色
+  "#FFECEC": "red",    // 红色
+  "#ffffff": "gray",   // 白色
       };
 
       // 获取颜色名称，默认为 yellow

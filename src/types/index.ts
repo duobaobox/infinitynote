@@ -144,9 +144,9 @@ export enum NoteColor {
   BLUE = "#E6F3FF",
   GREEN = "#E6FFE6",
   PURPLE = "#F0E6FF",
-  ORANGE = "#FFE6CC",
-  RED = "#FFD6D6",
-  GRAY = "#F0F0F0",
+  ORANGE = "#FFE7D4",
+  RED = "#FFECEC",
+  GRAY = "#ffffff",
 }
 
 /**

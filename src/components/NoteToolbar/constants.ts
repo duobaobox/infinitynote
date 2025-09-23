@@ -60,9 +60,9 @@ export const COLOR_OPTIONS: ColorOption[] = [
   { name: "blue", value: "#E6F3FF", label: "蓝色" },
   { name: "green", value: "#E6FFE6", label: "绿色" },
   { name: "purple", value: "#F0E6FF", label: "紫色" },
-  { name: "orange", value: "#FFE6CC", label: "橙色" },
-  { name: "red", value: "#FFD6D6", label: "红色" },
-  { name: "gray", value: "#F0F0F0", label: "灰色" },
+  { name: "orange", value: "#FFE7D4", label: "橙色" },
+  { name: "red", value: "#FFECEC", label: "红色" },
+  { name: "gray", value: "#ffffff", label: "白色" },
 ];
 
 // 工具栏尺寸配置 - 更小巧精致
