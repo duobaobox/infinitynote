@@ -9,6 +9,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
 import { ListItem } from "@tiptap/extension-list-item";
 import { TextAlign } from "@tiptap/extension-text-align";
+import { TaskList, TaskItem } from "@tiptap/extension-list";
 import type { TiptapEditorProps } from "./types/index";
 import { DEFAULT_CONFIG, CSS_CLASSES } from "./constants";
 import {
@@ -57,54 +58,59 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
     const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
 
-    // TipTap 官方推荐的扩展配置方式 - 直接配置，简洁明了
+    // Tiptap 官方推荐的扩展配置方式 - 标准化配置
     const extensions = useMemo(
       () => [
         StarterKit.configure({
-          // 配置 StarterKit 子扩展
+          // 使用官方推荐的CSS类命名，更符合ProseMirror规范
           blockquote: {
             HTMLAttributes: {
-              class: "tiptap-blockquote",
+              class: "ProseMirror-blockquote",
             },
           },
           bulletList: {
             keepMarks: true,
             keepAttributes: false,
             HTMLAttributes: {
-              class: "tiptap-bullet-list",
+              class: "ProseMirror-bulletList",
             },
           },
           orderedList: {
             keepMarks: true,
             keepAttributes: false,
             HTMLAttributes: {
-              class: "tiptap-ordered-list",
+              class: "ProseMirror-orderedList",
             },
           },
           listItem: {
             HTMLAttributes: {
-              class: "tiptap-list-item",
+              class: "ProseMirror-listItem",
             },
           },
           codeBlock: {
             HTMLAttributes: {
-              class: "tiptap-code-block",
+              class: "ProseMirror-codeBlock",
             },
           },
           code: {
             HTMLAttributes: {
-              class: "tiptap-code",
+              class: "ProseMirror-code",
             },
           },
           heading: {
             levels: [1, 2, 3, 4, 5, 6],
             HTMLAttributes: {
-              class: "tiptap-heading",
+              class: "ProseMirror-heading",
             },
           },
           paragraph: {
             HTMLAttributes: {
-              class: "tiptap-paragraph",
+              class: "ProseMirror-paragraph",
+            },
+          },
+          horizontalRule: {
+            HTMLAttributes: {
+              class: "ProseMirror-hr",
             },
           },
           dropcursor: {
@@ -112,14 +118,30 @@ export const TiptapEditor = memo<TiptapEditorProps>(
             width: 2,
           },
         }),
-        TextStyle, // 文本样式支持
+        TextStyle.configure({
+          HTMLAttributes: {
+            class: "ProseMirror-textStyle",
+          },
+        }),
         Color.configure({
-          types: [TextStyle.name, ListItem.name], // 支持文本和列表项颜色
+          types: [TextStyle.name, ListItem.name],
         }),
         TextAlign.configure({
-          types: ["heading", "paragraph"], // 支持标题和段落对齐
+          types: ["heading", "paragraph"],
           alignments: ["left", "center", "right", "justify"],
           defaultAlignment: "left",
+        }),
+        // 添加任务列表支持
+        TaskList.configure({
+          HTMLAttributes: {
+            class: "ProseMirror-taskList",
+          },
+        }),
+        TaskItem.configure({
+          nested: true, // 支持嵌套任务
+          HTMLAttributes: {
+            class: "ProseMirror-taskItem",
+          },
         }),
       ],
       []

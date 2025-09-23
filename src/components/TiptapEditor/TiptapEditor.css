@@ -107,6 +107,148 @@
   padding: 0;
 }
 
+/* ProseMirror官方推荐的元素样式 */
+.ProseMirror-paragraph {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.ProseMirror-paragraph + .ProseMirror-paragraph {
+  margin-top: 8px;
+}
+
+.ProseMirror-heading {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ProseMirror-heading + .ProseMirror-paragraph,
+.ProseMirror-paragraph + .ProseMirror-heading {
+  margin-top: 12px;
+}
+
+.ProseMirror-blockquote {
+  margin: 8px 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--color-border, #e0e0e0);
+  font-style: italic;
+  color: var(--color-text-secondary, #666);
+}
+
+.ProseMirror-code {
+  background: #f5f2f0;
+  color: #eb5757;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
+    Menlo, Courier, monospace;
+  font-size: 0.95em;
+  font-weight: 400;
+}
+
+.ProseMirror-codeBlock {
+  background: #f5f2f0;
+  color: #222;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
+    Menlo, Courier, monospace;
+  font-size: 0.95em;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre;
+  margin: 0.5em 0;
+}
+
+.ProseMirror-codeBlock code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+}
+
+.ProseMirror-bulletList,
+.ProseMirror-orderedList {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.ProseMirror-listItem {
+  margin: 2px 0;
+}
+
+.ProseMirror-hr {
+  height: 3px;
+  background: var(--color-border, #e0e0e0);
+  border: none;
+  margin: 16px 0;
+  border-radius: 2px;
+}
+
+/* 任务列表样式 - 符合ProseMirror规范 */
+.ProseMirror-taskList {
+  list-style: none;
+  padding-left: 0;
+  margin: 8px 0;
+}
+
+.ProseMirror-taskItem {
+  display: flex;
+  align-items: flex-start;
+  margin: 4px 0;
+}
+
+.ProseMirror-taskItem label {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  user-select: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ProseMirror-taskItem input[type="checkbox"] {
+  margin: 0;
+  margin-right: 6px;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--color-primary, #1677ff);
+}
+
+.ProseMirror-taskItem > div {
+  flex: 1;
+  min-height: 1.2em;
+  line-height: 1.5;
+}
+
+/* 嵌套任务列表样式 */
+.ProseMirror-taskItem .ProseMirror-taskList {
+  margin-top: 4px;
+  padding-left: 20px;
+}
+
+/* 已完成任务的样式 */
+.ProseMirror-taskItem[data-checked="true"] > div {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* 任务列表在暗色主题下的适配 */
+.tiptap-editor-dark .ProseMirror-taskItem input[type="checkbox"] {
+  filter: brightness(0.8);
+}
+.tiptap-editor-content .ProseMirror {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  outline: none;
+  padding: 0;
+}
+
 /* 只读模式 */
 .tiptap-editor-readonly {
   background: transparent;
@@ -141,67 +283,26 @@
   opacity: 0.8;
 }
 
-/* Tiptap 编辑器内容样式 */
+/* 编辑器内容样式 - 保持通用性 */
 .tiptap-editor-prose {
   max-width: none;
 }
 
-.tiptap-editor-prose p {
-  margin: 0;
-  padding: 0;
-  line-height: 1.5;
-}
-
-.tiptap-editor-prose p + p {
-  margin-top: 8px;
-}
-
-.tiptap-editor-prose strong {
+/* 通用文本格式化 */
+.ProseMirror strong {
   font-weight: 600;
 }
 
-.tiptap-editor-prose em {
+.ProseMirror em {
   font-style: italic;
 }
 
-.tiptap-editor-prose s {
+.ProseMirror s {
   text-decoration: line-through;
 }
 
-.tiptap-editor-prose code {
-  background: #f5f2f0;
-  color: #eb5757;
-  padding: 0.2em 0.4em;
-  border-radius: 4px;
-  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
-    Menlo, Courier, monospace;
-  font-size: 0.95em;
-  font-weight: 400;
-}
-
-.tiptap-editor-prose pre {
-  background: #f5f2f0;
-  color: #222;
-  padding: 8px;
-  border-radius: 4px;
-  overflow-x: auto;
-  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
-    Menlo, Courier, monospace;
-  font-size: 0.95em;
-  line-height: 1.5;
-  text-align: left;
-  white-space: pre;
-  margin: 0.5em 0;
-}
-
-.tiptap-editor-prose pre code {
-  background: none;
-  padding: 0;
-  border-radius: 0;
-  color: inherit;
-  font-size: inherit;
-  font-family: inherit;
-  text-align: left;
+.ProseMirror u {
+  text-decoration: underline;
 }
 
 .tiptap-editor-prose blockquote {

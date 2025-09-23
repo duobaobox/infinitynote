@@ -1,111 +1,48 @@
 /**
- * Tiptap 工具栏配置和组件
+ * Tiptap 工具栏配置和组件 - 标准化实现
  */
 
 import React, { memo } from "react";
 import type { Editor } from "@tiptap/core";
 import type { ToolbarButton } from "../types/index";
 
-// 工具栏按钮配置
+// 简化的工具栏按钮配置 - 更接近Tiptap官方示例
 export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
-  // 基础文本格式
+  // 基础文本格式 - 核心功能
   {
     id: "bold",
-    icon: <strong>B</strong>,
+    icon: "B",
     title: "加粗 (Ctrl+B)",
-    group: "text-format",
+    group: "format",
     isActive: (editor) => editor.isActive("bold"),
     onClick: (editor) => editor.chain().focus().toggleBold().run(),
   },
   {
     id: "italic",
-    icon: <em>I</em>,
+    icon: "I",
     title: "斜体 (Ctrl+I)",
-    group: "text-format",
+    group: "format",
     isActive: (editor) => editor.isActive("italic"),
     onClick: (editor) => editor.chain().focus().toggleItalic().run(),
   },
   {
-    id: "underline",
-    icon: <u>U</u>,
-    title: "下划线 (Ctrl+U)",
-    group: "text-format",
-    isActive: (editor) => editor.isActive("underline"),
-    onClick: (editor) => editor.chain().focus().toggleUnderline().run(),
-  },
-  {
     id: "strike",
-    icon: <s>S</s>,
+    icon: "S",
     title: "删除线",
-    group: "text-format",
+    group: "format",
     isActive: (editor) => editor.isActive("strike"),
     onClick: (editor) => editor.chain().focus().toggleStrike().run(),
   },
   {
     id: "code",
-    icon: <code>{`</>`}</code>,
+    icon: "</>",
     title: "行内代码",
-    group: "text-format",
+    group: "format",
     isActive: (editor) => editor.isActive("code"),
     onClick: (editor) => editor.chain().focus().toggleCode().run(),
   },
 
-  // 标题组
-  {
-    id: "heading1",
-    icon: "H1",
-    title: "标题 1",
-    group: "headings",
-    isActive: (editor) => editor.isActive("heading", { level: 1 }),
-    onClick: (editor) =>
-      editor.chain().focus().toggleHeading({ level: 1 }).run(),
-  },
-  {
-    id: "heading2",
-    icon: "H2",
-    title: "标题 2",
-    group: "headings",
-    isActive: (editor) => editor.isActive("heading", { level: 2 }),
-    onClick: (editor) =>
-      editor.chain().focus().toggleHeading({ level: 2 }).run(),
-  },
-  {
-    id: "heading3",
-    icon: "H3",
-    title: "标题 3",
-    group: "headings",
-    isActive: (editor) => editor.isActive("heading", { level: 3 }),
-    onClick: (editor) =>
-      editor.chain().focus().toggleHeading({ level: 3 }).run(),
-  },
-
-  // 段落和块元素
-  {
-    id: "paragraph",
-    icon: "P",
-    title: "正文段落",
-    group: "blocks",
-    isActive: (editor) => editor.isActive("paragraph"),
-    onClick: (editor) => editor.chain().focus().setParagraph().run(),
-  },
-  {
-    id: "blockquote",
-    icon: `"`,
-    title: "引用块",
-    group: "blocks",
-    isActive: (editor) => editor.isActive("blockquote"),
-    onClick: (editor) => editor.chain().focus().toggleBlockquote().run(),
-  },
-  {
-    id: "codeBlock",
-    icon: "{ }",
-    title: "代码块",
-    group: "blocks",
-    isActive: (editor) => editor.isActive("codeBlock"),
-    onClick: (editor) => editor.chain().focus().toggleCodeBlock().run(),
-  },
-
-  // 列表
+  // 列表 - 核心功能
   {
     id: "bulletList",
     icon: "•",
@@ -122,69 +59,31 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
     isActive: (editor) => editor.isActive("orderedList"),
     onClick: (editor) => editor.chain().focus().toggleOrderedList().run(),
   },
-
-  // 对齐方式
   {
-    id: "alignLeft",
-    icon: "⫸",
-    title: "左对齐",
-    group: "alignment",
-    isActive: (editor) => editor.isActive({ textAlign: "left" }),
-    onClick: (editor) => editor.chain().focus().setTextAlign("left").run(),
-  },
-  {
-    id: "alignCenter",
-    icon: "⫯",
-    title: "居中对齐",
-    group: "alignment",
-    isActive: (editor) => editor.isActive({ textAlign: "center" }),
-    onClick: (editor) => editor.chain().focus().setTextAlign("center").run(),
-  },
-  {
-    id: "alignRight",
-    icon: "⫷",
-    title: "右对齐",
-    group: "alignment",
-    isActive: (editor) => editor.isActive({ textAlign: "right" }),
-    onClick: (editor) => editor.chain().focus().setTextAlign("right").run(),
-  },
-  {
-    id: "alignJustify",
-    icon: "⫫",
-    title: "两端对齐",
-    group: "alignment",
-    isActive: (editor) => editor.isActive({ textAlign: "justify" }),
-    onClick: (editor) => editor.chain().focus().setTextAlign("justify").run(),
+    id: "taskList",
+    icon: "☑",
+    title: "任务列表",
+    group: "lists",
+    isActive: (editor) => editor.isActive("taskList"),
+    onClick: (editor) => editor.chain().focus().toggleTaskList().run(),
   },
 
-  // 颜色工具
+  // 其他实用功能
   {
-    id: "textColor",
-    icon: "A",
-    title: "文字颜色",
-    group: "color",
-    onClick: (editor) => {
-      // 简单的颜色切换，你可以后续扩展为颜色选择器
-      const currentColor = editor.getAttributes("textStyle").color;
-      const newColor = currentColor === "#ff0000" ? "#000000" : "#ff0000";
-      editor.chain().focus().setColor(newColor).run();
-    },
-  },
-
-  // 其他工具
-  {
-    id: "horizontalRule",
-    icon: "─",
-    title: "水平分割线",
-    group: "tools",
-    onClick: (editor) => editor.chain().focus().setHorizontalRule().run(),
+    id: "blockquote",
+    icon: '"',
+    title: "引用",
+    group: "blocks",
+    isActive: (editor) => editor.isActive("blockquote"),
+    onClick: (editor) => editor.chain().focus().toggleBlockquote().run(),
   },
   {
-    id: "hardBreak",
-    icon: "↵",
-    title: "硬换行",
-    group: "tools",
-    onClick: (editor) => editor.chain().focus().setHardBreak().run(),
+    id: "codeBlock",
+    icon: "{}",
+    title: "代码块",
+    group: "blocks",
+    isActive: (editor) => editor.isActive("codeBlock"),
+    onClick: (editor) => editor.chain().focus().toggleCodeBlock().run(),
   },
 
   // 历史操作
@@ -222,55 +121,22 @@ export interface ToolbarConfig {
   compact?: boolean;
 }
 
-// 精简工具栏配置 - 只保留最常用的格式化功能
-const MINIMAL_TOOLBAR_CONFIG: ToolbarConfig = {
+// 默认工具栏配置 - 简化版
+export const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
   show: true,
   buttons: [
-    // 核心文本格式
+    // 核心格式化功能
     "bold",
     "italic",
-    "underline",
     "strike",
     "code",
     // 列表功能
     "bulletList",
     "orderedList",
-  ],
-  showGroupDividers: true,
-  position: "bottom",
-  compact: false,
-};
-
-// 完整工具栏配置 - 包含所有功能（可选）
-const FULL_TOOLBAR_CONFIG: ToolbarConfig = {
-  show: true,
-  buttons: [
-    // 文本格式
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "code",
-    // 标题
-    "heading1",
-    "heading2",
-    "heading3",
-    // 段落类型
-    "paragraph",
+    "taskList", // 添加任务列表
+    // 块级元素
     "blockquote",
-    "codeBlock",
-    // 列表
-    "bulletList",
-    "orderedList",
-    // 对齐
-    "alignLeft",
-    "alignCenter",
-    "alignRight",
-    // 颜色
-    "textColor",
-    // 工具
-    "horizontalRule",
-    // 历史
+    // 历史操作
     "undo",
     "redo",
   ],
@@ -279,37 +145,30 @@ const FULL_TOOLBAR_CONFIG: ToolbarConfig = {
   compact: false,
 };
 
-// 默认使用精简配置
-export const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = MINIMAL_TOOLBAR_CONFIG;
-
 // 工具栏组件属性
 interface ToolbarProps {
   editor: Editor;
   config: ToolbarConfig;
   className?: string;
-  updateKey?: number; // 添加更新键参数
+  updateKey?: number;
 }
 
 /**
- * 工具栏按钮组件
+ * 工具栏按钮组件 - 简化版
  */
 const ToolbarButtonComponent = memo<{
   button: ToolbarButton;
   editor: Editor;
   compact?: boolean;
-  updateKey?: number; // 添加更新键来强制重新渲染
+  updateKey?: number;
 }>(({ button, editor, compact, updateKey }) => {
   const isActive = button.isActive?.(editor) || false;
   const isDisabled = button.disabled?.(editor) || false;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    // 阻止默认行为但不阻止事件传播
     event.preventDefault();
-
     if (!isDisabled) {
       button.onClick(editor);
-      // 立即强制更新按钮状态（虽然父组件也会更新，但这样更及时）
-      // 注意：这里不需要额外的 state 更新，因为父组件会处理
     }
   };
 
@@ -322,13 +181,10 @@ const ToolbarButtonComponent = memo<{
       title={button.title}
       disabled={isDisabled}
       onClick={handleClick}
-      onMouseDown={(e) => {
-        // 防止鼠标按下事件导致编辑器失去焦点
-        e.preventDefault();
-      }}
-      tabIndex={-1} // 防止通过 Tab 键获得焦点
+      onMouseDown={(e) => e.preventDefault()}
+      tabIndex={-1}
       data-testid={`toolbar-${button.id}`}
-      data-update-key={updateKey} // 用于调试和强制更新
+      data-update-key={updateKey}
     >
       {button.icon}
     </button>
@@ -347,7 +203,7 @@ const ToolbarDivider = memo(() => (
 ToolbarDivider.displayName = "ToolbarDivider";
 
 /**
- * 工具栏主组件
+ * 工具栏主组件 - 简化版
  */
 export const Toolbar = memo<ToolbarProps>(
   ({ editor, config, className = "", updateKey }) => {
@@ -370,7 +226,7 @@ export const Toolbar = memo<ToolbarProps>(
       <div
         className={`tiptap-toolbar ${className} ${
           config.compact ? "compact" : ""
-        } ${config.position || "top"}`}
+        } ${config.position || "bottom"}`}
         role="toolbar"
         aria-label="文本编辑工具栏"
       >
@@ -402,9 +258,4 @@ export const Toolbar = memo<ToolbarProps>(
 Toolbar.displayName = "Toolbar";
 
 // 导出工具栏相关组件和配置
-export {
-  ToolbarButtonComponent,
-  ToolbarDivider,
-  MINIMAL_TOOLBAR_CONFIG,
-  FULL_TOOLBAR_CONFIG,
-};
+export { ToolbarButtonComponent, ToolbarDivider };
