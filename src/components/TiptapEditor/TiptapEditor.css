@@ -138,8 +138,8 @@
 }
 
 .ProseMirror-code {
-  background: #f5f2f0;
-  color: #eb5757;
+  background: #000000cb;
+  color: #e7e7e7;
   padding: 0.2em 0.4em;
   border-radius: 4px;
   font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
@@ -149,8 +149,8 @@
 }
 
 .ProseMirror-codeBlock {
-  background: #f5f2f0;
-  color: #222;
+  background: #000000cb;
+  color: #e7e7e7;
   padding: 8px;
   border-radius: 4px;
   overflow-x: auto;

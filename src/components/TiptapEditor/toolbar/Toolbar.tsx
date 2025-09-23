@@ -3,36 +3,12 @@
  */
 
 import React, { memo } from "react";
-// 清理当前表格所有 cell 的 colwidth 属性（官方推荐）
-function removeColWidths(editor: Editor) {
-  const { state, view } = editor;
-  let tr = state.tr;
-  let modified = false;
-  state.doc.descendants((node, pos) => {
-    if (node.type.name === 'table') {
-      node.descendants((cell, cellPos) => {
-        let needUpdate = false;
-        let newAttrs = { ...cell.attrs };
-        if (cell.attrs.colwidth) {
-          newAttrs.colwidth = null;
-          needUpdate = true;
-        }
-        if (cell.attrs.style && /width\s*:[^;]+;?/gi.test(cell.attrs.style)) {
-          newAttrs.style = cell.attrs.style.replace(/width\s*:[^;]+;?/gi, '');
-          if (!newAttrs.style.trim()) delete newAttrs.style;
-          needUpdate = true;
-        }
-        if (needUpdate) {
-          tr = tr.setNodeMarkup(pos + cellPos + 1, undefined, newAttrs);
-          modified = true;
-        }
-      });
-    }
-  });
-  if (modified) {
-    view.dispatch(tr);
-  }
-}
+import 'remixicon/fonts/remixicon.css';
+
+// 图标组件
+const Icon = ({ name }: { name: string }) => (
+  <i className={`ri-${name}`}></i>
+);
 import type { Editor } from "@tiptap/core";
 import type { ToolbarButton } from "../types/index";
 
@@ -41,86 +17,86 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
   // 基础文本格式 - 核心功能
   {
     id: "bold",
-    icon: "B",
+    icon: <Icon name="bold" />,
     title: "加粗 (Ctrl+B)",
     group: "format",
-    isActive: (editor) => editor.isActive("bold"),
+  isActive: (editor) => editor.isActive("bold"),
     onClick: (editor) => editor.chain().focus().toggleBold().run(),
   },
   {
     id: "italic",
-    icon: "I",
+    icon: <Icon name="italic" />,
     title: "斜体 (Ctrl+I)",
     group: "format",
-    isActive: (editor) => editor.isActive("italic"),
+  isActive: (editor) => editor.isActive("italic"),
     onClick: (editor) => editor.chain().focus().toggleItalic().run(),
   },
   {
     id: "strike",
-    icon: "S",
-    title: "删除线",
+    icon: <Icon name="strikethrough" />,
+    title: "删除线 (Ctrl+Shift+X)",
     group: "format",
-    isActive: (editor) => editor.isActive("strike"),
+  isActive: (editor) => editor.isActive("strike"),
     onClick: (editor) => editor.chain().focus().toggleStrike().run(),
   },
   {
     id: "code",
-    icon: "</>",
-    title: "行内代码",
+    icon: <Icon name="code-view" />,
+    title: "行内代码 (Ctrl+E)",
     group: "format",
-    isActive: (editor) => editor.isActive("code"),
+  isActive: (editor) => editor.isActive("code"),
     onClick: (editor) => editor.chain().focus().toggleCode().run(),
   },
 
   // 列表 - 核心功能
   {
     id: "bulletList",
-    icon: "•",
-    title: "无序列表",
+    icon: <Icon name="list-unordered" />,
+    title: "无序列表 (Ctrl+Shift+8)",
     group: "lists",
-    isActive: (editor) => editor.isActive("bulletList"),
+  isActive: (editor) => editor.isActive("bulletList"),
     onClick: (editor) => editor.chain().focus().toggleBulletList().run(),
   },
   {
     id: "orderedList",
-    icon: "1.",
-    title: "有序列表",
+    icon: <Icon name="list-ordered" />,
+    title: "有序列表 (Ctrl+Shift+7)",
     group: "lists",
-    isActive: (editor) => editor.isActive("orderedList"),
+  isActive: (editor) => editor.isActive("orderedList"),
     onClick: (editor) => editor.chain().focus().toggleOrderedList().run(),
   },
   {
     id: "taskList",
-    icon: "☑",
-    title: "任务列表",
+    icon: <Icon name="checkbox-multiple-line" />,
+    title: "任务列表 (无快捷键)",
     group: "lists",
-    isActive: (editor) => editor.isActive("taskList"),
+  isActive: (editor) => editor.isActive("taskList"),
     onClick: (editor) => editor.chain().focus().toggleTaskList().run(),
   },
 
   // 其他实用功能
   {
     id: "blockquote",
-    icon: '"',
-    title: "引用",
+    icon: <Icon name="double-quotes-l" />,
+    title: "引用 (Ctrl+Shift+B)",
     group: "blocks",
-    isActive: (editor) => editor.isActive("blockquote"),
+  isActive: (editor) => editor.isActive("blockquote"),
     onClick: (editor) => editor.chain().focus().toggleBlockquote().run(),
   },
   {
     id: "codeBlock",
-    icon: "{}",
-    title: "代码块",
+    icon: <Icon name="code-box-line" />,
+    title: "代码块 (Ctrl+Alt+C)",
     group: "blocks",
-    isActive: (editor) => editor.isActive("codeBlock"),
+  isActive: (editor) => editor.isActive("codeBlock"),
     onClick: (editor) => editor.chain().focus().toggleCodeBlock().run(),
   },
 
   // 表格功能
   {
     id: "insertTable",
-    icon: "表",
-    title: "插入表格",
+    icon: <Icon name="table-2" />,
+    title: "插入表格 (无快捷键)",
     group: "table",
     onClick: (editor) =>
       editor
@@ -131,64 +107,59 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
   },
   {
     id: "addColumnAfter",
-    icon: "列++",
-    title: "向右增加列",
+    icon: <Icon name="insert-column-right" />,
+    title: "向右增加列 (无快捷键)",
     group: "table",
-    disabled: (editor) => !editor.isActive('table'),
+  disabled: (editor) => !editor.can().addColumnAfter(),
     onClick: (editor) => {
       editor.chain().focus().addColumnAfter().run();
-      removeColWidths(editor);
     },
   },
   {
     id: "deleteColumn",
-    icon: "列-",
-    title: "删除列",
+    icon: <Icon name="delete-column" />,
+    title: "删除列 (无快捷键)",
     group: "table",
-    disabled: (editor) => !editor.isActive('table'),
+  disabled: (editor) => !editor.can().deleteColumn(),
     onClick: (editor) => {
       editor.chain().focus().deleteColumn().run();
-      removeColWidths(editor);
     },
   },
   {
     id: "addRowAfter",
-    icon: "行++",
-    title: "向下增加行",
+    icon: <Icon name="insert-row-bottom" />,
+    title: "向下增加行 (无快捷键)",
     group: "table",
-    disabled: (editor) => !editor.isActive('table'),
+  disabled: (editor) => !editor.can().addRowAfter(),
     onClick: (editor) => {
       editor.chain().focus().addRowAfter().run();
-      removeColWidths(editor);
     },
   },
   {
     id: "deleteRow",
-    icon: "行-",
-    title: "删除行",
+    icon: <Icon name="delete-row" />,
+    title: "删除行 (无快捷键)",
     group: "table",
-    disabled: (editor) => !editor.isActive('table'),
+  disabled: (editor) => !editor.can().deleteRow(),
     onClick: (editor) => {
       editor.chain().focus().deleteRow().run();
-      removeColWidths(editor);
     },
   },
   {
     id: "deleteTable",
-    icon: "删表",
-    title: "删除表格",
+    icon: <Icon name="delete-bin-2-line" />,
+    title: "删除表格 (无快捷键)",
     group: "table",
-    disabled: (editor) => !editor.isActive('table'),
+  disabled: (editor) => !editor.can().deleteTable(),
     onClick: (editor) => {
       editor.chain().focus().deleteTable().run();
-      removeColWidths(editor);
     },
   },
   // 图片功能
   {
     id: "insertImage",
-    icon: "🖼️",
-    title: "插入图片",
+    icon: <Icon name="image-add-line" />,
+    title: "插入图片 (无快捷键)",
     group: "media",
     onClick: (editor) => {
       const input = document.createElement('input');
@@ -213,7 +184,7 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
   // 历史操作
   {
     id: "undo",
-    icon: "↶",
+    icon: <Icon name="arrow-go-back-line" />,
     title: "撤销 (Ctrl+Z)",
     group: "history",
     disabled: (editor) => !editor.can().undo(),
@@ -221,7 +192,7 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
   },
   {
     id: "redo",
-    icon: "↷",
+    icon: <Icon name="arrow-go-forward-line" />,
     title: "重做 (Ctrl+Y)",
     group: "history",
     disabled: (editor) => !editor.can().redo(),
@@ -312,6 +283,7 @@ const ToolbarButtonComponent = memo<{
         compact ? "compact" : ""
       }`}
       title={button.title}
+      aria-label={button.title}
       disabled={isDisabled}
       onClick={handleClick}
       onMouseDown={(e) => e.preventDefault()}
