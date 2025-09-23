@@ -1,6 +1,42 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { useConnectionStore } from "../../store/connectionStore";
 
+// 动态加载 leader-line
+let LeaderLine: any = null;
+let loadPromise: Promise<any> | null = null;
+
+// 异步加载 leader-line
+const loadLeaderLine = async () => {
+  if (LeaderLine) return LeaderLine;
+  
+  // 避免重复加载
+  if (loadPromise) return loadPromise;
+  
+  loadPromise = new Promise((resolve, reject) => {
+    try {
+      // 创建 script 标签动态加载
+      const script = document.createElement('script');
+      script.src = '/leader-line.min.js';
+      script.onload = () => {
+        LeaderLine = (window as any).LeaderLine;
+        if (LeaderLine) {
+          resolve(LeaderLine);
+        } else {
+          reject(new Error('LeaderLine not found on window object'));
+        }
+      };
+      script.onerror = () => {
+        reject(new Error('Failed to load leader-line script'));
+      };
+      document.head.appendChild(script);
+    } catch (error) {
+      reject(error);
+    }
+  });
+  
+  return loadPromise;
+};
+
 // 类型定义
 interface LeaderLineInstance {
   remove(): void;
@@ -12,12 +48,6 @@ interface LeaderLineVisualizerProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-// 声明全局 LeaderLine
-declare global {
-  interface Window {
-    LeaderLine: any;
-  }
-}
 
 /**
  * Leader-Line 连接线可视化组件
@@ -47,14 +77,15 @@ export const LeaderLineVisualizer: React.FC<LeaderLineVisualizerProps> = ({
   }, []);
 
   // 创建连接线
-  const createLines = useCallback(() => {
+  const createLines = useCallback(async () => {
     if (!isMountedRef.current || connectedNotes.length === 0) {
       return;
     }
 
-    // 检查 Leader-Line 是否可用
-    if (!window.LeaderLine) {
-      console.error("LeaderLine 库未加载");
+    // 动态加载 Leader-Line
+    const LeaderLineClass = await loadLeaderLine();
+    if (!LeaderLineClass) {
+      console.error("LeaderLine 库加载失败");
       return;
     }
 
@@ -74,7 +105,7 @@ export const LeaderLineVisualizer: React.FC<LeaderLineVisualizerProps> = ({
 
         if (startElement && endElement) {
           try {
-            const line = new window.LeaderLine(startElement, endElement, {
+            const line = new LeaderLineClass(startElement, endElement, {
               // 基本样式
               color: "#52c41a", // 绿色主色调
               size: 3, // 线条粗细
@@ -144,7 +175,7 @@ export const LeaderLineVisualizer: React.FC<LeaderLineVisualizerProps> = ({
 
     if (connectedNotes.length > 0) {
       // 延迟创建，确保DOM已就绪
-      const timer = setTimeout(createLines, 100);
+      const timer = setTimeout(() => createLines(), 100);
       return () => clearTimeout(timer);
     } else {
       // 没有连接时清理现有连接线
