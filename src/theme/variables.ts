@@ -197,12 +197,12 @@ export const applyCSSVariables = (theme: "light" | "dark") => {
 // 便签颜色主题
 export const noteColorThemes = {
   light: {
-    yellow: "#FFF2CC",
-    pink: "#FFE6E6",
-    blue: "#E6F3FF",
-    green: "#E6FFE6",
-    purple: "#F0E6FF",
-    orange: "#FFE6CC",
+    yellow: "#fffdee",
+    blue: "#f2fbff",
+    green: "#f5fffa",
+    pink: "#fff9f8",
+    purple: "#fdf9ff",
+    orange: "#fdf9ff",
     red: "#FFD6D6",
     gray: "#F0F0F0",
     lightBlue: "#E6F7FF",

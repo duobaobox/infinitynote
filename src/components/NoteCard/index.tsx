@@ -51,8 +51,12 @@ export const NoteCard = memo<NoteCardProps>(
     } = useNoteStore();
 
     // 连接状态
-    const { isNoteConnected, addConnection, canAddConnection } =
-      useConnectionStore();
+    const {
+      isNoteConnected,
+      addConnection,
+      canAddConnection,
+      removeConnection,
+    } = useConnectionStore();
     const [isHovered, setIsHovered] = useState(false);
 
     // 编辑状态
@@ -61,6 +65,18 @@ export const NoteCard = memo<NoteCardProps>(
     // 工具栏显示状态
     const [showToolbar, setShowToolbar] = useState(false);
 
+    // 编辑状态时断开所有连接线
+    useEffect(() => {
+      if (isEditing) {
+        removeConnection(note.id);
+      }
+    }, [isEditing, note.id, removeConnection]);
+    // 退出编辑时自动隐藏悬浮
+    useEffect(() => {
+      if (!isEditing) {
+        setIsHovered(false);
+      }
+    }, [isEditing]);
     // 提示词模板选择器状态
     const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
@@ -762,8 +778,14 @@ export const NoteCard = memo<NoteCardProps>(
             {...(!isEditing && !isResizing ? attributes : {})}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={() => {
+              if (isEditing) return;
+              setIsHovered(true);
+            }}
+            onMouseLeave={() => {
+              if (isEditing) return;
+              setIsHovered(false);
+            }}
             onDoubleClick={handleDoubleClick}
           >
             {isSelected && <div className={styles.selectionBorder} />}
@@ -845,13 +867,14 @@ export const NoteCard = memo<NoteCardProps>(
             </div>
 
             {/* 连接点组件 - 左下角 */}
-            <ConnectionPoint
-              noteId={note.id}
-              isConnected={isNoteConnected(note.id)}
-              onConnect={handleConnectionClick}
-              isEditingHidden={isEditing}
-              isNoteHovered={isHovered}
-            />
+            {!isEditing && (
+              <ConnectionPoint
+                noteId={note.id}
+                isConnected={isNoteConnected(note.id)}
+                onConnect={handleConnectionClick}
+                isNoteHovered={isHovered && !isEditing}
+              />
+            )}
 
             {/* 缩放控件 - 只显示右下角，悬浮或选中时显示 */}
             {(isSelected || isHovered || isResizing) && (

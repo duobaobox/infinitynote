@@ -17,13 +17,17 @@
   z-index: 100; /* 大幅提高z-index确保在最上层 */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); /* 增加阴影增强可见性 */
 }
+/* 便签悬浮时显示连接点 */
+.connectionPoint.noteHovered {
+  opacity: 1;
+}
 
 /* 连接点内部的圆点 */
 .connectionDot {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #52c41a; /* 改为绿色，对应设计稿 */
+  background: #1890ff; /* 未连接为蓝色 */
   border: 1px solid rgba(255, 255, 255, 1);
   transition: all 0.2s ease;
   margin: auto;
