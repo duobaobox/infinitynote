@@ -317,6 +317,20 @@ export const useNoteStore = create<NoteStore>()(
           const noteToDelete = get().notes.find((note) => note.id === id);
           const canvasId = noteToDelete?.canvasId;
 
+          // === 新增：删除所有与该便签相关的连接线 ===
+          try {
+            const { useConnectionStore } = await import("./connectionStore");
+            const connectionStore = useConnectionStore.getState();
+            // 移除所有与该便签相关的连接
+            connectionStore.connectedNotes
+              .filter((connNote) => connNote.id === id)
+              .forEach((connNote) => {
+                connectionStore.removeConnection(connNote.id);
+              });
+          } catch (e) {
+            console.warn("移除便签相关连接线失败（可忽略）:", e);
+          }
+
           // 先更新内存状态
           set((state) => ({
             notes: state.notes.filter((note) => note.id !== id),
@@ -349,6 +363,19 @@ export const useNoteStore = create<NoteStore>()(
       // 删除多个便签
       deleteNotes: async (ids: string[]) => {
         try {
+          // === 新增：批量删除所有相关连接线 ===
+          try {
+            const { useConnectionStore } = await import("./connectionStore");
+            const connectionStore = useConnectionStore.getState();
+            connectionStore.connectedNotes
+              .filter((connNote) => ids.includes(connNote.id))
+              .forEach((connNote) => {
+                connectionStore.removeConnection(connNote.id);
+              });
+          } catch (e) {
+            console.warn("批量移除便签相关连接线失败（可忽略）:", e);
+          }
+
           // 先更新内存状态
           set((state) => ({
             notes: state.notes.filter((note) => !ids.includes(note.id)),
