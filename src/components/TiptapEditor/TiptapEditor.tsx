@@ -150,7 +150,7 @@ export const TiptapEditor = memo<TiptapEditorProps>(
         }),
         // 添加表格支持
         Table.configure({
-          resizable: true,
+          resizable: false, // 禁用手动调整列宽以保持等宽
           HTMLAttributes: { class: "ProseMirror-table" },
         }),
         TableRow,

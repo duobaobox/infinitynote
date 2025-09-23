@@ -3,6 +3,36 @@
  */
 
 import React, { memo } from "react";
+// 清理当前表格所有 cell 的 colwidth 属性（官方推荐）
+function removeColWidths(editor: Editor) {
+  const { state, view } = editor;
+  let tr = state.tr;
+  let modified = false;
+  state.doc.descendants((node, pos) => {
+    if (node.type.name === 'table') {
+      node.descendants((cell, cellPos) => {
+        let needUpdate = false;
+        let newAttrs = { ...cell.attrs };
+        if (cell.attrs.colwidth) {
+          newAttrs.colwidth = null;
+          needUpdate = true;
+        }
+        if (cell.attrs.style && /width\s*:[^;]+;?/gi.test(cell.attrs.style)) {
+          newAttrs.style = cell.attrs.style.replace(/width\s*:[^;]+;?/gi, '');
+          if (!newAttrs.style.trim()) delete newAttrs.style;
+          needUpdate = true;
+        }
+        if (needUpdate) {
+          tr = tr.setNodeMarkup(pos + cellPos + 1, undefined, newAttrs);
+          modified = true;
+        }
+      });
+    }
+  });
+  if (modified) {
+    view.dispatch(tr);
+  }
+}
 import type { Editor } from "@tiptap/core";
 import type { ToolbarButton } from "../types/index";
 
@@ -100,39 +130,59 @@ export const DEFAULT_TOOLBAR_BUTTONS: ToolbarButton[] = [
         .run(),
   },
   {
-    id: "addColumnBefore",
-    icon: "列+",
-    title: "左侧插入列",
-    group: "table",
-    onClick: (editor) => editor.chain().focus().addColumnBefore().run(),
-  },
-  {
     id: "addColumnAfter",
     icon: "列++",
-    title: "右侧插入列",
+    title: "向右增加列",
     group: "table",
-    onClick: (editor) => editor.chain().focus().addColumnAfter().run(),
+    disabled: (editor) => !editor.isActive('table'),
+    onClick: (editor) => {
+      editor.chain().focus().addColumnAfter().run();
+      removeColWidths(editor);
+    },
   },
   {
-    id: "addRowBefore",
-    icon: "行+",
-    title: "上方插入行",
+    id: "deleteColumn",
+    icon: "列-",
+    title: "删除列",
     group: "table",
-    onClick: (editor) => editor.chain().focus().addRowBefore().run(),
+    disabled: (editor) => !editor.isActive('table'),
+    onClick: (editor) => {
+      editor.chain().focus().deleteColumn().run();
+      removeColWidths(editor);
+    },
   },
   {
     id: "addRowAfter",
     icon: "行++",
-    title: "下方插入行",
+    title: "向下增加行",
     group: "table",
-    onClick: (editor) => editor.chain().focus().addRowAfter().run(),
+    disabled: (editor) => !editor.isActive('table'),
+    onClick: (editor) => {
+      editor.chain().focus().addRowAfter().run();
+      removeColWidths(editor);
+    },
+  },
+  {
+    id: "deleteRow",
+    icon: "行-",
+    title: "删除行",
+    group: "table",
+    disabled: (editor) => !editor.isActive('table'),
+    onClick: (editor) => {
+      editor.chain().focus().deleteRow().run();
+      removeColWidths(editor);
+    },
   },
   {
     id: "deleteTable",
     icon: "删表",
     title: "删除表格",
     group: "table",
-    onClick: (editor) => editor.chain().focus().deleteTable().run(),
+    disabled: (editor) => !editor.isActive('table'),
+    onClick: (editor) => {
+      editor.chain().focus().deleteTable().run();
+      removeColWidths(editor);
+    },
   },
   // 图片功能
   {
@@ -198,10 +248,10 @@ export const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
     "blockquote",
     // 表格功能
     "insertTable",
-    "addColumnBefore",
     "addColumnAfter",
-    "addRowBefore",
+    "deleteColumn",
     "addRowAfter",
+    "deleteRow",
     "deleteTable",
     // 图片功能
     "insertImage",
