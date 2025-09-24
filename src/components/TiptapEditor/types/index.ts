@@ -147,10 +147,6 @@ export interface TiptapEditorProps {
   onEmpty?: () => void;
   /** 编辑器创建完成的回调 */
   onEditorReady?: (editor: Editor) => void;
-  /** 是否启用自动滚动到底部 */
-  enableAutoScroll?: boolean;
-  /** 自动滚动的行为 */
-  autoScrollBehavior?: ScrollBehavior;
 }
 
 // 错误类型

@@ -2,10 +2,9 @@
  * 思考过程显示组件 - 精简版
  */
 
-import { memo, useEffect } from "react";
+import { memo, useEffect, useRef } from "react";
 import type { AICustomProperties } from "../../types/ai";
 import { AIGenerationPhase } from "../../types/ai";
-import { useAutoScroll } from "../../hooks";
 import styles from "./ThinkingChainDisplay.module.css";
 
 interface ThinkingChainDisplayProps {
@@ -35,20 +34,21 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
       aiStatus?.isStreaming === true && aiStatus?.generated !== true;
     const generationPhase = aiStatus?.generationPhase;
 
-    // 自动滚动功能 - 在思维链生成时自动滚动到最新内容
-    const { containerRef, triggerAutoScroll } = useAutoScroll({
-      enabled: isStreaming && !isCollapsed,
-      behavior: "smooth",
-      delay: 100,
-      threshold: 20,
-    });
+    const contentRef = useRef<HTMLDivElement>(null);
 
-    // 当思维链内容更新时触发自动滚动
+    // 当思维链内容更新时自动滚动到底部
     useEffect(() => {
-      if (isStreaming && !isCollapsed && thinkingData?.steps?.length) {
-        triggerAutoScroll();
+      if (isStreaming && !isCollapsed && thinkingData?.steps?.length && contentRef.current) {
+        const container = contentRef.current;
+        // 使用轻微延迟确保内容已渲染
+        setTimeout(() => {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth',
+          });
+        }, 50);
       }
-    }, [isStreaming, isCollapsed, thinkingData?.steps?.length, triggerAutoScroll]);
+    }, [isStreaming, isCollapsed, thinkingData?.steps?.length]);
 
     // 注释掉这个逻辑，让头部始终显示
     // if (!thinkingData?.steps?.length && !isStreaming) {
@@ -123,7 +123,7 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
         </div>
 
         {!isCollapsed && (
-          <div className={styles.thinkingContent} ref={containerRef}>
+          <div className={styles.thinkingContent} ref={contentRef}>
             {validSteps.length > 0 ? (
               validSteps.map((step) => (
                 <div key={step.id} className={styles.thinkingText}>

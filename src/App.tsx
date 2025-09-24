@@ -8,6 +8,8 @@ import { ThemeProvider } from "./theme";
 import ErrorBoundary from "./components/ErrorBoundary";
 // 引入Ant Design App组件
 import { App as AntdApp } from "antd";
+// 引入AI滚动调试面板
+import { AIScrollDebugPanel } from "./components/AIScrollDebugPanel";
 
 // 引入全局样式
 import "./App.css";
@@ -77,6 +79,7 @@ function App() {
           <ErrorBoundary>
             <AntdApp>
               <Main />
+              <AIScrollDebugPanel />
             </AntdApp>
           </ErrorBoundary>
         </div>

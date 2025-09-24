@@ -31,12 +31,6 @@ export function useAutoScroll(options: AutoScrollOptions) {
   const scrollTimeoutRef = useRef<number | undefined>(undefined);
   const lastScrollTopRef = useRef(0);
 
-  // 检查是否接近底部
-  const isNearBottom = useCallback((element: HTMLDivElement): boolean => {
-    const { scrollTop, scrollHeight, clientHeight } = element;
-    return scrollHeight - scrollTop - clientHeight <= threshold;
-  }, [threshold]);
-
   // 滚动到底部
   const scrollToBottom = useCallback((element: HTMLDivElement) => {
     if (scrollTimeoutRef.current) {
@@ -44,19 +38,28 @@ export function useAutoScroll(options: AutoScrollOptions) {
     }
 
     scrollTimeoutRef.current = setTimeout(() => {
-      // 只在用户没有主动滚动的情况下才自动滚动
-      const wasNearBottom = isNearBottom(element);
-      const hasUserScrolled = Math.abs(element.scrollTop - lastScrollTopRef.current) > 10;
-
-      if (wasNearBottom || !hasUserScrolled) {
+      // 检查用户是否主动向上滚动了很多
+      const currentScrollTop = element.scrollTop;
+      const scrollHeight = element.scrollHeight;
+      const clientHeight = element.clientHeight;
+      
+      // 如果用户明显向上滚动了一大段距离，则不自动滚动
+      const userScrolledUp = lastScrollTopRef.current - currentScrollTop > 50;
+      const isAtBottom = scrollHeight - currentScrollTop - clientHeight <= threshold;
+      
+      // 如果用户没有明显向上滚动，或者已经接近底部，就自动滚动
+      if (!userScrolledUp || isAtBottom) {
         element.scrollTo({
           top: element.scrollHeight,
           behavior,
         });
         lastScrollTopRef.current = element.scrollHeight;
+      } else {
+        // 更新记录的滚动位置，但不强制滚动
+        lastScrollTopRef.current = currentScrollTop;
       }
     }, delay);
-  }, [behavior, delay, isNearBottom]);
+  }, [behavior, delay, threshold]);
 
   // 手动触发滚动到底部
   const forceScrollToBottom = useCallback(() => {
@@ -79,6 +82,21 @@ export function useAutoScroll(options: AutoScrollOptions) {
 
     scrollToBottom(element);
   }, [enabled, scrollToBottom]);
+
+  // 强制自动滚动（用于AI生成时）
+  const forceAutoScroll = useCallback(() => {
+    if (!enabled) return;
+    
+    const element = containerRef.current;
+    if (!element) return;
+    
+    // 强制滚动到底部，不考虑用户滚动行为
+    element.scrollTo({
+      top: element.scrollHeight,
+      behavior,
+    });
+    lastScrollTopRef.current = element.scrollHeight;
+  }, [enabled, behavior]);
 
   // 监听用户滚动行为
   useEffect(() => {
@@ -108,5 +126,6 @@ export function useAutoScroll(options: AutoScrollOptions) {
     containerRef,
     triggerAutoScroll,
     forceScrollToBottom,
+    forceAutoScroll,
   };
 }
