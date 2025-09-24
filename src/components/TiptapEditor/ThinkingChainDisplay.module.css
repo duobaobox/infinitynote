@@ -88,7 +88,6 @@
   margin-bottom: 8px; /* 增加间距 */
   padding: 6px 12px; /* 增加内边距 */
   border-left: 3px solid #1890ff;
-  background: rgba(24, 144, 255, 0.05); /* 添加淡蓝色背景 */
   border-radius: 0 4px 4px 0; /* 添加右侧圆角 */
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -102,7 +101,6 @@
 
 /* 思考文本悬浮效果 */
 .thinkingText:hover {
-  background: rgba(24, 144, 255, 0.08);
   transition: background-color 0.2s ease;
 }
 
