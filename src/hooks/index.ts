@@ -10,5 +10,14 @@ export {
   clearLocalStorage,
   getLocalStorageSize,
 } from "./useLocalStorage";
+export {
+  useScrollbarDetection,
+  useVerticalScrollbarDetection,
+  useHorizontalScrollbarDetection,
+} from "./useScrollbarDetection";
 
 export type { KeyboardShortcut } from "./useKeyboardShortcuts";
+export type {
+  ScrollbarState,
+  UseScrollbarDetectionOptions,
+} from "./useScrollbarDetection";

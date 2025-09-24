@@ -14,6 +14,7 @@ import type { PromptTemplate } from "../../config/promptTemplates";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import { ConnectionPoint } from "../ConnectionPoint";
 import { useConnectionStore } from "../../store/connectionStore";
+import { useVerticalScrollbarDetection } from "../../hooks/useScrollbarDetection";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -486,6 +487,37 @@ export const NoteCard = memo<NoteCardProps>(
     // 当前便签的引用
     const currentNoteRef = useRef<HTMLDivElement>(null);
 
+    // ProseMirror滚动容器的引用 - 用于滚动条检测
+    const [proseMirrorElement, setProseMirrorElement] =
+      useState<HTMLElement | null>(null);
+
+    // 检测TiptapEditor内容区域是否有垂直滚动条
+    const hasVerticalScrollbar = useVerticalScrollbarDetection(
+      proseMirrorElement,
+      {
+        debounceDelay: 16, // 约一个动画帧的时间
+        immediate: false, // 保持防抖，但使用很短的延迟
+      }
+    );
+
+    // 当编辑状态或便签尺寸变化时，重新获取ProseMirror元素
+    useEffect(() => {
+      if (currentNoteRef.current) {
+        // 使用requestAnimationFrame代替setTimeout，更快响应
+        const frameId = requestAnimationFrame(() => {
+          const proseMirror = currentNoteRef.current?.querySelector(
+            ".ProseMirror"
+          ) as HTMLElement;
+          setProseMirrorElement(proseMirror);
+        });
+
+        return () => cancelAnimationFrame(frameId);
+      } else {
+        // 便签引用不存在时清除引用
+        setProseMirrorElement(null);
+      }
+    }, [isEditing, note.size, note.content]); // 添加note.content以在内容变化时重新检测
+
     // 处理点击外部退出编辑模式和关闭工具栏
     const handleClickOutside = useCallback(
       (e: MouseEvent) => {
@@ -713,14 +745,14 @@ export const NoteCard = memo<NoteCardProps>(
 
       // 十六进制颜色到颜色名称的映射
       const colorHexToName: Record<string, keyof typeof themeColors> = {
-  "#FFF2CC": "yellow",
-  "#FFE6E6": "pink",
-  "#E6F3FF": "blue",
-  "#E6FFE6": "green",
-  "#F0E6FF": "purple",
-  "#FFE7D4": "orange", // 橙色
-  "#FFECEC": "red",    // 红色
-  "#ffffff": "gray",   // 白色
+        "#FFF2CC": "yellow",
+        "#FFE6E6": "pink",
+        "#E6F3FF": "blue",
+        "#E6FFE6": "green",
+        "#F0E6FF": "purple",
+        "#FFE7D4": "orange", // 橙色
+        "#FFECEC": "red", // 红色
+        "#ffffff": "gray", // 白色
       };
 
       // 获取颜色名称，默认为 yellow
@@ -839,7 +871,11 @@ export const NoteCard = memo<NoteCardProps>(
             )}
 
             {/* 便签内容区域 - 编辑器 */}
-            <div className={styles.noteContent}>
+            <div
+              className={`${styles.noteContent} ${
+                hasVerticalScrollbar ? styles.hasScrollbar : styles.noScrollbar
+              }`}
+            >
               <TiptapEditor
                 content={
                   // 如果正在生成AI内容且有流式数据，显示流式内容；否则显示原内容
