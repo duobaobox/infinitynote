@@ -16,7 +16,7 @@ import type { AIGenerationOptions } from "../../types/ai";
  */
 class OpenAIRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
-    return {
+    const requestBody: any = {
       model: options.model || "gpt-3.5-turbo",
       messages: [
         {
@@ -24,10 +24,20 @@ class OpenAIRequestBuilder implements RequestBodyBuilder {
           content: options.prompt,
         },
       ],
-      stream: true,
-      temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 1000,
+      stream: options.stream ?? true, // 默认启用流式输出
     };
+    
+    // 只有明确指定了temperature才设置，否则使用API默认值
+    if (options.temperature !== undefined) {
+      requestBody.temperature = options.temperature;
+    }
+    
+    // 只有明确指定了maxTokens才设置，否则使用API默认值
+    if (options.maxTokens) {
+      requestBody.max_tokens = options.maxTokens;
+    }
+    
+    return requestBody;
   }
 }
 
@@ -63,7 +73,7 @@ class OpenAIResponseParser implements ResponseParser {
     }
   }
 
-  extractThinkingFromChunk(chunk: string): string | null {
+  extractThinkingFromChunk(_chunk: string): string | null {
     // OpenAI不支持思维链
     return null;
   }
@@ -86,8 +96,6 @@ export class OpenAIProvider extends BaseAIProvider {
     supportedModels: ["gpt-4", "gpt-4o", "gpt-3.5-turbo"],
     supportsStreaming: true,
     supportsThinking: false, // OpenAI不支持思维链显示
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 1000,
   };
 
   protected readonly requestBuilder = new OpenAIRequestBuilder();

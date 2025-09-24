@@ -62,6 +62,7 @@ export interface AIGenerationOptions {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  stream?: boolean;
   onStream?: (content: string, aiData?: AICustomProperties["ai"]) => void;
   onComplete?: (finalContent: string, aiData: AICustomProperties["ai"]) => void;
   onError?: (error: Error) => void;
@@ -147,6 +148,7 @@ export interface AISettings {
   /** 生成参数 */
   temperature: number;
   maxTokens: number;
+  stream: boolean;
   /** 是否自动保存AI生成的内容 */
   autoSave: boolean;
 

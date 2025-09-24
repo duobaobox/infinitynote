@@ -18,7 +18,7 @@ import { useTheme } from "../../../theme";
 
 export interface ModelSettingsContainerProps {
   /** 设置变更回调（用于向后兼容） */
-  onSettingChange?: (key: string, value: any) => void;
+  onSettingChange?: (key: string | number | symbol, value: any) => void;
 }
 
 /**

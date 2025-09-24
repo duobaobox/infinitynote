@@ -116,7 +116,8 @@ class AIService {
     globalShowThinking: true,
     // 生成参数
     temperature: 0.7,
-    maxTokens: 1000,
+    maxTokens: 3500,
+    stream: true,
     autoSave: true,
 
     // 向后兼容字段
@@ -455,6 +456,7 @@ class AIService {
       model: options.model || activeConfig.model,
       temperature: options.temperature ?? this.currentSettings.temperature,
       maxTokens: options.maxTokens ?? this.currentSettings.maxTokens,
+      stream: options.stream ?? this.currentSettings.stream,
       generatedContent: "",
       status: "success",
       duration: 0,
@@ -524,6 +526,7 @@ class AIService {
         model: historyRecord.model,
         temperature: historyRecord.temperature,
         maxTokens: historyRecord.maxTokens,
+        stream: historyRecord.stream,
         // 包装回调函数以收集生成内容
         onStream: (content, aiData) => {
           historyRecord.generatedContent = content;

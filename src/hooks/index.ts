@@ -15,9 +15,11 @@ export {
   useVerticalScrollbarDetection,
   useHorizontalScrollbarDetection,
 } from "./useScrollbarDetection";
+export { useAutoScroll } from "./useAutoScroll";
 
 export type { KeyboardShortcut } from "./useKeyboardShortcuts";
 export type {
   ScrollbarState,
   UseScrollbarDetectionOptions,
 } from "./useScrollbarDetection";
+export type { AutoScrollOptions } from "./useAutoScroll";

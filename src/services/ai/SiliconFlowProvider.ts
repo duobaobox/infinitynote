@@ -18,7 +18,7 @@ import type { AIGenerationOptions } from "../../types/ai";
  */
 class SiliconFlowRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
-    return {
+    const requestBody: any = {
       model: options.model || "deepseek-chat",
       messages: [
         {
@@ -26,10 +26,20 @@ class SiliconFlowRequestBuilder implements RequestBodyBuilder {
           content: options.prompt,
         },
       ],
-      stream: true,
-      temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 2000,
+      stream: options.stream ?? true, // 默认启用流式输出
     };
+    
+    // 只有明确指定了temperature才设置，否则使用API默认值
+    if (options.temperature !== undefined) {
+      requestBody.temperature = options.temperature;
+    }
+    
+    // 只有明确指定了maxTokens才设置，否则使用API默认值
+    if (options.maxTokens) {
+      requestBody.max_tokens = options.maxTokens;
+    }
+    
+    return requestBody;
   }
 }
 
@@ -66,7 +76,7 @@ class SiliconFlowResponseParser implements ResponseParser {
     }
   }
 
-  extractThinkingFromChunk(chunk: string): string | null {
+  extractThinkingFromChunk(_chunk: string): string | null {
     // 硅基流动作为代理服务，不支持思维链
     return null;
   }
@@ -89,8 +99,6 @@ export class SiliconFlowProvider extends BaseAIProvider {
     supportedModels: ["deepseek-chat", "qwen-72b-chat", "internlm2_5-7b-chat"],
     supportsStreaming: true,
     supportsThinking: false, // 作为代理服务，不支持思维链
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 2000,
   };
 
   protected readonly requestBuilder = new SiliconFlowRequestBuilder();

@@ -30,10 +30,6 @@ export interface AIProviderConfig {
   supportsStreaming: boolean;
   /** 是否支持思维链 */
   supportsThinking: boolean;
-  /** 默认温度参数 */
-  defaultTemperature?: number;
-  /** 默认最大Token数 */
-  defaultMaxTokens?: number;
 }
 
 /**

@@ -268,7 +268,8 @@ export class ConfigValidator {
       },
       globalShowThinking: oldConfig.showThinking ?? true,
       temperature: oldConfig.temperature ?? 0.7,
-      maxTokens: oldConfig.maxTokens ?? 4000,
+      maxTokens: oldConfig.maxTokens ?? 3500,
+      stream: oldConfig.stream ?? true,
       autoSave: oldConfig.autoSave ?? true,
       
       // 向后兼容字段

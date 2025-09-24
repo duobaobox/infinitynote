@@ -899,6 +899,9 @@ export const NoteCard = memo<NoteCardProps>(
                 onBlur={handleEditorBlur}
                 onEscape={handleEditorEscape}
                 debounceDelay={300}
+                // 启用自动滚动功能 - 在AI生成时自动滚动到最新内容
+                enableAutoScroll={aiGenerating[note.id]}
+                autoScrollBehavior="smooth"
               />
             </div>
 

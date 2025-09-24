@@ -16,7 +16,7 @@ import type { AIGenerationOptions } from "../../types/ai";
  */
 class AnthropicRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
-    return {
+    const requestBody: any = {
       model: options.model || "claude-3-sonnet",
       messages: [
         {
@@ -24,10 +24,20 @@ class AnthropicRequestBuilder implements RequestBodyBuilder {
           content: options.prompt,
         },
       ],
-      stream: true,
-      temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 1000,
+      stream: options.stream ?? true, // 默认启用流式输出
     };
+    
+    // 只有明确指定了temperature才设置，否则使用API默认值
+    if (options.temperature !== undefined) {
+      requestBody.temperature = options.temperature;
+    }
+    
+    // 只有明确指定了maxTokens才设置，否则使用API默认值
+    if (options.maxTokens) {
+      requestBody.max_tokens = options.maxTokens;
+    }
+    
+    return requestBody;
   }
 }
 
@@ -65,7 +75,7 @@ class AnthropicResponseParser implements ResponseParser {
     }
   }
 
-  extractThinkingFromChunk(chunk: string): string | null {
+  extractThinkingFromChunk(_chunk: string): string | null {
     // Anthropic暂时不支持思维链
     return null;
   }
@@ -90,8 +100,6 @@ export class AnthropicProvider extends BaseAIProvider {
     supportedModels: ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
     supportsStreaming: true,
     supportsThinking: false, // Claude暂时不支持思维链
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 1000,
   };
 
   protected readonly requestBuilder = new AnthropicRequestBuilder();

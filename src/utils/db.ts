@@ -56,6 +56,7 @@ export interface AIHistoryDB {
   model: string; // 使用的模型
   temperature: number; // 生成参数
   maxTokens: number; // 最大token数
+  stream: boolean; // 是否使用流式输出
   generatedContent: string; // 生成的内容
   thinkingChain?: string; // 思维链内容（JSON字符串）
   status: "success" | "error" | "cancelled"; // 生成状态

@@ -16,7 +16,7 @@ import type { AIGenerationOptions } from "../../types/ai";
  */
 class ZhipuRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
-    return {
+    const requestBody: any = {
       model: options.model || "glm-4",
       messages: [
         {
@@ -24,10 +24,20 @@ class ZhipuRequestBuilder implements RequestBodyBuilder {
           content: options.prompt,
         },
       ],
-      stream: true,
-      temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 1000,
+      stream: options.stream ?? true, // 默认启用流式输出
     };
+    
+    // 只有明确指定了temperature才设置，否则使用API默认值
+    if (options.temperature !== undefined) {
+      requestBody.temperature = options.temperature;
+    }
+    
+    // 只有明确指定了maxTokens才设置，否则使用API默认值
+    if (options.maxTokens) {
+      requestBody.max_tokens = options.maxTokens;
+    }
+    
+    return requestBody;
   }
 }
 
@@ -109,8 +119,6 @@ export class ZhipuAIProvider extends BaseAIProvider {
     supportedModels: ["glm-4", "glm-4-plus"],
     supportsStreaming: true,
     supportsThinking: true,
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 1000,
   };
 
   protected readonly requestBuilder = new ZhipuRequestBuilder();

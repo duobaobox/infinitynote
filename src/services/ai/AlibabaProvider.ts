@@ -16,6 +16,20 @@ import type { AIGenerationOptions } from "../../types/ai";
  */
 class AlibabaRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
+    const parameters: any = {
+      stream: options.stream ?? true, // 默认启用流式输出
+    };
+    
+    // 只有明确指定了temperature才设置，否则使用API默认值
+    if (options.temperature !== undefined) {
+      parameters.temperature = options.temperature;
+    }
+    
+    // 只有明确指定了maxTokens才设置，否则使用API默认值
+    if (options.maxTokens) {
+      parameters.max_tokens = options.maxTokens;
+    }
+
     return {
       model: options.model || "qwen-turbo",
       input: {
@@ -26,11 +40,7 @@ class AlibabaRequestBuilder implements RequestBodyBuilder {
           },
         ],
       },
-      parameters: {
-        temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 2000,
-        stream: true,
-      },
+      parameters,
     };
   }
 }
@@ -96,8 +106,6 @@ export class AlibabaProvider extends BaseAIProvider {
     supportedModels: ["qwen-plus", "qwen-turbo", "qwen-max"],
     supportsStreaming: true,
     supportsThinking: false, // 暂时不支持思维链，待官方API更新
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 2000,
   };
 
   protected readonly requestBuilder = new AlibabaRequestBuilder();

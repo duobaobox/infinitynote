@@ -29,7 +29,7 @@ class DeepSeekRequestBuilder implements RequestBodyBuilder {
       model = "deepseek-chat";
     }
 
-    return {
+    const requestBody: any = {
       model,
       messages: [
         {
@@ -37,10 +37,20 @@ class DeepSeekRequestBuilder implements RequestBodyBuilder {
           content: options.prompt,
         },
       ],
-      stream: true,
-      temperature: options.temperature || 0.7,
-      max_tokens: options.maxTokens || 2000,
+      stream: options.stream ?? true, // 默认启用流式输出
     };
+    
+    // 只有明确指定了temperature才设置，否则使用API默认值
+    if (options.temperature !== undefined) {
+      requestBody.temperature = options.temperature;
+    }
+    
+    // 只有明确指定了maxTokens才设置，否则使用API默认值
+    if (options.maxTokens) {
+      requestBody.max_tokens = options.maxTokens;
+    }
+    
+    return requestBody;
   }
 }
 
@@ -136,8 +146,6 @@ export class DeepSeekProvider extends BaseAIProvider {
     supportedModels: ["deepseek-chat", "deepseek-reasoner"],
     supportsStreaming: true,
     supportsThinking: true, // 支持reasoning模型的思维链
-    defaultTemperature: 0.7,
-    defaultMaxTokens: 2000,
   };
 
   protected readonly requestBuilder = new DeepSeekRequestBuilder();

@@ -1,13 +1,11 @@
 import React, { useState, useCallback, useEffect } from "react";
 import {
-  Space,
   Typography,
   Card,
   Form,
   Slider,
   Switch,
   InputNumber,
-  Divider,
 } from "antd";
 import { useTheme } from "../../../theme";
 import type { ModelSettings } from "../types";
@@ -23,10 +21,9 @@ export interface ModelSettingsTabProps {
 }
 
 const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
-  settings,
   onSettingChange,
 }) => {
-  const { isDark } = useTheme();
+  useTheme();
   const [aiSettings, setAiSettings] = useState(() =>
     aiService.getSettingsSync()
   );
@@ -55,6 +52,14 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     [aiSettings, onSettingChange]
   );
 
+  // 创建兼容的设置变更处理函数
+  const handleCompatibleSettingChange = useCallback(
+    (key: string | number | symbol, value: any) => {
+      onSettingChange(key as keyof ModelSettings, value);
+    },
+    [onSettingChange]
+  );
+
   return (
     <div
       className={styles.contentSection}
@@ -68,7 +73,7 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     >
       {/* 新的模型设置容器组件 */}
       <div style={{ marginBottom: "16px" }}>
-        <ModelSettingsContainer onSettingChange={onSettingChange} />
+        <ModelSettingsContainer onSettingChange={handleCompatibleSettingChange} />
       </div>
 
       {/* 生成参数设置 */}
@@ -96,7 +101,7 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                   max={32000}
                   value={aiSettings.maxTokens}
                   onChange={(value) =>
-                    handleParameterChange("maxTokens", value || 1000)
+                    handleParameterChange("maxTokens", value || 3500)
                   }
                   style={{ width: "100%" }}
                 />
@@ -107,6 +112,13 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
           <div
             style={{ display: "flex", flexDirection: "column", gap: "12px" }}
           >
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <Text>流式输出</Text>
+              <Switch
+                checked={aiSettings.stream}
+                onChange={(value) => handleParameterChange("stream", value)}
+              />
+            </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <Text>自动保存</Text>
               <Switch

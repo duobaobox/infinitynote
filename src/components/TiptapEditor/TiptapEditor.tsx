@@ -28,6 +28,7 @@ import { Toolbar, DEFAULT_TOOLBAR_CONFIG } from "./toolbar/Toolbar";
 import type { ToolbarConfig } from "./toolbar/Toolbar";
 import { useOptimizedDebounce } from "./performance";
 import { TiptapEditorErrorBoundary } from "./ErrorBoundary";
+import { useAutoScroll } from "../../hooks";
 import "./TiptapEditor.css";
 
 /**
@@ -53,8 +54,9 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     showCharacterCount = false,
     maxCharacters = DEFAULT_CONFIG.MAX_CHARACTERS,
     debounceDelay = DEFAULT_CONFIG.DEBOUNCE_DELAY,
-    // enableHistory = true, // 历史记录功能暂时保留
     enableShortcuts = true,
+    enableAutoScroll = false,
+    autoScrollBehavior = "smooth",
   }) => {
     const { isDark } = useTheme();
     const editorId = useRef(generateEditorId());
@@ -62,6 +64,14 @@ export const TiptapEditor = memo<TiptapEditorProps>(
 
     // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
     const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
+
+    // 自动滚动功能
+    const { containerRef, triggerAutoScroll } = useAutoScroll({
+      enabled: enableAutoScroll && readonly, // 只在只读模式下启用自动滚动（用于AI流式显示）
+      behavior: autoScrollBehavior,
+      delay: 100, // 与AI流式更新频率匹配
+      threshold: 50, // 当距离底部50px时才自动滚动
+    });
 
     // Tiptap 官方推荐的扩展配置方式 - 标准化配置
     const extensions = useMemo(
@@ -319,6 +329,11 @@ export const TiptapEditor = memo<TiptapEditorProps>(
                   : undefined,
               });
               lastValidContent.current = cleanedNewContent;
+
+              // 流式内容更新后触发自动滚动
+              if (isStreamingContent && enableAutoScroll) {
+                setTimeout(() => triggerAutoScroll(), 50);
+              }
             }
           });
         }
@@ -374,7 +389,7 @@ export const TiptapEditor = memo<TiptapEditorProps>(
 
     return (
       <TiptapEditorErrorBoundary>
-        <div className={containerClassName} style={editorStyle}>
+        <div className={containerClassName} style={editorStyle} ref={containerRef}>
           {/* 编辑器内容区域 - 充满主要空间 */}
           <EditorContent editor={editor} className="tiptap-editor-content" />
 
