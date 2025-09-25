@@ -876,6 +876,7 @@ export const NoteCard = memo<NoteCardProps>(
               }`}
               onMouseDown={handleMouseDown}
               onMouseUp={handleMouseUp}
+              onDoubleClick={e => e.stopPropagation()}
             >
               <TiptapEditor
                 content={
