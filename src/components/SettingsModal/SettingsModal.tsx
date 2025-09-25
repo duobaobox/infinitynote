@@ -329,10 +329,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       width="80vw"
       className={`${styles.settingsModal} settingsModal`}
       destroyOnHidden
+      transitionName=""
+      maskTransitionName=""
       styles={{
         body: { height: "calc(80vh - 55px)", padding: 0 },
         content: { height: "80vh" },
-        mask: { backgroundColor: "rgba(0, 0, 0, 0.45)" },
+        mask: { backgroundColor: "rgba(0, 0, 0, 0.45)", backdropFilter: "blur(8px)" },
       }}
     >
       <div className={styles.modalContent}>
