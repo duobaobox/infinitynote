@@ -48,6 +48,7 @@
   transition: none;
   /* 提升层级，避免重绘 */
   z-index: 9999 !important;
+  pointer-events: auto;
 }
 
 .noteCard.selected {
@@ -66,6 +67,12 @@
   /* 继承便签卡片的上方圆角 */
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
+}
+
+.noteHeader:hover {
+  background: rgba(22, 119, 255, 0.08);
+  cursor: grab;
+  transition: background 0.2s;
 }
 
 /* 编辑状态下头部可拖拽，但默认无颜色 */
@@ -113,11 +120,14 @@
   flex-shrink: 0; /* 不允许收缩，保持固定高度 */
   position: relative; /* 确保层级正确 */
   z-index: 1; /* 确保不被其他元素遮挡 */
-  pointer-events: auto; /* 确保可以接收点击事件 */
+  pointer-events: auto; /* 默认可交互 */
   /* 去掉圆角边框和背景色 */
   background: transparent;
   border: none;
   border-radius: 0;
+}
+.noteCard.dragging .thinkingChainSection {
+  pointer-events: none;
 }
 
 .noteTitle {

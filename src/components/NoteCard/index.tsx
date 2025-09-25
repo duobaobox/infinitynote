@@ -310,20 +310,6 @@ export const NoteCard = memo<NoteCardProps>(
     // 删除这个函数，合并到 handleMouseUp 中
 
     // 处理双击进入编辑（保留作为备用）
-    const handleDoubleClick = useCallback(
-      (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation(); // 阻止冒泡到画布
-        if (!isEditing) {
-          setIsEditing(true);
-          // 确保便签被选中
-          if (!isSelected) {
-            onSelect(note.id);
-          }
-        }
-      },
-      [isEditing, isSelected, onSelect, note.id]
-    );
 
     // 处理编辑器获得焦点
     const handleEditorFocus = useCallback(() => {
@@ -824,14 +810,9 @@ export const NoteCard = memo<NoteCardProps>(
             style={{
               width: resizeSize?.width ?? note.size.width,
               height: resizeSize?.height ?? note.size.height,
-              position: "relative", // 相对定位，不再需要left/top
+              position: "relative",
               ...getColorStyle(),
             }}
-            // 非编辑状态：整个便签可拖拽
-            {...(!isEditing && !isResizing ? listeners : {})}
-            {...(!isEditing && !isResizing ? attributes : {})}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
             onMouseEnter={() => {
               if (isEditing) return;
               setIsHovered(true);
@@ -840,7 +821,6 @@ export const NoteCard = memo<NoteCardProps>(
               if (isEditing) return;
               setIsHovered(false);
             }}
-            onDoubleClick={handleDoubleClick}
           >
             {isSelected && <div className={styles.selectionBorder} />}
 
@@ -853,18 +833,15 @@ export const NoteCard = memo<NoteCardProps>(
             */}
             <div
               className={styles.noteHeader}
-              // 编辑状态下应用拖拽监听器到头部
-              {...(isEditing && !isResizing ? listeners : {})}
-              {...(isEditing && !isResizing ? attributes : {})}
+              // 编辑状态和非编辑状态下头部都可拖拽
+              {...(!isResizing ? listeners : {})}
+              {...(!isResizing ? attributes : {})}
               style={{
-                cursor: isEditing ? "grab" : "default",
+                cursor: !isResizing ? "grab" : "default",
               }}
               onMouseDown={(e) => {
-                if (isEditing) {
-                  // 编辑状态下，阻止事件冒泡，确保只通过dnd-kit处理拖拽
-                  e.stopPropagation();
-                } else {
-                  // 非编辑状态下，正常处理点击（用于选择等操作）
+                // 缩放时不允许拖拽
+                if (!isResizing) {
                   handleMouseDown(e);
                 }
               }}
@@ -897,10 +874,11 @@ export const NoteCard = memo<NoteCardProps>(
               className={`${styles.noteContent} ${
                 hasVerticalScrollbar ? styles.hasScrollbar : styles.noScrollbar
               }`}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
             >
               <TiptapEditor
                 content={
-                  // 如果正在生成AI内容且有流式数据，显示流式内容；否则显示原内容
                   aiGenerating[note.id] && aiStreamingData[note.id]
                     ? aiStreamingData[note.id] || ""
                     : note.content || ""
