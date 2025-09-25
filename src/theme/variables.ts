@@ -1,3 +1,12 @@
+/**
+ * CSS 主题变量配置
+ * 
+ * 定义明亮和暗黑主题的 CSS 变量
+ */
+
+// 导入新的颜色配置系统
+import { generateNoteColorThemes, getDefaultNoteColor } from '../config/noteColors';
+
 // CSS 变量定义 - 与 Ant Design 主题保持一致
 export const cssVariables = {
   light: {
@@ -181,8 +190,12 @@ export const tagColors = [
   "#fa8c16",
 ];
 
-// 默认便签颜色
-export const defaultNoteColor = "#FFF2CC";
+/**
+ * 默认便签颜色配置
+ * 
+ * @deprecated 请使用 src/config/noteColors.ts 中的 getDefaultNoteColor()
+ */
+export const defaultNoteColor = getDefaultNoteColor().value;
 
 // 应用 CSS 变量到文档根元素
 export const applyCSSVariables = (theme: "light" | "dark") => {
@@ -194,37 +207,12 @@ export const applyCSSVariables = (theme: "light" | "dark") => {
   });
 };
 
-// 便签颜色主题
-export const noteColorThemes = {
-  light: {
-    yellow: "#fffdee",
-    blue: "#f2fbff",
-    green: "#f5fffa",
-    pink: "#fff9f8",
-    purple: "#fdf9ff",
-  orange: "#FFE7D4", // 橙色
-    red: "#FFECEC", // 红色
-    gray: "#ffffff", // 白色
-    lightBlue: "#E6F7FF",
-    lightGreen: "#F6FFED",
-    lightPink: "#FFF0F6",
-    lightYellow: "#FFFBE6",
-  },
-  dark: {
-    yellow: "#3D3B00",
-    pink: "#3D1A1A",
-    blue: "#1A2B3D",
-    green: "#1A3D1A",
-    purple: "#2B1A3D",
-    orange: "#3D2B1A",
-    red: "#3D1A1A",
-    gray: "#2D2D2D",
-    lightBlue: "#1A3D3D",
-    lightGreen: "#2B3D1A",
-    lightPink: "#3D1A2B",
-    lightYellow: "#3D3B1A",
-  },
-};
+/**
+ * 便签颜色主题配置
+ * 
+ * @deprecated 请使用 src/config/noteColors.ts 中的 generateNoteColorThemes()
+ */
+export const noteColorThemes = generateNoteColorThemes();
 
 // 画布网格主题
 export const canvasGridThemes = {

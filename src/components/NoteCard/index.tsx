@@ -16,6 +16,7 @@ import { ConnectionPoint } from "../ConnectionPoint";
 import { useConnectionStore } from "../../store/connectionStore";
 import { useVerticalScrollbarDetection } from "../../hooks/useScrollbarDetection";
 import { useSimpleAIAutoScroll } from "../../hooks/useSimpleAIAutoScroll";
+import { NOTE_COLOR_PRESETS } from "../../config/noteColors";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -750,17 +751,11 @@ export const NoteCard = memo<NoteCardProps>(
       // 根据主题选择颜色映射
       const themeColors = isDark ? noteColorThemes.dark : noteColorThemes.light;
 
-      // 十六进制颜色到颜色名称的映射
-      const colorHexToName: Record<string, keyof typeof themeColors> = {
-        "#FFF2CC": "yellow",
-        "#FFE6E6": "pink",
-        "#E6F3FF": "blue",
-        "#E6FFE6": "green",
-        "#F0E6FF": "purple",
-        "#FFE7D4": "orange", // 橙色
-        "#FFECEC": "red", // 红色
-        "#ffffff": "gray", // 白色
-      };
+      // 动态生成颜色映射，从颜色配置中获取
+      const colorHexToName: Record<string, keyof typeof themeColors> = {};
+      NOTE_COLOR_PRESETS.forEach(preset => {
+        colorHexToName[preset.value] = preset.name as keyof typeof themeColors;
+      });
 
       // 获取颜色名称，默认为 yellow
       const colorName = colorHexToName[note.color] || "yellow";

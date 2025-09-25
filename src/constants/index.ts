@@ -79,20 +79,21 @@ export const COLOR_THEMES = {
   },
 } as const;
 
-// 便签颜色预设
+/**
+ * 便签颜色预设
+ * 
+ * @deprecated 此常量已废弃，请使用 src/config/noteColors.ts 中的 NOTE_COLOR_PRESETS
+ * @see getAllNoteColorValues() 获取所有颜色值
+ */
 export const NOTE_COLORS = [
   "#FFF2CC", // 黄色
   "#FFE6E6", // 粉色
   "#E6F3FF", // 蓝色
   "#E6FFE6", // 绿色
   "#F0E6FF", // 紫色
-  "#FFE6CC", // 橙色
-  "#FFD6D6", // 红色
-  "#F0F0F0", // 灰色
-  "#E6F7FF", // 浅蓝
-  "#F6FFED", // 浅绿
-  "#FFF0F6", // 浅粉
-  "#FFFBE6", // 浅黄
+  "#FFE7D4", // 橙色
+  "#FFECEC", // 红色
+  "#FFFFFF", // 白色
 ] as const;
 
 // 动画配置

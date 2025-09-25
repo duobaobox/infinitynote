@@ -5,7 +5,8 @@
  */
 
 import type { Note, Size, NoteTemplate } from "../types";
-import { NoteColor } from "../types";
+// 导入新的颜色配置系统，替换废弃的 NoteColor 枚举
+import { getNoteColorPresetByName } from "../config/noteColors";
 import { NOTE_DEFAULT_SIZE } from "../types/constants";
 import { NoteService } from "./noteService";
 
@@ -20,7 +21,7 @@ export const BUILTIN_TEMPLATES: Omit<
     name: "待办事项",
     description: "简单的待办事项模板",
     content: "□ 任务1\n□ 任务2\n□ 任务3",
-    color: NoteColor.YELLOW,
+    color: getNoteColorPresetByName("yellow")?.value || "#FFF2CC",
     size: NOTE_DEFAULT_SIZE, // 使用新的默认尺寸 (270x240像素) 提供更好的显示效果
     contentType: "text",
     isSystem: true,
@@ -30,7 +31,7 @@ export const BUILTIN_TEMPLATES: Omit<
     description: "会议记录模板",
     content:
       "# 会议记录\n\n**时间：** \n**参与者：** \n**议题：** \n\n## 要点\n- \n\n## 行动项\n- ",
-    color: NoteColor.BLUE,
+    color: getNoteColorPresetByName("blue")?.value || "#E6F3FF",
     size: { width: 300, height: 250 },
     contentType: "markdown",
     isSystem: true,
@@ -39,7 +40,7 @@ export const BUILTIN_TEMPLATES: Omit<
     name: "想法收集",
     description: "收集灵感和想法",
     content: "💡 想法：\n\n\n🎯 目标：\n\n\n📝 备注：",
-    color: NoteColor.PURPLE,
+    color: getNoteColorPresetByName("purple")?.value || "#F0E6FF",
     size: { width: 250, height: 200 },
     contentType: "text",
     isSystem: true,
@@ -48,7 +49,7 @@ export const BUILTIN_TEMPLATES: Omit<
     name: "日程安排",
     description: "每日日程规划",
     content: "📅 日期：\n\n🌅 上午：\n-\n-\n\n🌞 下午：\n-\n-\n\n🌙 晚上：\n-",
-    color: NoteColor.GREEN,
+    color: getNoteColorPresetByName("green")?.value || "#E6FFE6",
     size: { width: 280, height: 220 },
     contentType: "text",
     isSystem: true,
@@ -57,7 +58,7 @@ export const BUILTIN_TEMPLATES: Omit<
     name: "学习笔记",
     description: "学习内容整理",
     content: "# 学习主题\n\n## 重点内容\n\n\n## 问题记录\n\n\n## 总结",
-    color: NoteColor.ORANGE,
+    color: getNoteColorPresetByName("orange")?.value || "#FFE7D4",
     size: { width: 320, height: 240 },
     contentType: "markdown",
     isSystem: true,

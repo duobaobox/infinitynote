@@ -137,16 +137,19 @@ export interface CanvasViewport {
 
 /**
  * 便签颜色枚举
+ * 
+ * @deprecated 此枚举已废弃，请使用 src/config/noteColors.ts 中的 NOTE_COLOR_PRESETS
+ * @see src/config/noteColors.ts 获取新的颜色配置系统
  */
 export enum NoteColor {
   YELLOW = "#FFF2CC",
-  PINK = "#FFE6E6",
+  PINK = "#FFE6E6", 
   BLUE = "#E6F3FF",
   GREEN = "#E6FFE6",
   PURPLE = "#F0E6FF",
   ORANGE = "#FFE7D4",
   RED = "#FFECEC",
-  GRAY = "#ffffff",
+  GRAY = "#FFFFFF",
 }
 
 /**

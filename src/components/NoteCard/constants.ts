@@ -153,18 +153,21 @@ export const KEYBOARD_SHORTCUTS = {
 } as const;
 
 /**
- * 默认颜色主题
+ * 便签卡片组件常量配置
+ * 
+ * @author InfinityNote2 Team
  */
-export const DEFAULT_NOTE_COLORS = [
-  "#FFF2CC", // 黄色
-  "#FFE6E6", // 粉色
-  "#E6F3FF", // 蓝色
-  "#E6FFE6", // 绿色
-  "#F0E6FF", // 紫色
-  "#FFE7D4", // 橙色
-  "#FFECEC", // 红色
-  "#ffffff", // 白色
-] as const;
+
+// 导入新的颜色配置系统
+import { getAllNoteColorValues } from "../../config/noteColors";
+
+/**
+ * 默认便签颜色配置
+ * 
+ * @deprecated 请使用 src/config/noteColors.ts 中的 getAllNoteColorValues()
+ * @see src/config/noteColors.ts
+ */
+export const DEFAULT_NOTE_COLORS = getAllNoteColorValues();
 
 /**
  * 便签类型图标映射

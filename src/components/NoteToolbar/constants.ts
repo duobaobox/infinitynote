@@ -1,4 +1,12 @@
+/**
+ * 便签工具栏常量配置
+ * 
+ * 定义工具栏按钮和颜色选项的配置
+ * @author InfinityNote2 Team
+ */
+
 import type { ToolbarButton, ColorOption } from "./types";
+import { NoteColorConfig } from "../../config/noteColors";
 
 // 基础工具栏按钮配置
 export const BASE_TOOLBAR_BUTTONS: ToolbarButton[] = [
@@ -53,17 +61,13 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
   ...BASE_TOOLBAR_BUTTONS,
 ];
 
-// 颜色选项配置
-export const COLOR_OPTIONS: ColorOption[] = [
-  { name: "yellow", value: "#FFF2CC", label: "黄色" },
-  { name: "pink", value: "#FFE6E6", label: "粉色" },
-  { name: "blue", value: "#E6F3FF", label: "蓝色" },
-  { name: "green", value: "#E6FFE6", label: "绿色" },
-  { name: "purple", value: "#F0E6FF", label: "紫色" },
-  { name: "orange", value: "#FFE7D4", label: "橙色" },
-  { name: "red", value: "#FFECEC", label: "红色" },
-  { name: "gray", value: "#ffffff", label: "白色" },
-];
+/**
+ * 颜色选项配置
+ * 
+ * 从统一的颜色配置系统获取工具栏颜色选项
+ * 修改颜色请编辑 src/config/noteColors.ts
+ */
+export const COLOR_OPTIONS: ColorOption[] = NoteColorConfig.getToolbarColorOptions();
 
 // 工具栏尺寸配置 - 更小巧精致
 export const TOOLBAR_CONFIG = {
