@@ -835,18 +835,21 @@ export const NoteCard = memo<NoteCardProps>(
                 cursor: !isResizing ? "grab" : "default",
               }}
               onMouseDown={(e) => {
-                // 缩放时不允许拖拽
                 if (!isResizing) {
                   handleMouseDown(e);
                 }
               }}
+              onDoubleClick={e => e.stopPropagation()}
             >
               <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
             </div>
 
             {/* 思维链显示区域 - 独立层级 */}
             {aiData && aiData.showThinking !== false && (
-              <div className={styles.thinkingChainSection}>
+              <div
+                className={styles.thinkingChainSection}
+                onDoubleClick={e => e.stopPropagation()}
+              >
                 <ThinkingChainDisplay
                   thinkingData={aiData.thinkingChain}
                   isCollapsed={!thinkingChainExpanded}
