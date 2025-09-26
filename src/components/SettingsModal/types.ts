@@ -123,6 +123,18 @@ export interface DisplaySettings {
 }
 
 /**
+ * 便签设置
+ */
+export interface NoteSettings {
+  /** 默认便签宽度 */
+  defaultWidth: number;
+  /** 默认便签高度 */
+  defaultHeight: number;
+  /** 便签透明度 */
+  noteOpacity: number;
+}
+
+/**
  * 数据设置
  */
 export interface DataSettings {
@@ -187,6 +199,7 @@ export interface SettingsConfig {
   model: ModelSettings;
   general: GeneralSettings;
   display: DisplaySettings;
+  note: NoteSettings;
   data: DataSettings;
   shortcuts: ShortcutConfig[];
   cloud: CloudSettings;

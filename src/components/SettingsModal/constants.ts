@@ -118,6 +118,8 @@ export const THEME_OPTIONS = [
   { value: "auto", label: "跟随系统" },
 ] as const;
 
+
+
 /**
  * 画布颜色预设配置
  */
@@ -235,6 +237,15 @@ export const DEFAULT_DISPLAY_SETTINGS = {
   showGrid: true,
   smoothZoom: false, // 默认关闭平滑缩放
   canvasColor: "#f0f2f5", // 默认画布颜色
+};
+
+/**
+ * 默认便签设置
+ */
+export const DEFAULT_NOTE_SETTINGS = {
+  defaultWidth: 300,
+  defaultHeight: 200,
+  noteOpacity: 1.0,
 };
 
 /**

@@ -17,6 +17,7 @@ import { useConnectionStore } from "../../store/connectionStore";
 import { useVerticalScrollbarDetection } from "../../hooks/useScrollbarDetection";
 import { useSimpleAIAutoScroll } from "../../hooks/useSimpleAIAutoScroll";
 import { NOTE_COLOR_PRESETS } from "../../config/noteColors";
+import { loadSettingsFromStorage } from "../SettingsModal/utils";
 import styles from "./index.module.css";
 
 interface NoteCardProps {
@@ -755,6 +756,25 @@ export const NoteCard = memo<NoteCardProps>(
       };
     }, []);
 
+    const [noteSettings, setNoteSettings] = useState(() => loadSettingsFromStorage().note);
+
+    // 监听设置变化事件
+    useEffect(() => {
+      const handleSettingsChange = (e: CustomEvent) => {
+        if (e.detail.section === 'note') {
+          setNoteSettings(prev => ({
+            ...prev,
+            [e.detail.key]: e.detail.value
+          }));
+        }
+      };
+
+      window.addEventListener('settingsChanged', handleSettingsChange as EventListener);
+      return () => {
+        window.removeEventListener('settingsChanged', handleSettingsChange as EventListener);
+      };
+    }, []);
+
     const getColorStyle = () => {
       // 根据主题选择颜色映射
       const themeColors = isDark ? noteColorThemes.dark : noteColorThemes.light;
@@ -769,11 +789,15 @@ export const NoteCard = memo<NoteCardProps>(
       const colorName = colorHexToName[note.color] || "yellow";
       const backgroundColor = themeColors[colorName];
 
+      // 应用透明度设置
+      const opacity = noteSettings.noteOpacity || 1.0;
+
       return {
         backgroundColor,
         // 在暗黑主题下调整边框和文字颜色
         border: isDark ? `1px solid ${backgroundColor}` : "none",
         color: isDark ? "var(--color-text)" : "var(--color-text)",
+        opacity: opacity,
       };
     };
 

@@ -284,8 +284,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
         return (
           <DisplaySettingsTab
             settings={settings.display}
+            noteSettings={settings.note}
             onSettingChange={(key, value) =>
               handleSettingChange("display", key, value)
+            }
+            onNoteSettingChange={(key, value) =>
+              handleSettingChange("note", key, value)
             }
           />
         );

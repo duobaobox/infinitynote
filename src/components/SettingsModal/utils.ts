@@ -43,6 +43,7 @@ import {
   DEFAULT_MODEL_SETTINGS,
   DEFAULT_GENERAL_SETTINGS,
   DEFAULT_DISPLAY_SETTINGS,
+  DEFAULT_NOTE_SETTINGS,
   DEFAULT_CLOUD_SETTINGS,
   STORAGE_KEYS,
   APP_INFO,
@@ -59,6 +60,7 @@ export const getDefaultSettings = (): SettingsConfig => ({
   model: DEFAULT_MODEL_SETTINGS,
   general: DEFAULT_GENERAL_SETTINGS,
   display: DEFAULT_DISPLAY_SETTINGS,
+  note: DEFAULT_NOTE_SETTINGS,
   data: {
     storageUsed: "0 MB",
     noteCount: 0,
@@ -132,6 +134,7 @@ export const exportSettings = (
       model: settings.model,
       general: settings.general,
       display: settings.display,
+      note: settings.note,
       shortcuts: settings.shortcuts,
       cloud: {
         ...settings.cloud,
@@ -275,7 +278,7 @@ export const calculateStorageUsage = (): {
 /**
  * 深度合并对象
  */
-function deepMerge<T extends Record<string, unknown>>(
+function deepMerge<T extends Record<string, any>>(
   target: T,
   source: Partial<T>
 ): T {
@@ -294,12 +297,12 @@ function deepMerge<T extends Record<string, unknown>>(
         typeof targetValue === "object" &&
         !Array.isArray(targetValue)
       ) {
-        (result as Record<string, unknown>)[key] = deepMerge(
+        (result as Record<string, any>)[key] = deepMerge(
           targetValue,
           sourceValue
         );
       } else if (sourceValue !== undefined) {
-        (result as Record<string, unknown>)[key] = sourceValue;
+        (result as Record<string, any>)[key] = sourceValue;
       }
     }
   }
@@ -348,8 +351,9 @@ export const validateSettings = (
 ): string[] => {
   const errors: string[] = [];
 
-  if (settings.model?.apiKey && settings.model?.provider) {
-    if (!validateApiKey(settings.model.provider, settings.model.apiKey)) {
+  if (settings.model?.apiKeys && settings.model?.provider) {
+    const providerApiKey = settings.model.apiKeys[settings.model.provider];
+    if (providerApiKey && !validateApiKey(settings.model.provider, providerApiKey)) {
       errors.push("API 密钥格式不正确");
     }
   }

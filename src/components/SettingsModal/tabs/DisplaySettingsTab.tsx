@@ -12,6 +12,10 @@
  * - 📐 显示网格：在画布上显示辅助网格线
  * - 🔄 平滑缩放：启用画布平滑缩放动画效果
  *
+ * 📝 便签外观：
+ * - 📏 默认便签尺寸：自定义便签的默认宽度和高度
+ * - 💧 便签透明度：调节便签的透明度
+ *
  * 技术特性：
  * - 🔄 实时生效：设置修改后立即应用到界面
  * - 🎯 主题集成：与 ThemeProvider 深度集成
@@ -20,13 +24,13 @@
  *
  * @author InfinityNote Team
  * @since v1.5.7
- * @lastModified 2024-12-14
+ * @lastModified 2025-09-27
  */
 
 import React, { useEffect, useState } from "react";
-import { Switch, Select, Typography, Card, Row, Col, ColorPicker } from "antd";
+import { Switch, Select, Typography, Card, Row, Col, ColorPicker, Slider, InputNumber } from "antd";
 import { useTheme } from "../../../theme";
-import type { DisplaySettings } from "../types";
+import type { DisplaySettings, NoteSettings } from "../types";
 import { THEME_OPTIONS, CANVAS_COLOR_PRESETS } from "../constants";
 import styles from "../index.module.css";
 
@@ -34,15 +38,22 @@ const { Text } = Typography;
 
 export interface DisplaySettingsTabProps {
   settings: DisplaySettings;
+  noteSettings: NoteSettings;
   onSettingChange: (
     key: keyof DisplaySettings,
     value: string | boolean
+  ) => void;
+  onNoteSettingChange: (
+    key: keyof NoteSettings,
+    value: string | boolean | number
   ) => void;
 }
 
 const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
   settings,
+  noteSettings,
   onSettingChange,
+  onNoteSettingChange,
 }) => {
   // 使用主题 hook 来直接控制应用主题
   const { theme: currentTheme, setTheme } = useTheme();
@@ -260,6 +271,90 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
                   </Col>
                 ))}
               </Row>
+            </div>
+          </div>
+        </Card>
+
+        {/* 便签外观设置 */}
+        <Card size="small" title="便签外观" style={{ flex: "0 0 auto" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+          >
+            {/* 便签尺寸设置 */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>默认便签宽度</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  新建便签的默认宽度（像素）
+                </div>
+              </div>
+              <InputNumber
+                min={150}
+                max={1000}
+                value={noteSettings.defaultWidth}
+                onChange={(value) => value !== null && onNoteSettingChange("defaultWidth", value)}
+                style={{ width: 120 }}
+                placeholder="宽度"
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>默认便签高度</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  新建便签的默认高度（像素）
+                </div>
+              </div>
+              <InputNumber
+                min={100}
+                max={800}
+                value={noteSettings.defaultHeight}
+                onChange={(value) => value !== null && onNoteSettingChange("defaultHeight", value)}
+                style={{ width: 120 }}
+                placeholder="高度"
+              />
+            </div>
+
+            {/* 便签透明度 */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>便签透明度</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  调节便签的透明度 ({Math.round(noteSettings.noteOpacity * 100)}%)
+                </div>
+              </div>
+              <Slider
+                min={0.1}
+                max={1}
+                step={0.1}
+                value={noteSettings.noteOpacity}
+                onChange={(value) => value !== undefined && onNoteSettingChange("noteOpacity", value)}
+                style={{ width: 160 }}
+              />
             </div>
           </div>
         </Card>

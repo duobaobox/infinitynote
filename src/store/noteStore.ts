@@ -9,6 +9,7 @@ import { NOTE_DEFAULT_SIZE, NoteColor } from "../types";
 import { dbOperations } from "../utils/db";
 import { noteStoreEvents, storeEventBus } from "./storeEvents";
 import { aiService } from "../services/aiService";
+import { loadSettingsFromStorage } from "../components/SettingsModal/utils";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -223,6 +224,10 @@ export const useNoteStore = create<NoteStore>()(
         const tempId = generateId();
         const now = new Date();
         const { maxZIndex } = get();
+        
+        // 从存储中加载设置以获取默认便签尺寸
+        const settings = loadSettingsFromStorage();
+        const noteSettings = settings.note;
 
         const newNote: Note = {
           id: tempId,
@@ -230,7 +235,10 @@ export const useNoteStore = create<NoteStore>()(
           content: "",
           color,
           position,
-          size: { ...NOTE_DEFAULT_SIZE },
+          size: { 
+            width: noteSettings.defaultWidth || NOTE_DEFAULT_SIZE.width,
+            height: noteSettings.defaultHeight || NOTE_DEFAULT_SIZE.height
+          },
           zIndex: maxZIndex + 1,
           canvasId,
           createdAt: now,
@@ -1135,7 +1143,7 @@ export const useNoteStore = create<NoteStore>()(
         position: Position = { x: 200, y: 200 }
       ): Promise<string> => {
         try {
-          // 先创建一个空白便签作为占位符
+          // 直接调用createNote，因为它现在使用默认尺寸
           const noteId = await get().createNote(
             canvasId,
             position,
@@ -1172,6 +1180,15 @@ export const useNoteStore = create<NoteStore>()(
 
 // 设置Store事件监听器
 if (typeof window !== "undefined") {
+  // 监听设置变化事件，以便实时获取最新的便签设置
+  window.addEventListener('settingsChanged', (event: Event) => {
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail?.section === 'note') {
+      // 当便签设置变更时，创建便签时将使用新的默认值
+      // 由于createNote方法每次都从本地存储加载设置，所以无需额外操作
+    }
+  });
+  
   // 监听便签重新加载请求
   storeEventBus.on("notes:reload", ({ canvasId }) => {
     const store = useNoteStore.getState();
@@ -1205,6 +1222,18 @@ if (typeof window !== "undefined") {
     if (type === "notes" || type === "all") {
       const store = useNoteStore.getState();
       store.loadNotesFromDB();
+    }
+  });
+}
+
+// 设置Store事件监听器
+if (typeof window !== "undefined") {
+  // 监听设置变化事件，以便实时获取最新的便签设置
+  window.addEventListener('settingsChanged', (event: Event) => {
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail?.section === 'note') {
+      // 当便签设置变更时，创建便签时将使用新的默认值
+      // 由于createNote方法每次都从本地存储加载设置，所以无需额外操作
     }
   });
 }
