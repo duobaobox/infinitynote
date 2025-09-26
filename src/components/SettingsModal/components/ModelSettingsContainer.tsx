@@ -37,7 +37,6 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
     appliedAt: new Date().toISOString(),
   });
 
-  const [globalShowThinking, setGlobalShowThinking] = useState<boolean>(true);
   const [connectionStatus, setConnectionStatus] = useState<
     "ready" | "error" | "unconfigured"
   >("unconfigured");
@@ -134,7 +133,7 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
         const currentActiveConfig = aiService.getActiveConfig();
 
         setActiveConfig(currentActiveConfig);
-        setGlobalShowThinking(aiService.getGlobalShowThinking());
+        // setGlobalShowThinking(aiService.getGlobalShowThinking()); // 已移除思维链开关
 
         // 加载当前提供商的API密钥和首选模型
         const currentApiKey = await loadProviderApiKey(
@@ -169,25 +168,6 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
 
     initializeData();
   }, [loadProviderApiKey, loadProviderModel, checkCurrentConfigurationStatus]);
-
-  // 处理思维链开关
-  const handleThinkingToggle = useCallback(
-    async (enabled: boolean) => {
-      try {
-        await aiService.setGlobalShowThinking(enabled);
-        setGlobalShowThinking(enabled);
-
-        // 向后兼容回调
-        onSettingChange?.("showThinking", enabled);
-
-        message.success(`思维链显示已${enabled ? "开启" : "关闭"}`);
-      } catch (error) {
-        console.error("❌ 更新思维链设置失败:", error);
-        message.error("更新思维链设置失败");
-      }
-    },
-    [onSettingChange, message]
-  );
 
   // 处理配置变更
   const handleConfigChange = useCallback(
@@ -339,8 +319,6 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
         modelLabel={getModelLabel(activeConfig.provider, activeConfig.model)}
         providerColor={getProviderColor(activeConfig.provider)}
         connectionStatus={connectionStatus}
-        globalShowThinking={globalShowThinking}
-        onThinkingToggle={handleThinkingToggle}
       />
 
       {/* 配置区域组件 */}

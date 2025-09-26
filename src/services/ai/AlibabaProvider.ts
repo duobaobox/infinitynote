@@ -12,37 +12,41 @@ import type {
 import type { AIGenerationOptions } from "../../types/ai";
 
 /**
- * 阿里百炼请求体构建器
+ * 阿里百炼请求体构建器 (OpenAI兼容格式)
  */
 class AlibabaRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
     // 直接使用用户指定的模型名称，不做校验
     const modelName = options.model || "qwen-turbo";
 
-    const parameters: any = {
+    const requestBody: any = {
+      model: modelName,
+      messages: [
+        {
+          role: "user",
+          content: options.prompt,
+        },
+      ],
       stream: options.stream ?? true,
     };
 
     if (options.temperature !== undefined) {
-      parameters.temperature = options.temperature;
+      requestBody.temperature = options.temperature;
     }
 
     if (options.maxTokens) {
-      parameters.max_tokens = options.maxTokens;
+      requestBody.max_tokens = options.maxTokens;
     }
 
-    const requestBody = {
-      model: modelName,
-      input: {
-        messages: [
-          {
-            role: "user",
-            content: options.prompt,
-          },
-        ],
-      },
-      parameters,
-    };
+    // 支持思维链模式 - 对于支持thinking的模型
+    const thinkingModels = ["qwen-plus", "qwen-max", "qvq-max-2025-05-15"];
+    if (
+      thinkingModels.some(
+        (model) => modelName === model || modelName.startsWith(model + "-")
+      )
+    ) {
+      requestBody.enable_thinking = true;
+    }
 
     console.log(
       `🚀 [Alibaba] 构建请求体:`,
@@ -53,43 +57,40 @@ class AlibabaRequestBuilder implements RequestBodyBuilder {
 }
 
 /**
- * 阿里百炼响应解析器
+ * 阿里百炼响应解析器 (OpenAI兼容格式)
  */
 class AlibabaResponseParser implements ResponseParser {
-  private lastText = ""; // 保存上一次的完整文本，用于计算增量
-
   /**
    * 重置状态，用于新的生成会话
    */
   resetState(): void {
-    this.lastText = "";
+    // OpenAI兼容格式不需要状态管理
   }
 
   extractContentFromChunk(chunk: string): string {
     try {
-      // 阿里百炼使用SSE格式，需要找到data:开头的行（注意没有空格）
+      // OpenAI兼容格式使用SSE，需要找到data:开头的行
       const lines = chunk.split("\n");
 
       for (const line of lines) {
-        if (line.startsWith("data:")) {
-          const data = line.slice(5); // 去掉"data:"前缀
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6); // 去掉"data: "前缀
           if (data === "[DONE]") continue;
 
           try {
             const parsed = JSON.parse(data);
             console.log(`🔍 [Alibaba] 解析响应数据:`, parsed);
 
-            // 阿里百炼的响应格式是 {"output": {"text": "完整文本"}}
-            if (parsed.output && parsed.output.text) {
-              const currentText = parsed.output.text;
-
-              // 计算增量内容 - 新文本减去之前已处理的文本
-              const deltaContent = currentText.slice(this.lastText.length);
-              this.lastText = currentText;
-
-              if (deltaContent) {
-                console.log(`✅ [Alibaba] 成功提取增量内容:`, deltaContent);
-                return deltaContent;
+            // OpenAI兼容格式：{"choices": [{"delta": {"content": "文本"}}]}
+            if (
+              parsed.choices &&
+              parsed.choices[0] &&
+              parsed.choices[0].delta
+            ) {
+              const content = parsed.choices[0].delta.content;
+              if (content) {
+                console.log(`✅ [Alibaba] 成功提取内容:`, content);
+                return content;
               }
             }
           } catch (parseError) {
@@ -111,14 +112,60 @@ class AlibabaResponseParser implements ResponseParser {
     }
   }
 
-  extractThinkingFromChunk(_chunk: string): string | null {
-    // 阿里百炼暂时不支持思维链
-    return null;
+  extractThinkingFromChunk(chunk: string): string | null {
+    try {
+      const lines = chunk.split("\n");
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6);
+          if (data === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(data);
+
+            // 检查是否有思维链字段
+            if (parsed.choices && parsed.choices[0]) {
+              const choice = parsed.choices[0];
+
+              // 检查delta中的思维链内容
+              if (choice.delta) {
+                // 阿里巴巴可能在delta中包含thinking字段
+                if (choice.delta.thinking) {
+                  return choice.delta.thinking;
+                }
+
+                // 或者在特殊的字段中
+                if (choice.delta.reasoning_content) {
+                  return choice.delta.reasoning_content;
+                }
+              }
+
+              // 检查message中的思维链内容
+              if (choice.message) {
+                if (choice.message.thinking) {
+                  return choice.message.thinking;
+                }
+                if (choice.message.reasoning_content) {
+                  return choice.message.reasoning_content;
+                }
+              }
+            }
+          } catch (parseError) {
+            // 忽略解析错误
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      return null;
+    }
   }
 
   isStreamComplete(chunk: string): boolean {
     return (
-      chunk.includes("data:[DONE]") ||
+      chunk.includes("data: [DONE]") ||
       chunk.includes('"finish_reason":"stop"') ||
       chunk.includes('"finish_reason": "stop"')
     );
@@ -133,16 +180,17 @@ export class AlibabaProvider extends BaseAIProvider {
 
   protected readonly config: AIProviderConfig = {
     apiEndpoint:
-      "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
+      "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
     defaultModel: "qwen-turbo",
     supportedModels: [
       "qwen-plus",
       "qwen-turbo",
       "qwen-max",
       "qwen2-72b-instruct",
+      "qvq-max-2025-05-15",
     ],
     supportsStreaming: true,
-    supportsThinking: false,
+    supportsThinking: true, // 现在支持思维链
   };
 
   protected readonly requestBuilder = new AlibabaRequestBuilder();

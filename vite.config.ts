@@ -86,14 +86,14 @@ export default defineConfig({
     host: true,
     // 代理配置解决CORS问题
     proxy: {
-      // 阿里百炼API代理
+      // 阿里百炼API代理 (OpenAI兼容)
       "/api/alibaba": {
         target: "https://dashscope.aliyuncs.com",
         changeOrigin: true,
         rewrite: (path) =>
           path.replace(
             /^\/api\/alibaba/,
-            "/api/v1/services/aigc/text-generation/generation"
+            "/compatible-mode/v1/chat/completions"
           ),
         headers: {
           Origin: "https://dashscope.aliyuncs.com",

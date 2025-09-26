@@ -94,11 +94,14 @@ export const NoteCard = memo<NoteCardProps>(
     // 监听AI流式数据变化，触发自动滚动
     useEffect(() => {
       if (aiGenerating[note.id] && aiStreamingData[note.id]) {
-        console.log(`🔄 [AI滚动] 检测到便签 ${note.id.slice(-8)} 的AI数据更新`, {
-          contentLength: aiStreamingData[note.id]?.length || 0,
-          isGenerating: aiGenerating[note.id],
-        });
-        
+        console.log(
+          `🔄 [AI滚动] 检测到便签 ${note.id.slice(-8)} 的AI数据更新`,
+          {
+            contentLength: aiStreamingData[note.id]?.length || 0,
+            isGenerating: aiGenerating[note.id],
+          }
+        );
+
         // 稍微延迟以确保DOM更新完成
         const timer = setTimeout(() => {
           performAutoScroll(note.id);
@@ -106,7 +109,12 @@ export const NoteCard = memo<NoteCardProps>(
 
         return () => clearTimeout(timer);
       }
-    }, [aiGenerating[note.id], aiStreamingData[note.id], note.id, performAutoScroll]);
+    }, [
+      aiGenerating[note.id],
+      aiStreamingData[note.id],
+      note.id,
+      performAutoScroll,
+    ]);
 
     // 调试AI数据传递
     useEffect(() => {
@@ -753,7 +761,7 @@ export const NoteCard = memo<NoteCardProps>(
 
       // 动态生成颜色映射，从颜色配置中获取
       const colorHexToName: Record<string, keyof typeof themeColors> = {};
-      NOTE_COLOR_PRESETS.forEach(preset => {
+      NOTE_COLOR_PRESETS.forEach((preset) => {
         colorHexToName[preset.value] = preset.name as keyof typeof themeColors;
       });
 
@@ -839,16 +847,16 @@ export const NoteCard = memo<NoteCardProps>(
                   handleMouseDown(e);
                 }
               }}
-              onDoubleClick={e => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
             >
               <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
             </div>
 
-            {/* 思维链显示区域 - 独立层级 */}
-            {aiData && aiData.showThinking !== false && (
+            {/* 思维链显示区域 - 基于数据存在性自动显示 */}
+            {aiData?.thinkingChain && (
               <div
                 className={styles.thinkingChainSection}
-                onDoubleClick={e => e.stopPropagation()}
+                onDoubleClick={(e) => e.stopPropagation()}
               >
                 <ThinkingChainDisplay
                   thinkingData={aiData.thinkingChain}
@@ -874,7 +882,7 @@ export const NoteCard = memo<NoteCardProps>(
               }`}
               onMouseDown={handleMouseDown}
               onMouseUp={handleMouseUp}
-              onDoubleClick={e => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
             >
               <TiptapEditor
                 content={

@@ -15,6 +15,7 @@ import type {
   AICustomProperties,
 } from "../../types/ai";
 import { markdownConverter } from "../../utils/markdownConverter";
+import { ThinkingChainDetector } from "../../utils/thinkingChainDetector";
 
 /**
  * AI提供商配置接口
@@ -275,38 +276,36 @@ export abstract class BaseAIProvider implements AIProvider {
             console.log(`⚠️ [${this.name}] 数据块中未提取到有效内容`);
           }
 
-          // 提取思维链（如果支持）
-          if (
-            this.config.supportsThinking &&
-            this.responseParser.extractThinkingFromChunk
-          ) {
-            const thinking =
-              this.responseParser.extractThinkingFromChunk(chunk);
-            if (thinking) {
-              fullThinking += thinking;
+          // 提取思维链内容 - 使用统一检测器
+          const streamThinking =
+            ThinkingChainDetector.detectFromStreamChunk(chunk);
+          const legacyThinking =
+            this.responseParser.extractThinkingFromChunk?.(chunk);
 
-              // 更新或创建思维链步骤 - 使用累积方式而非分段方式
-              if (thinkingChain.length === 0) {
-                // 创建第一个思维步骤
-                thinkingChain.push({
-                  id: `thinking_step_1`,
-                  content: fullThinking,
-                  timestamp: Date.now(),
-                });
-              } else {
-                // 更新现有的思维步骤内容
-                thinkingChain[0].content = fullThinking;
-              }
+          if (streamThinking || legacyThinking) {
+            fullThinking += streamThinking || legacyThinking || "";
 
-              // 思维链数据更新时也要通知
-              const html = markdownConverter.convertStreamChunk(fullMarkdown);
-              const currentAIData = this.buildStreamingAIData(
-                options,
-                fullMarkdown,
-                thinkingChain
-              );
-              options.onStream?.(html, currentAIData);
+            // 更新或创建思维链步骤 - 使用累积方式而非分段方式
+            if (thinkingChain.length === 0) {
+              // 创建第一个思维步骤
+              thinkingChain.push({
+                id: `thinking_step_1`,
+                content: fullThinking,
+                timestamp: Date.now(),
+              });
+            } else {
+              // 更新现有的思维步骤内容
+              thinkingChain[0].content = fullThinking;
             }
+
+            // 思维链数据更新时也要通知
+            const html = markdownConverter.convertStreamChunk(fullMarkdown);
+            const currentAIData = this.buildStreamingAIData(
+              options,
+              fullMarkdown,
+              thinkingChain
+            );
+            options.onStream?.(html, currentAIData);
           }
 
           retryCount = 0; // 重置重试计数
@@ -339,6 +338,25 @@ export abstract class BaseAIProvider implements AIProvider {
     fullMarkdown: string,
     thinkingChain: any[]
   ): AICustomProperties["ai"] {
+    // 使用统一检测器进行最终检测
+    const finalDetection = ThinkingChainDetector.detectFromText(fullMarkdown);
+
+    // 如果从流式中没有检测到思维链，但在最终内容中检测到了，则使用检测结果
+    let finalThinkingChain = thinkingChain;
+    let cleanContent = fullMarkdown;
+
+    if (finalDetection.hasThinkingChain && thinkingChain.length === 0) {
+      // 从完整内容中检测到了思维链，但流式过程中没有
+      finalThinkingChain = finalDetection.thinkingContent?.steps || [];
+      cleanContent = finalDetection.cleanContent;
+      console.log(
+        `🧠 [${this.name}] 从完整响应中检测到思维链，步骤数: ${finalThinkingChain.length}`
+      );
+    } else if (thinkingChain.length > 0) {
+      // 使用流式过程中收集的思维链
+      cleanContent = fullMarkdown; // 对于流式检测，保持原始内容
+    }
+
     const aiData: AICustomProperties["ai"] = {
       generated: true,
       model: options.model || this.config.defaultModel,
@@ -346,18 +364,19 @@ export abstract class BaseAIProvider implements AIProvider {
       generatedAt: new Date().toISOString(),
       prompt: options.prompt,
       requestId: `req_${Date.now()}`,
-      showThinking: this.config.supportsThinking && thinkingChain.length > 0,
       thinkingCollapsed: true,
       isStreaming: false,
-      originalMarkdown: fullMarkdown,
+      originalMarkdown: cleanContent, // 使用清理后的内容
     };
 
-    // 添加思维链数据
-    if (this.config.supportsThinking && thinkingChain.length > 0) {
+    // 如果检测到思维链，添加思维链数据
+    if (finalThinkingChain.length > 0) {
       aiData.thinkingChain = {
-        steps: thinkingChain,
-        summary: `通过${thinkingChain.length}步推理完成`,
-        totalSteps: thinkingChain.length,
+        steps: finalThinkingChain,
+        summary:
+          finalDetection.thinkingContent?.summary ||
+          `通过${finalThinkingChain.length}步推理完成`,
+        totalSteps: finalThinkingChain.length,
       };
     }
 
@@ -380,20 +399,19 @@ export abstract class BaseAIProvider implements AIProvider {
       generatedAt: new Date().toISOString(),
       prompt: options.prompt,
       requestId: `req_${Date.now()}`,
-      showThinking: this.config.supportsThinking, // 支持思维链就显示
       thinkingCollapsed: false, // 生成过程中默认展开
       isStreaming: true, // 正在流式生成
       originalMarkdown: fullMarkdown,
     };
 
-    // 添加思维链数据（即使为空也添加结构）
-    if (this.config.supportsThinking) {
+    // 如果有思维链数据，添加思维链结构
+    if (thinkingChain.length > 0) {
       aiData.thinkingChain = {
         steps: thinkingChain,
         summary:
           thinkingChain.length > 0
-            ? `已生成${thinkingChain.length}步推理`
-            : "正在生成思维链",
+            ? `正在生成思维链 (${thinkingChain.length}步)`
+            : "正在思考...",
         totalSteps: thinkingChain.length,
       };
     }

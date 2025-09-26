@@ -242,38 +242,6 @@ class AIService {
   }
 
   /**
-   * 获取全局思维链显示设置
-   */
-  getGlobalShowThinking(): boolean {
-    return this.currentSettings.globalShowThinking;
-  }
-
-  /**
-   * 设置全局思维链显示
-   * @param enabled 是否启用思维链显示
-   */
-  async setGlobalShowThinking(enabled: boolean): Promise<void> {
-    try {
-      console.log(`🧠 设置全局思维链显示: ${enabled}`);
-
-      this.currentSettings.globalShowThinking = enabled;
-      // 更新向后兼容字段
-      this.currentSettings.showThinking = enabled;
-
-      // 保存设置
-      await this.saveSettings({
-        globalShowThinking: enabled,
-        showThinking: enabled,
-      });
-
-      console.log(`✅ 全局思维链设置已更新: ${enabled}`);
-    } catch (error) {
-      console.error(`❌ 更新思维链设置失败:`, error);
-      throw new Error("更新思维链设置失败");
-    }
-  }
-
-  /**
    * 思维链支持的模型配置
    * 便于维护和扩展新的支持思维链的模型
    */
@@ -308,10 +276,12 @@ class AIService {
 
   /**
    * 判断是否应该显示思维链
-   * 综合考虑全局设置和模型能力
+   * 现在基于内容检测，不再依赖全局开关
+   * @deprecated 此方法已废弃，思维链显示现在基于内容自动检测
    */
   shouldShowThinking(): boolean {
-    return this.getGlobalShowThinking() && this.currentModelSupportsThinking();
+    // 始终返回true，让BaseAIProvider的检测器决定
+    return true;
   }
 
   /**
@@ -514,23 +484,21 @@ class AIService {
         throw error;
       }
 
-      // 检查思维链功能提示 - 使用新的全局控制逻辑
-      if (this.getGlobalShowThinking()) {
-        const currentProvider = this.getCurrentProvider();
-        const currentModel = this.getCurrentModel();
+      // 思维链功能现在基于内容自动检测，不再需要全局开关提示
+      // 保留模型兼容性检查用于调试
+      const currentModel = this.getCurrentModel();
 
-        if (
-          currentProvider === "deepseek" &&
-          !currentModel.includes("reasoner")
-        ) {
-          console.warn(
-            `💡 提示: 当前使用的是 ${currentModel} 模型，该模型不支持思维链功能。如需使用思维链，请在设置中切换到 deepseek-reasoner 模型。`
-          );
-        } else if (!this.currentModelSupportsThinking()) {
-          console.warn(
-            `💡 提示: 当前模型 ${currentProvider}/${currentModel} 不支持思维链功能。`
-          );
-        }
+      if (
+        currentProvider === "deepseek" &&
+        !currentModel.includes("reasoner")
+      ) {
+        console.info(
+          `💡 提示: 当前使用的是 ${currentModel} 模型，该模型不支持思维链功能。如需使用思维链，请在设置中切换到 deepseek-reasoner 模型。`
+        );
+      } else if (!this.currentModelSupportsThinking()) {
+        console.info(
+          `💡 提示: 当前模型 ${currentProvider}/${currentModel} 不支持思维链功能。`
+        );
       }
 
       const completeOptions: AIGenerationOptions = {

@@ -30,7 +30,8 @@ export interface AICustomProperties {
     };
 
     // UI状态
-    showThinking?: boolean; // 是否显示思维链
+    /** @deprecated 思维链显示现在基于数据存在性自动判断，不再需要此字段 */
+    showThinking?: boolean; // 为了向后兼容保留，但已不使用
     thinkingCollapsed?: boolean; // 思维链是否折叠
 
     // 元数据
