@@ -16,34 +16,17 @@ import type { AIGenerationOptions } from "../../types/ai";
  */
 class AlibabaRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
-    // 映射模型名称 - 处理自定义模型名称
-    let modelName = options.model || "qwen-turbo";
-
-    // 如果是不支持的模型名称，映射到默认模型
-    const supportedModels = [
-      "qwen-plus",
-      "qwen-turbo",
-      "qwen-max",
-      "qwen2-72b-instruct",
-      "qwen2-7b-instruct",
-    ];
-    if (!supportedModels.includes(modelName)) {
-      console.warn(
-        `⚠️ [Alibaba] 不支持的模型 ${modelName}, 使用默认模型 qwen-turbo`
-      );
-      modelName = "qwen-turbo";
-    }
+    // 直接使用用户指定的模型名称，不做校验
+    const modelName = options.model || "qwen-turbo";
 
     const parameters: any = {
-      stream: options.stream ?? true, // 默认启用流式输出
+      stream: options.stream ?? true,
     };
 
-    // 只有明确指定了temperature才设置，否则使用API默认值
     if (options.temperature !== undefined) {
       parameters.temperature = options.temperature;
     }
 
-    // 只有明确指定了maxTokens才设置，否则使用API默认值
     if (options.maxTokens) {
       parameters.max_tokens = options.maxTokens;
     }
@@ -157,15 +140,9 @@ export class AlibabaProvider extends BaseAIProvider {
       "qwen-turbo",
       "qwen-max",
       "qwen2-72b-instruct",
-      "qwen2-7b-instruct",
-      "qwen1.5-110b-chat",
-      "qwen1.5-72b-chat",
-      "qwen1.5-32b-chat",
-      "qwen1.5-14b-chat",
-      "qwen1.5-7b-chat",
     ],
     supportsStreaming: true,
-    supportsThinking: false, // 暂时不支持思维链，待官方API更新
+    supportsThinking: false,
   };
 
   protected readonly requestBuilder = new AlibabaRequestBuilder();

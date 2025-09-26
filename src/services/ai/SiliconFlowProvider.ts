@@ -18,27 +18,32 @@ import type { AIGenerationOptions } from "../../types/ai";
  */
 class SiliconFlowRequestBuilder implements RequestBodyBuilder {
   buildRequestBody(options: AIGenerationOptions): any {
+    // 直接使用用户指定的模型名称，不做校验
+    const modelName = options.model || "deepseek-llm-67b-chat";
+
     const requestBody: any = {
-      model: options.model || "deepseek-chat",
+      model: modelName,
       messages: [
         {
           role: "user",
           content: options.prompt,
         },
       ],
-      stream: options.stream ?? true, // 默认启用流式输出
+      stream: options.stream ?? true,
     };
-    
-    // 只有明确指定了temperature才设置，否则使用API默认值
+
     if (options.temperature !== undefined) {
       requestBody.temperature = options.temperature;
     }
-    
-    // 只有明确指定了maxTokens才设置，否则使用API默认值
+
     if (options.maxTokens) {
       requestBody.max_tokens = options.maxTokens;
     }
-    
+
+    console.log(
+      `🚀 [SiliconFlow] 构建请求体:`,
+      JSON.stringify(requestBody, null, 2)
+    );
     return requestBody;
   }
 }
@@ -64,6 +69,10 @@ class SiliconFlowResponseParser implements ResponseParser {
           const deltaContent = parsed.choices?.[0]?.delta?.content;
           if (deltaContent) {
             content += deltaContent;
+            console.log(
+              `📝 [SiliconFlow] 提取到内容:`,
+              deltaContent.substring(0, 100)
+            );
           }
         } catch (parseError) {
           continue;
@@ -95,10 +104,15 @@ export class SiliconFlowProvider extends BaseAIProvider {
 
   protected readonly config: AIProviderConfig = {
     apiEndpoint: "https://api.siliconflow.cn/v1/chat/completions",
-    defaultModel: "deepseek-chat",
-    supportedModels: ["deepseek-chat", "qwen-72b-chat", "internlm2_5-7b-chat"],
+    defaultModel: "deepseek-llm-67b-chat",
+    supportedModels: [
+      "deepseek-llm-67b-chat",
+      "qwen-72b-chat",
+      "internlm2_5-7b-chat",
+      "yi-large",
+    ],
     supportsStreaming: true,
-    supportsThinking: false, // 作为代理服务，不支持思维链
+    supportsThinking: false,
   };
 
   protected readonly requestBuilder = new SiliconFlowRequestBuilder();

@@ -183,8 +183,8 @@ class AIService {
       // 临时保存API密钥用于测试
       await this.securityManager.setAPIKey(provider, apiKey);
 
-      // 测试提供商连接
-      const testResult = await this.testProvider(provider);
+      // 测试提供商连接，传递指定的模型
+      const testResult = await this.testProvider(provider, model);
 
       if (testResult) {
         console.log(`✅ 配置测试成功: ${provider} - ${model}`);
@@ -353,40 +353,35 @@ class AIService {
 
   /**
    * 验证和修复模型设置
-   * 确保模型名称与提供商支持的模型匹配
+   * 仅处理缺失的必要字段，不校验模型有效性
    */
   private async validateAndFixModelSettings(settings: any): Promise<any> {
     const fixedSettings = { ...settings };
 
     if (fixedSettings.provider) {
       try {
-        const provider = await this.getProvider(fixedSettings.provider);
-        const supportedModels = provider.supportedModels;
-
         // 当默认模型缺失时使用提供商默认模型兜底
         if (!fixedSettings.defaultModel) {
-          fixedSettings.defaultModel = supportedModels[0] ?? provider.name;
+          const providerRegistry = (await import("./ai/ProviderRegistry"))
+            .providerRegistry;
+          const defaultModel = providerRegistry.getDefaultModel(
+            fixedSettings.provider
+          );
+          fixedSettings.defaultModel = defaultModel || "gpt-3.5-turbo";
         }
 
         // 如果活跃配置缺失模型信息，也同步兜底
-        if (fixedSettings.activeConfig?.model === undefined) {
+        if (!fixedSettings.activeConfig?.model) {
           fixedSettings.activeConfig = {
             ...(fixedSettings.activeConfig ?? {}),
             model: fixedSettings.defaultModel,
           };
         }
 
-        // 对于自定义模型，仅记录日志而不强制回退
-        const activeModel = fixedSettings.activeConfig?.model;
-        if (
-          activeModel &&
-          supportedModels.length > 0 &&
-          !supportedModels.includes(activeModel)
-        ) {
-          console.warn(
-            `ℹ️ 检测到 ${fixedSettings.provider} 的自定义模型 ${activeModel}，将保留该配置。`
-          );
-        }
+        // 保留用户设置的模型，不做校验（交给测试时处理）
+        console.log(
+          `ℹ️ 保留用户配置的模型: ${fixedSettings.provider}/${fixedSettings.activeConfig.model}`
+        );
       } catch (error) {
         console.warn(`⚠️ 验证模型设置时出错:`, error);
       }
@@ -696,15 +691,11 @@ class AIService {
         };
       }
 
-      // 3. 检查模型是否在支持列表中（允许自定义模型，仅记录提示）
-      const supportedModels = providerRegistry.getSupportedModels(
-        activeConfig.provider as ProviderId
+      // 3. 跳过模型校验（用户可以配置任何模型名称）
+      // 实际的模型有效性将在"保存并测试"时进行验证
+      console.info(
+        `ℹ️ 当前配置的模型: ${activeConfig.provider}/${activeConfig.model}`
       );
-      if (!supportedModels.includes(activeConfig.model)) {
-        console.info(
-          `ℹ️ 当前使用自定义模型 ${activeConfig.provider}/${activeConfig.model}，未在预设列表中。`
-        );
-      }
 
       // 4. 验证API密钥格式
       const apiKey = await this.getAPIKey(activeConfig.provider);
@@ -817,8 +808,10 @@ class AIService {
 
   /**
    * 测试提供商连接
+   * @param providerName 提供商名称
+   * @param model 要测试的模型名称（可选）
    */
-  async testProvider(providerName: string): Promise<boolean> {
+  async testProvider(providerName: string, model?: string): Promise<boolean> {
     try {
       const provider = await this.getProvider(providerName);
       if (!provider) {
@@ -830,13 +823,14 @@ class AIService {
         throw new Error("API密钥未配置");
       }
 
-      // 发送测试请求
+      // 发送测试请求，使用指定的模型
       const testPrompt = "测试连接";
       let testPassed = false;
 
       await provider.generateContent({
         noteId: "test",
         prompt: testPrompt,
+        model: model, // 传递指定的模型
         onStream: () => {
           testPassed = true;
         },
