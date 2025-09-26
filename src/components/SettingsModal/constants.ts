@@ -240,12 +240,13 @@ export const DEFAULT_DISPLAY_SETTINGS = {
 };
 
 /**
- * 默认便签设置
+ * \u9ed8\u8ba4\u4fbf\u7b7e\u8bbe\u7f6e
  */
 export const DEFAULT_NOTE_SETTINGS = {
   defaultWidth: 300,
   defaultHeight: 200,
   noteOpacity: 1.0,
+  randomColor: true,
 };
 
 /**

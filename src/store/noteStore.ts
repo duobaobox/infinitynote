@@ -10,6 +10,7 @@ import { dbOperations } from "../utils/db";
 import { noteStoreEvents, storeEventBus } from "./storeEvents";
 import { aiService } from "../services/aiService";
 import { loadSettingsFromStorage } from "../components/SettingsModal/utils";
+import { NoteColorConfig } from "../config/noteColors";
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -219,21 +220,29 @@ export const useNoteStore = create<NoteStore>()(
       createNote: async (
         canvasId: string,
         position: Position,
-        color = NoteColor.YELLOW
+        color?: string
       ) => {
         const tempId = generateId();
         const now = new Date();
         const { maxZIndex } = get();
         
-        // 从存储中加载设置以获取默认便签尺寸
+        // 从存储中加载设置以获取默认便签尺寸和随机颜色设置
         const settings = loadSettingsFromStorage();
         const noteSettings = settings.note;
+
+        // 如果未提供颜色且开启了随机颜色，则随机选择一个颜色，否则使用默认黄色
+        let selectedColor = color;
+        if (!selectedColor && noteSettings.randomColor) {
+          selectedColor = NoteColorConfig.getRandomColor().value;
+        } else if (!selectedColor) {
+          selectedColor = NoteColor.YELLOW; // 默认颜色
+        }
 
         const newNote: Note = {
           id: tempId,
           title: "新便签",
           content: "",
-          color,
+          color: selectedColor,
           position,
           size: { 
             width: noteSettings.defaultWidth || NOTE_DEFAULT_SIZE.width,
@@ -1130,7 +1139,8 @@ export const useNoteStore = create<NoteStore>()(
         } else {
           const canvasId = noteWithAI.canvasId || "default-canvas";
           const position = noteWithAI.position || { x: 100, y: 100 };
-          const color = noteWithAI.color || NoteColor.YELLOW;
+          // 如果noteData没有指定颜色，则让createNote方法处理随机颜色
+          const color = noteWithAI.color;
 
           return await get().createNote(canvasId, position, color);
         }
@@ -1143,11 +1153,10 @@ export const useNoteStore = create<NoteStore>()(
         position: Position = { x: 200, y: 200 }
       ): Promise<string> => {
         try {
-          // 直接调用createNote，因为它现在使用默认尺寸
+          // 直接调用createNote，不传入颜色值，让createNote方法根据设置决定是否使用随机颜色
           const noteId = await get().createNote(
             canvasId,
-            position,
-            NoteColor.YELLOW
+            position
           );
 
           // 更新便签标题为提示词的前几个字

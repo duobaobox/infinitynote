@@ -356,6 +356,28 @@ const DisplaySettingsTab: React.FC<DisplaySettingsTabProps> = ({
                 style={{ width: 160 }}
               />
             </div>
+
+            {/* 便签随机颜色 */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>便签生成随机颜色</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  启用后新便签将使用随机颜色
+                </div>
+              </div>
+              <Switch
+                checked={noteSettings.randomColor}
+                onChange={(checked) => onNoteSettingChange("randomColor", checked)}
+              />
+            </div>
           </div>
         </Card>
       </div>

@@ -234,7 +234,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           );
         }
 
-        await createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
+        await createNote(activeCanvasId, canvasPosition);
         console.log("✅ 画布便签创建成功");
       } catch (error) {
         console.error("❌ 画布便签创建失败:", error);

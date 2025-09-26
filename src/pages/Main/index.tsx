@@ -279,7 +279,7 @@ const Main: React.FC = () => {
           );
         }
 
-        await createNote(activeCanvasId, canvasPosition, NoteColor.YELLOW);
+        await createNote(activeCanvasId, canvasPosition);
         console.log("✅ 便签创建成功");
       } catch (error) {
         console.error("❌ 创建便签失败:", error);

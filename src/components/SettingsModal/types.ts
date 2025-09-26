@@ -132,6 +132,8 @@ export interface NoteSettings {
   defaultHeight: number;
   /** 便签透明度 */
   noteOpacity: number;
+  /** 随机颜色 */
+  randomColor: boolean;
 }
 
 /**
