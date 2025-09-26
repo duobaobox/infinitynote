@@ -792,7 +792,7 @@ class AIService {
       }
 
       // 发送测试请求，使用指定的模型
-      const testPrompt = "测试连接";
+      const testPrompt = "hi";
       let testPassed = false;
 
       await provider.generateContent({

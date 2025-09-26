@@ -168,12 +168,20 @@ export abstract class BaseAIProvider implements AIProvider {
       bodyPreview: JSON.stringify(requestBody).substring(0, 200),
     });
 
-    const response = await fetch(endpoint, {
+    // 增加超时机制，5秒未响应自动中断
+    const fetchPromise = fetch(endpoint, {
       method: "POST",
       headers,
       body: JSON.stringify(requestBody),
       signal: abortController.signal,
     });
+    const timeoutPromise = new Promise<Response>((_, reject) => {
+      setTimeout(() => {
+        abortController.abort();
+        reject(new Error("请求超时（5秒）"));
+      }, 5000);
+    });
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
 
     console.log(`📡 [${this.name}] 收到响应:`, {
       status: response.status,

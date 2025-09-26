@@ -72,7 +72,7 @@ const PROVIDER_REGISTRY: Record<ProviderId, ProviderMetadata> = {
     defaultModel: "glm-4.5-flash",
     supportsStreaming: true,
     supportsThinking: true,
-    apiKeyPattern: /^[a-zA-Z0-9]{32,}$/,
+    apiKeyPattern: /^[a-zA-Z0-9._-]{32,}$/,
     colors: {
       light: "#1890ff",
       dark: "#3c9ae8",
