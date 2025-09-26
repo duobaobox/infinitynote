@@ -74,13 +74,18 @@ import { providerRegistry } from "../../services/ai/ProviderRegistry";
 /**
  * API 提供商选项 - 从注册中心动态生成
  */
-export const API_PROVIDERS = providerRegistry
-  .getAllProviderMetadata()
-  .map((metadata) => ({
-    value: metadata.id,
-    label: metadata.name,
-    description: metadata.description,
-  }));
+// 指定顺序：深度求索、阿里百炼、硅基流动、智谱AI、openAI、anthropic
+const PROVIDER_ORDER: import("../../services/ai/ProviderRegistry").ProviderId[] =
+  ["deepseek", "alibaba", "siliconflow", "zhipu", "openai", "anthropic"];
+export const API_PROVIDERS = PROVIDER_ORDER.map((id) =>
+  providerRegistry.getProviderMetadata(
+    id as import("../../services/ai/ProviderRegistry").ProviderId
+  )
+).map((metadata) => ({
+  value: metadata.id,
+  label: metadata.name,
+  description: metadata.description,
+}));
 
 /**
  * 模型选项配置 - 从注册中心动态生成

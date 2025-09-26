@@ -30,8 +30,25 @@ export const ActiveModelStatus: React.FC<ActiveModelStatusProps> = ({
   providerLabel,
   modelLabel,
   connectionStatus,
+  providerColor,
 }) => {
   const { isDark } = useTheme();
+
+  // 将16进制颜色转为rgba，透明度20%
+  function hexToRgba(hex: string, alpha: number) {
+    let c = hex.replace("#", "");
+    if (c.length === 3) {
+      c = c
+        .split("")
+        .map((x) => x + x)
+        .join("");
+    }
+    const num = parseInt(c, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
 
   // 获取状态显示信息
   const getStatusInfo = () => {
@@ -68,7 +85,9 @@ export const ActiveModelStatus: React.FC<ActiveModelStatusProps> = ({
         alignItems: "center",
         justifyContent: "space-between",
         padding: "12px 16px",
-        backgroundColor: "var(--bg-secondary)",
+        backgroundColor: providerColor
+          ? hexToRgba(providerColor, 0.12) //活跃模型背景颜色透明度
+          : "var(--bg-secondary)",
         borderRadius: "6px",
         marginBottom: "16px",
         border: `1px solid ${isDark ? "#303030" : "#f0f0f0"}`,
@@ -79,7 +98,7 @@ export const ActiveModelStatus: React.FC<ActiveModelStatusProps> = ({
         <Text strong style={{ fontSize: "12px" }}>
           {providerLabel} / {modelLabel}
         </Text>
-      </div>{" "}
+      </div>
       {/* 右侧：连接状态 */}
       <div>
         <Text style={{ fontSize: "12px", color: statusInfo.color }}>
