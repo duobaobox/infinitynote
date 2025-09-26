@@ -126,6 +126,29 @@ export abstract class BaseAIProvider implements AIProvider {
   }
 
   /**
+   * 获取API端点URL
+   * 在开发环境中使用代理路径避免CORS问题
+   */
+  protected getApiEndpoint(): string {
+    // 检测是否为开发环境
+    const isDev = import.meta.env.DEV;
+
+    if (!isDev) {
+      return this.config.apiEndpoint;
+    }
+
+    // 开发环境使用代理路径
+    const providerProxyMap: Record<string, string> = {
+      alibaba: "/api/alibaba",
+      openai: "/api/openai",
+      anthropic: "/api/anthropic",
+      siliconflow: "/api/siliconflow",
+    };
+
+    return providerProxyMap[this.name] || this.config.apiEndpoint;
+  }
+
+  /**
    * 发起HTTP请求
    * 统一的请求处理逻辑
    */
@@ -135,13 +158,29 @@ export abstract class BaseAIProvider implements AIProvider {
     abortController: AbortController
   ): Promise<Response> {
     const headers = this.buildHeaders(apiKey);
+    const endpoint = this.getApiEndpoint();
 
-    return await fetch(this.config.apiEndpoint, {
+    console.log(`🌐 [${this.name}] 发起请求:`, {
+      endpoint,
+      method: "POST",
+      headers: { ...headers, Authorization: "Bearer ***" }, // 隐藏敏感信息
+      bodyPreview: JSON.stringify(requestBody).substring(0, 200),
+    });
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers,
       body: JSON.stringify(requestBody),
       signal: abortController.signal,
     });
+
+    console.log(`📡 [${this.name}] 收到响应:`, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+    });
+
+    return response;
   }
 
   /**
@@ -183,20 +222,33 @@ export abstract class BaseAIProvider implements AIProvider {
     let retryCount = 0;
     const maxRetries = 3;
 
+    console.log(
+      `🔍 [${this.name}] 开始处理流式响应，响应状态: ${response.status}`
+    );
+
     try {
       while (true) {
         if (abortController.signal.aborted) {
+          console.log(`🛑 [${this.name}] 流式响应已中止`);
           break;
         }
 
         try {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            console.log(`✅ [${this.name}] 流式响应读取完成`);
+            break;
+          }
 
           const chunk = new TextDecoder().decode(value);
+          console.log(
+            `📦 [${this.name}] 接收到数据块:`,
+            chunk.substring(0, 200) + (chunk.length > 200 ? "..." : "")
+          );
 
           // 检查流是否完成
           if (this.responseParser.isStreamComplete(chunk)) {
+            console.log(`🏁 [${this.name}] 检测到流结束标志`);
             break;
           }
 
@@ -204,6 +256,11 @@ export abstract class BaseAIProvider implements AIProvider {
           const deltaContent =
             this.responseParser.extractContentFromChunk(chunk);
           if (deltaContent) {
+            console.log(
+              `📝 [${this.name}] 提取到内容:`,
+              deltaContent.substring(0, 100) +
+                (deltaContent.length > 100 ? "..." : "")
+            );
             fullMarkdown += deltaContent;
             const html = markdownConverter.convertStreamChunk(fullMarkdown);
 
@@ -214,6 +271,8 @@ export abstract class BaseAIProvider implements AIProvider {
               thinkingChain
             );
             options.onStream?.(html, currentAIData);
+          } else {
+            console.log(`⚠️ [${this.name}] 数据块中未提取到有效内容`);
           }
 
           // 提取思维链（如果支持）

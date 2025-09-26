@@ -84,6 +84,51 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    // 代理配置解决CORS问题
+    proxy: {
+      // 阿里百炼API代理
+      "/api/alibaba": {
+        target: "https://dashscope.aliyuncs.com",
+        changeOrigin: true,
+        rewrite: (path) =>
+          path.replace(
+            /^\/api\/alibaba/,
+            "/api/v1/services/aigc/text-generation/generation"
+          ),
+        headers: {
+          Origin: "https://dashscope.aliyuncs.com",
+        },
+      },
+      // OpenAI API代理
+      "/api/openai": {
+        target: "https://api.openai.com",
+        changeOrigin: true,
+        rewrite: (path) =>
+          path.replace(/^\/api\/openai/, "/v1/chat/completions"),
+        headers: {
+          Origin: "https://api.openai.com",
+        },
+      },
+      // Anthropic API代理
+      "/api/anthropic": {
+        target: "https://api.anthropic.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/anthropic/, "/v1/messages"),
+        headers: {
+          Origin: "https://api.anthropic.com",
+        },
+      },
+      // SiliconFlow API代理
+      "/api/siliconflow": {
+        target: "https://api.siliconflow.cn",
+        changeOrigin: true,
+        rewrite: (path) =>
+          path.replace(/^\/api\/siliconflow/, "/v1/chat/completions"),
+        headers: {
+          Origin: "https://api.siliconflow.cn",
+        },
+      },
+    },
   },
 
   // 预构建优化

@@ -358,17 +358,34 @@ class AIService {
   private async validateAndFixModelSettings(settings: any): Promise<any> {
     const fixedSettings = { ...settings };
 
-    if (fixedSettings.provider && fixedSettings.defaultModel) {
+    if (fixedSettings.provider) {
       try {
         const provider = await this.getProvider(fixedSettings.provider);
         const supportedModels = provider.supportedModels;
 
-        // 检查当前模型是否在支持列表中
-        if (!supportedModels.includes(fixedSettings.defaultModel)) {
+        // 当默认模型缺失时使用提供商默认模型兜底
+        if (!fixedSettings.defaultModel) {
+          fixedSettings.defaultModel = supportedModels[0] ?? provider.name;
+        }
+
+        // 如果活跃配置缺失模型信息，也同步兜底
+        if (fixedSettings.activeConfig?.model === undefined) {
+          fixedSettings.activeConfig = {
+            ...(fixedSettings.activeConfig ?? {}),
+            model: fixedSettings.defaultModel,
+          };
+        }
+
+        // 对于自定义模型，仅记录日志而不强制回退
+        const activeModel = fixedSettings.activeConfig?.model;
+        if (
+          activeModel &&
+          supportedModels.length > 0 &&
+          !supportedModels.includes(activeModel)
+        ) {
           console.warn(
-            `⚠️ 模型 ${fixedSettings.defaultModel} 不被 ${fixedSettings.provider} 支持，自动修复为: ${supportedModels[0]}`
+            `ℹ️ 检测到 ${fixedSettings.provider} 的自定义模型 ${activeModel}，将保留该配置。`
           );
-          fixedSettings.defaultModel = supportedModels[0];
         }
       } catch (error) {
         console.warn(`⚠️ 验证模型设置时出错:`, error);
@@ -679,15 +696,14 @@ class AIService {
         };
       }
 
-      // 3. 检查模型是否在支持列表中
+      // 3. 检查模型是否在支持列表中（允许自定义模型，仅记录提示）
       const supportedModels = providerRegistry.getSupportedModels(
         activeConfig.provider as ProviderId
       );
       if (!supportedModels.includes(activeConfig.model)) {
-        return {
-          status: "error",
-          message: `模型 ${activeConfig.model} 不被当前提供商支持`,
-        };
+        console.info(
+          `ℹ️ 当前使用自定义模型 ${activeConfig.provider}/${activeConfig.model}，未在预设列表中。`
+        );
       }
 
       // 4. 验证API密钥格式

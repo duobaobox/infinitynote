@@ -3,24 +3,22 @@
  * 专注于AI提供商和模型的配置、测试功能
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   Card,
   Form,
-  Select,
+  AutoComplete,
   Input,
   Button,
   Space,
   Typography,
   App,
-  Spin,
 } from "antd";
 import { useTheme } from "../../../theme";
 import type { AIConfigurationState } from "../../../types/ai";
 import { API_PROVIDERS, MODEL_OPTIONS_BY_PROVIDER } from "../constants";
 
 const { Text } = Typography;
-const { Option } = Select;
 
 export interface ModelConfigurationProps {
   /** 当前配置状态 */
@@ -90,8 +88,9 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
   // 处理模型变更
   const handleModelChange = useCallback(
     (model: string) => {
+      const sanitizedModel = model.trim();
       onConfigChange({
-        selectedModel: model,
+        selectedModel: sanitizedModel,
         connectionStatus: "idle",
         errorMessage: undefined,
       });
@@ -129,10 +128,29 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
   );
 
   // 获取当前选择的模型选项
-  const modelOptions =
+  const providerModelOptions =
     MODEL_OPTIONS_BY_PROVIDER[
       configState.selectedProvider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
     ] || [];
+
+  const modelOptions = useMemo(() => {
+    if (!configState.selectedModel) {
+      return providerModelOptions;
+    }
+
+    const existsInOptions = providerModelOptions.some(
+      (option) => option.value === configState.selectedModel
+    );
+
+    if (existsInOptions) {
+      return providerModelOptions;
+    }
+
+    return [
+      { value: configState.selectedModel, label: configState.selectedModel },
+      ...providerModelOptions,
+    ];
+  }, [providerModelOptions, configState.selectedModel]);
 
   return (
     <div style={{ display: "flex", gap: "16px", height: "350px" }}>
@@ -265,32 +283,24 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
         <Card size="small" title="模型选择">
           <Form layout="vertical">
             <Form.Item label="选择模型">
-              <Select
+              <AutoComplete
                 value={configState.selectedModel}
                 onChange={handleModelChange}
+                onBlur={() => handleModelChange(configState.selectedModel)}
                 style={{ width: "100%" }}
                 placeholder="请选择预设模型或输入自定义模型名称"
-                showSearch
                 allowClear
-                filterOption={(input, option) =>
+                options={modelOptions.map((option) => ({
+                  value: option.value,
+                  label: option.label,
+                }))}
+                filterOption={(inputValue, option) =>
                   (option?.label as string)
                     ?.toLowerCase()
-                    .includes(input.toLowerCase())
+                    .includes(inputValue.toLowerCase())
                 }
-                notFoundContent={
-                  <div style={{ padding: "8px", textAlign: "center" }}>
-                    <Text type="secondary" style={{ fontSize: "12px" }}>
-                      输入自定义模型名称，如：gpt-4o、claude-3.5-sonnet 等
-                    </Text>
-                  </div>
-                }
-              >
-                {modelOptions.map((model) => (
-                  <Option key={model.value} value={model.value}>
-                    {model.label}
-                  </Option>
-                ))}
-              </Select>
+                onSelect={(value) => handleModelChange(value)}
+              />
             </Form.Item>
           </Form>
 
