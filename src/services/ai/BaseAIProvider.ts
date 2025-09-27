@@ -99,7 +99,11 @@ export abstract class BaseAIProvider implements AIProvider {
       const response = await this.makeRequest(
         apiKey,
         requestBody,
-        abortController
+        abortController,
+        {
+          noteId: options.noteId,
+          prompt: options.prompt,
+        }
       );
 
       // 4. 处理响应
@@ -156,10 +160,17 @@ export abstract class BaseAIProvider implements AIProvider {
   protected async makeRequest(
     apiKey: string,
     requestBody: any,
-    abortController: AbortController
+    abortController: AbortController,
+    options?: { noteId?: string; prompt?: string }
   ): Promise<Response> {
     const headers = this.buildHeaders(apiKey);
     const endpoint = this.getApiEndpoint();
+    const requestStartTime = Date.now();
+
+    // 生成请求ID用于关联请求和响应
+    const requestId = `req_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
 
     console.log(`🌐 [${this.name}] 发起请求:`, {
       endpoint,
@@ -167,6 +178,35 @@ export abstract class BaseAIProvider implements AIProvider {
       headers: { ...headers, Authorization: "Bearer ***" }, // 隐藏敏感信息
       bodyPreview: JSON.stringify(requestBody).substring(0, 200),
     });
+
+    // 记录API请求到测试面板
+    try {
+      const { useTestPanelStore } = await import("../../store/testPanelStore");
+      const testPanelStore = useTestPanelStore.getState();
+
+      const bodyString = JSON.stringify(requestBody, null, 2);
+      const sessionId = `session_${options?.noteId}_${Date.now()}`;
+
+      testPanelStore.addRequest({
+        id: requestId,
+        timestamp: requestStartTime,
+        provider: this.name,
+        model: requestBody.model || "unknown",
+        endpoint,
+        method: "POST",
+        headers: { ...headers, Authorization: "Bearer ***" }, // 隐藏敏感信息
+        body: bodyString,
+        prompt:
+          options?.prompt || requestBody.messages?.[0]?.content || "unknown",
+        noteId: options?.noteId || "unknown",
+        // 增强字段
+        requestSize: new Blob([bodyString]).size,
+        userAgent: navigator.userAgent,
+        sessionId,
+      });
+    } catch (error) {
+      console.warn("记录API请求到测试面板失败:", error);
+    }
 
     // 增加超时机制，5秒未响应自动中断
     const fetchPromise = fetch(endpoint, {
@@ -181,15 +221,106 @@ export abstract class BaseAIProvider implements AIProvider {
         reject(new Error("请求超时（5秒）"));
       }, 5000);
     });
-    const response = await Promise.race([fetchPromise, timeoutPromise]);
 
-    console.log(`📡 [${this.name}] 收到响应:`, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
-    });
+    let response: Response;
+    let responseBody = "";
 
-    return response;
+    try {
+      response = await Promise.race([fetchPromise, timeoutPromise]);
+
+      // 对于流式响应，不尝试读取完整响应体，而是记录流式响应信息
+      if (response.headers.get("content-type")?.includes("text/event-stream")) {
+        responseBody = `流式响应 - Content-Type: ${response.headers.get(
+          "content-type"
+        )}`;
+        console.log(`📡 [${this.name}] 检测到流式响应，跳过完整体读取`);
+      } else {
+        // 对于非流式响应，尝试读取完整body
+        const responseClone = response.clone();
+        try {
+          responseBody = await responseClone.text();
+        } catch (bodyError) {
+          console.warn("读取响应体失败:", bodyError);
+          responseBody = "读取响应体失败";
+        }
+      }
+
+      console.log(`📡 [${this.name}] 收到响应:`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
+      // 记录API响应到测试面板
+      try {
+        const { useTestPanelStore } = await import(
+          "../../store/testPanelStore"
+        );
+        const testPanelStore = useTestPanelStore.getState();
+
+        // 尝试解析token信息
+        let tokenInfo = {};
+        try {
+          const parsedBody = JSON.parse(responseBody);
+          if (parsedBody.usage) {
+            tokenInfo = {
+              totalTokens: parsedBody.usage.total_tokens,
+              promptTokens: parsedBody.usage.prompt_tokens,
+              completionTokens: parsedBody.usage.completion_tokens,
+            };
+          }
+        } catch {}
+
+        testPanelStore.addResponse({
+          id: `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          requestId,
+          timestamp: Date.now(),
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: responseBody,
+          duration: Date.now() - requestStartTime,
+          success: response.ok,
+          error: response.ok
+            ? undefined
+            : `HTTP ${response.status}: ${response.statusText}`,
+          // 增强字段
+          responseSize: new Blob([responseBody]).size,
+          firstByteTime: Date.now() - requestStartTime, // 首字节时间近似等于总响应时间
+          ...tokenInfo,
+        });
+      } catch (error) {
+        console.warn("记录API响应到测试面板失败:", error);
+      }
+
+      return response;
+    } catch (error) {
+      // 记录错误响应到测试面板
+      try {
+        const { useTestPanelStore } = await import(
+          "../../store/testPanelStore"
+        );
+        const testPanelStore = useTestPanelStore.getState();
+
+        testPanelStore.addResponse({
+          id: `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          requestId,
+          timestamp: Date.now(),
+          status: 0,
+          statusText: "Network Error",
+          headers: {},
+          body: "",
+          duration: Date.now() - requestStartTime,
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+          responseSize: 0, // 网络错误时响应大小为0
+        });
+      } catch (recordError) {
+        console.warn("记录错误响应到测试面板失败:", recordError);
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -231,8 +362,20 @@ export abstract class BaseAIProvider implements AIProvider {
     let retryCount = 0;
     const maxRetries = 3;
 
+    // 性能监控数据
+    const streamStartTime = Date.now();
+    let firstChunkTime: number | null = null;
+    let streamingSteps = 0;
+    let totalChunkSize = 0;
+    let errorCount = 0;
+
     console.log(
       `🔍 [${this.name}] 开始处理流式响应，响应状态: ${response.status}`
+    );
+    console.log(
+      `🔍 [${this.name}] 响应头 Content-Type: ${response.headers.get(
+        "content-type"
+      )}`
     );
 
     try {
@@ -250,6 +393,14 @@ export abstract class BaseAIProvider implements AIProvider {
           }
 
           const chunk = new TextDecoder().decode(value);
+
+          // 记录性能数据
+          if (firstChunkTime === null) {
+            firstChunkTime = Date.now();
+          }
+          streamingSteps++;
+          totalChunkSize += chunk.length;
+
           console.log(
             `📦 [${this.name}] 接收到数据块:`,
             chunk.substring(0, 200) + (chunk.length > 200 ? "..." : "")
@@ -319,6 +470,7 @@ export abstract class BaseAIProvider implements AIProvider {
           retryCount = 0; // 重置重试计数
         } catch (parseError) {
           console.warn(`解析${this.name}响应数据失败:`, parseError);
+          errorCount++;
           retryCount++;
           if (retryCount > maxRetries) {
             throw new Error("连续解析失败，中止生成");
@@ -330,6 +482,62 @@ export abstract class BaseAIProvider implements AIProvider {
       if (!abortController.signal.aborted) {
         const finalHTML = markdownConverter.convertComplete(fullMarkdown);
         const aiData = this.buildAIData(options, fullMarkdown, thinkingChain);
+
+        // 记录便签生成结果到测试面板
+        try {
+          const { useTestPanelStore } = await import(
+            "../../store/testPanelStore"
+          );
+          const testPanelStore = useTestPanelStore.getState();
+
+          const totalGenerationTime = Date.now() - streamStartTime;
+          const contentLength = fullMarkdown.length;
+          const wordCount = fullMarkdown
+            .split(/\s+/)
+            .filter((word) => word.length > 0).length;
+
+          // 计算性能指标
+          const ttfb = firstChunkTime ? firstChunkTime - streamStartTime : 0;
+          const streamingRate =
+            totalGenerationTime > 0
+              ? (contentLength / totalGenerationTime) * 1000
+              : 0; // 字符/秒
+          const avgChunkSize =
+            streamingSteps > 0 ? totalChunkSize / streamingSteps : 0;
+
+          testPanelStore.addGeneration({
+            id: `gen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            requestId: aiData?.requestId || "unknown",
+            noteId: options.noteId,
+            timestamp: Date.now(),
+            finalContent: finalHTML,
+            originalMarkdown: fullMarkdown,
+            hasThinkingChain: !!aiData?.thinkingChain,
+            thinkingChain: aiData?.thinkingChain,
+            aiData: {
+              provider: this.name,
+              model: aiData?.model || "unknown",
+              generated: aiData?.generated || false,
+              generatedAt: aiData?.generatedAt || new Date().toISOString(),
+              prompt: options.prompt,
+            },
+            // 增强字段
+            totalGenerationTime,
+            contentLength,
+            wordCount,
+            streamingSteps,
+            errorCount,
+            retryCount: retryCount,
+            performance: {
+              ttfb,
+              streamingRate: Math.round(streamingRate * 100) / 100, // 保留2位小数
+              avgChunkSize: Math.round(avgChunkSize * 100) / 100,
+            },
+          });
+        } catch (error) {
+          console.warn("记录便签生成结果到测试面板失败:", error);
+        }
+
         options.onComplete?.(finalHTML, aiData);
       }
     } finally {

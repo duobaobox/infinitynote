@@ -1,0 +1,139 @@
+/* 测试面板样式 */
+.testPanel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 600px;
+  max-height: 70vh;
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: white;
+}
+
+.panelCard {
+  margin: 0;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.panelCard :global(.ant-card-body) {
+  padding: 12px;
+  max-height: calc(70vh - 60px);
+  overflow: hidden;
+}
+
+.tabContent {
+  max-height: calc(70vh - 120px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.logCard {
+  margin-bottom: 8px;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+}
+
+.logCard :global(.ant-card-body) {
+  padding: 12px;
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+/* 滚动条样式 */
+.tabContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tabContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.tabContent::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.tabContent::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 深色主题支持 */
+[data-theme="dark"] .testPanel {
+  background: #141414;
+}
+
+[data-theme="dark"] .panelCard {
+  background: #141414;
+  border-color: #303030;
+}
+
+[data-theme="dark"] .logCard {
+  background: #1f1f1f;
+  border-color: #303030;
+}
+
+[data-theme="dark"] .logHeader {
+  border-bottom-color: #303030;
+}
+
+[data-theme="dark"] .tabContent::-webkit-scrollbar-track {
+  background: #262626;
+}
+
+[data-theme="dark"] .tabContent::-webkit-scrollbar-thumb {
+  background: #595959;
+}
+
+[data-theme="dark"] .tabContent::-webkit-scrollbar-thumb:hover {
+  background: #6d6d6d;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .testPanel {
+    width: calc(100vw - 40px);
+    right: 20px;
+    max-height: 60vh;
+  }
+
+  .tabContent {
+    max-height: calc(60vh - 120px);
+  }
+}
+
+/* 代码块样式 */
+.logCard pre {
+  background: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+[data-theme="dark"] .logCard pre {
+  background: #0d1117;
+  border-color: #30363d;
+  color: #f0f6fc;
+}

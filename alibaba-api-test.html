@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿里巴巴API连接测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .success {
+            border-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            border-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔧 阿里巴巴AI API 连接测试工具</h1>
+
+    <div class="warning">
+        ⚠️ <strong>注意：</strong>此工具仅用于调试目的。请不要在生产环境中暴露API密钥。
+    </div>
+
+    <form id="testForm">
+        <div class="form-group">
+            <label for="apiKey">API密钥：</label>
+            <input type="password" id="apiKey" placeholder="输入您的阿里巴巴API密钥" required>
+        </div>
+
+        <div class="form-group">
+            <label for="model">模型：</label>
+            <select id="model">
+                <option value="qwen-turbo">qwen-turbo</option>
+                <option value="qwen-plus">qwen-plus</option>
+                <option value="qwen-max">qwen-max</option>
+                <option value="qwen3-max">qwen3-max</option>
+                <option value="Moonshot-Kimi-K2-Instruct">Moonshot-Kimi-K2-Instruct</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="endpoint">API端点（可选）：</label>
+            <input type="url" id="endpoint"
+                placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+                value="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions">
+        </div>
+
+        <button type="submit" id="testButton">🚀 开始测试</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        class AlibabaAPITester {
+            constructor() {
+                this.form = document.getElementById('testForm');
+                this.resultDiv = document.getElementById('result');
+                this.testButton = document.getElementById('testButton');
+
+                this.form.addEventListener('submit', this.handleSubmit.bind(this));
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+
+                const apiKey = document.getElementById('apiKey').value;
+                const model = document.getElementById('model').value;
+                const endpoint = document.getElementById('endpoint').value;
+
+                if (!apiKey) {
+                    this.showResult('❌ 请输入API密钥', 'error');
+                    return;
+                }
+
+                this.testButton.disabled = true;
+                this.testButton.textContent = '🔄 测试中...';
+                this.showResult('🔄 正在测试API连接，请稍候...', '');
+
+                try {
+                    await this.testAPI(apiKey, model, endpoint);
+                } catch (error) {
+                    this.showResult(`❌ 测试失败: ${error.message}`, 'error');
+                } finally {
+                    this.testButton.disabled = false;
+                    this.testButton.textContent = '🚀 开始测试';
+                }
+            }
+
+            async testAPI(apiKey, model, endpoint) {
+                const startTime = Date.now();
+
+                const requestBody = {
+                    model,
+                    messages: [
+                        {
+                            role: "user",
+                            content: "你好，请简单介绍一下你自己。"
+                        }
+                    ],
+                    stream: true,
+                    temperature: 0.7,
+                    max_tokens: 100
+                };
+
+                this.log(`🚀 开始测试 ${model} 模型`);
+                this.log(`🌐 端点: ${endpoint}`);
+                this.log(`📝 请求体: ${JSON.stringify(requestBody, null, 2)}`);
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${apiKey}`,
+                            "Content-Type": "application/json",
+                            "Accept": "text/event-stream"
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    this.log(`📡 响应状态: ${response.status} ${response.statusText}`);
+                    this.log(`📡 Content-Type: ${response.headers.get("content-type")}`);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}. ${errorText}`);
+                    }
+
+                    // 处理流式响应
+                    const reader = response.body?.getReader();
+                    if (!reader) {
+                        throw new Error("无法读取响应流");
+                    }
+
+                    let totalContent = "";
+                    let chunkCount = 0;
+
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                this.log(`✅ 流式响应读取完成，共 ${chunkCount} 个数据块`);
+                                break;
+                            }
+
+                            const chunk = new TextDecoder().decode(value);
+                            chunkCount++;
+
+                            this.log(`📦 数据块 ${chunkCount}: ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
+
+                            // 提取内容
+                            const lines = chunk.split("\n");
+                            for (const line of lines) {
+                                if (line.startsWith("data: ")) {
+                                    const data = line.slice(6);
+                                    if (data === "[DONE]") {
+                                        this.log(`🏁 检测到结束标志`);
+                                        continue;
+                                    }
+
+                                    try {
+                                        const parsed = JSON.parse(data);
+                                        if (parsed.choices?.[0]?.delta?.content) {
+                                            totalContent += parsed.choices[0].delta.content;
+                                        }
+                                    } catch (parseError) {
+                                        this.log(`⚠️ JSON解析失败: ${parseError.message}`);
+                                    }
+                                }
+                            }
+
+                            // 防止无限循环
+                            if (chunkCount > 50) {
+                                this.log(`⚠️ 数据块数量超过50，停止读取`);
+                                break;
+                            }
+                        }
+
+                        const responseTime = Date.now() - startTime;
+                        this.log(`\n✅ 测试成功完成！`);
+                        this.log(`⏱️  响应时间: ${responseTime}ms`);
+                        this.log(`📝 提取的内容: ${totalContent || '(无内容)'}`);
+
+                        this.showResult(this.currentLog, 'success');
+
+                    } finally {
+                        reader.releaseLock();
+                    }
+
+                } catch (error) {
+                    const responseTime = Date.now() - startTime;
+                    this.log(`❌ 测试失败: ${error.message}`);
+                    this.log(`⏱️  耗时: ${responseTime}ms`);
+                    this.showResult(this.currentLog, 'error');
+                }
+            }
+
+            log(message) {
+                this.currentLog = (this.currentLog || '') + message + '\n';
+                console.log(message);
+            }
+
+            showResult(content, className) {
+                this.resultDiv.textContent = content;
+                this.resultDiv.className = className;
+                this.currentLog = '';
+            }
+        }
+
+        // 初始化测试器
+        document.addEventListener('DOMContentLoaded', () => {
+            new AlibabaAPITester();
+        });
+    </script>
+</body>
+
+</html>

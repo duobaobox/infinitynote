@@ -13,9 +13,11 @@ import { VirtualizedNoteContainer } from "../../components/VirtualizedNoteContai
 import { ZoomIndicator } from "../../components/ZoomIndicator";
 import { SlotContainer } from "../../components/SlotContainer";
 import { LeaderLineVisualizer } from "../../components/LeaderLineVisualizer";
+import { TestPanel } from "../../components/TestPanel";
 import { useNoteStore } from "../../store/noteStore";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useConnectionStore } from "../../store/connectionStore";
+import { useTestPanelStore } from "../../store/testPanelStore";
 import { useTheme, canvasGridThemes } from "../../theme";
 import { loadSettingsFromStorage } from "../../components/SettingsModal/utils";
 import { iconRegistry } from "../../utils/iconRegistry";
@@ -143,6 +145,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     startDrag,
     endDrag,
   } = useNoteStore();
+
+  // 测试面板状态
+  const { isVisible: isTestPanelVisible, toggleVisibility: toggleTestPanel } = useTestPanelStore();
 
   const {
     activeCanvasId,
@@ -813,6 +818,12 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           <span className={styles.dragModeHint}>按 ESC 退出</span>
         </div>
       )}
+
+      {/* 测试面板 */}
+      <TestPanel
+        visible={isTestPanelVisible}
+        onClose={toggleTestPanel}
+      />
     </div>
   );
 };

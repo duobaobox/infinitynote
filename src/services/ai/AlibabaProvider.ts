@@ -71,11 +71,15 @@ class AlibabaResponseParser implements ResponseParser {
     try {
       // OpenAI兼容格式使用SSE，需要找到data:开头的行
       const lines = chunk.split("\n");
+      console.log(`📥 [Alibaba] 接收数据块，行数: ${lines.length}`);
 
       for (const line of lines) {
         if (line.startsWith("data: ")) {
           const data = line.slice(6); // 去掉"data: "前缀
-          if (data === "[DONE]") continue;
+          if (data === "[DONE]") {
+            console.log(`🏁 [Alibaba] 检测到流结束标志`);
+            continue;
+          }
 
           try {
             const parsed = JSON.parse(data);
@@ -102,6 +106,8 @@ class AlibabaResponseParser implements ResponseParser {
             );
             continue;
           }
+        } else if (line.trim()) {
+          console.log(`📝 [Alibaba] 非data行:`, line.substring(0, 100));
         }
       }
 

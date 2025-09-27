@@ -253,8 +253,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     message.info("当前已是最新版本");
   };
 
-  const handleOpenTestPanel = () => {
-    message.info("测试面板功能开发中");
+  const handleOpenTestPanel = async () => {
+    try {
+      // 动态导入测试面板store
+      const { useTestPanelStore } = await import("../../store/testPanelStore");
+      const { toggleVisibility } = useTestPanelStore.getState();
+
+      // 切换测试面板显示状态
+      toggleVisibility();
+
+      // 关闭设置模态框
+      onClose();
+
+      message.success("测试面板已打开");
+    } catch (error) {
+      console.error("打开测试面板失败:", error);
+      message.error("打开测试面板失败");
+    }
   };
 
   const renderContent = () => {
