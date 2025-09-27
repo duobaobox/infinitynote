@@ -942,10 +942,9 @@ const Main: React.FC = () => {
           currentGeneratingNoteId={currentGeneratingNoteId}
           connectedNotes={connectedNotes}
           onStopAI={() => {
-            // 停止AI生成并删除正在生成的便签
+            // 停止AI生成但保留已生成的内容
             if (currentGeneratingNoteId) {
               cancelAIGeneration(currentGeneratingNoteId);
-              deleteNote(currentGeneratingNoteId);
               setCurrentGeneratingNoteId(undefined);
             }
           }}
