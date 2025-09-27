@@ -208,7 +208,7 @@ export abstract class BaseAIProvider implements AIProvider {
       console.warn("记录API请求到测试面板失败:", error);
     }
 
-    // 增加超时机制，5秒未响应自动中断
+    // 增加超时机制，30秒未响应自动中断 - 针对AI生成请求需要更长的超时时间
     const fetchPromise = fetch(endpoint, {
       method: "POST",
       headers,
@@ -218,8 +218,8 @@ export abstract class BaseAIProvider implements AIProvider {
     const timeoutPromise = new Promise<Response>((_, reject) => {
       setTimeout(() => {
         abortController.abort();
-        reject(new Error("请求超时（5秒）"));
-      }, 5000);
+        reject(new Error("请求超时（30秒）"));
+      }, 30000); // 增加到30秒以适应AI生成
     });
 
     let response: Response;
