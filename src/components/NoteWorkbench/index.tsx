@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Input, Button } from "antd";
-import { PlusOutlined, RobotOutlined } from "@ant-design/icons";
+import { PlusOutlined, RobotOutlined, MergeOutlined } from "@ant-design/icons";
 import type { NoteWorkbenchProps, WorkbenchStatus } from "./types";
 import styles from "./index.module.css";
 
@@ -31,6 +31,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   loading = false,
   placeholder = "输入文本AI生成便签，留空创建空白便签...",
   aiGenerating = {},
+  connectedNotes = [],
 }) => {
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);
@@ -38,6 +39,9 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
 
   // AI状态计算
   const isAnyAIGenerating = Object.values(aiGenerating).some(Boolean);
+
+  // 检测是否为连接模式
+  const isConnectedMode = connectedNotes && connectedNotes.length > 0;
 
   /**
    * 处理输入框值变化
@@ -57,7 +61,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     setStatus("loading");
 
     try {
-      await onAddNote?.(prompt || undefined);
+      await onAddNote?.(prompt || undefined, isConnectedMode);
 
       // AI生成成功后清空输入框
       if (prompt) {
@@ -74,7 +78,15 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
       // 短暂显示错误状态后重置
       setTimeout(() => setStatus("idle"), 2000);
     }
-  }, [inputValue, disabled, loading, isAnyAIGenerating, onAddNote, onChange]);
+  }, [
+    inputValue,
+    disabled,
+    loading,
+    isAnyAIGenerating,
+    onAddNote,
+    onChange,
+    isConnectedMode,
+  ]);
 
   /**
    * 处理停止AI生成（仅在悬浮时显示）
@@ -109,9 +121,11 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   const isButtonDisabled =
     disabled || ((loading || status === "loading") && !isAnyAIGenerating);
 
-  // 动态占位符
+  // 动态占位符 - 连接模式下显示特殊提示
   const dynamicPlaceholder = isAnyAIGenerating
     ? "AI正在生成便签..."
+    : isConnectedMode
+    ? "请输入指令处理便签（如:汇总、分析、整理等）"
     : placeholder;
 
   // 按钮点击处理
@@ -123,10 +137,32 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     }
   };
 
+  // 按钮类型和图标 - 连接模式下使用不同的样式
+  const buttonType = isConnectedMode ? "default" : "primary";
+  const buttonIcon = isConnectedMode ? (
+    <MergeOutlined /> // 连接模式下使用合并图标
+  ) : hasPrompt ? (
+    <RobotOutlined />
+  ) : (
+    <PlusOutlined />
+  );
+
+  // 按钮样式 - 连接模式下使用绿色按钮
+  const buttonStyle = isConnectedMode
+    ? { backgroundColor: "#52c41a", borderColor: "#52c41a", color: "white" }
+    : {};
+
+  // 按钮文本 - 连接模式下显示"汇总"
+  const buttonText = isConnectedMode ? "汇总" : hasPrompt ? "AI生成" : "新建";
+
   // 工具提示文本
   const getTooltipText = () => {
     if (isAnyAIGenerating) {
       return "停止生成并删除便签";
+    }
+
+    if (isConnectedMode) {
+      return "汇总连接的便签内容";
     }
 
     if (hasPrompt) {
@@ -140,6 +176,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     <div
       className={styles.consoleContainer}
       data-loading={loading || status === "loading"}
+      data-connected={isConnectedMode}
     >
       {/* 输入框容器 */}
       <div className={styles.consoleInputContainer}>
@@ -158,10 +195,11 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
       {/* 按钮容器 */}
       <div className={styles.consoleExternalButtons}>
         <Button
-          type="primary"
+          type={buttonType}
           shape="circle"
           size="small"
-          icon={hasPrompt ? <RobotOutlined /> : <PlusOutlined />}
+          icon={buttonIcon}
+          style={buttonStyle}
           loading={isAnyAIGenerating}
           onClick={handleButtonClick}
           disabled={isButtonDisabled}

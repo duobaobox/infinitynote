@@ -72,38 +72,56 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
 
   return (
     <div 
-      className={`${styles.slotContainer}`} 
+      className={`${styles.slotContainer} ${className}`} 
       data-slot-container
     >
       {/* 插槽列表 */}
       <div className={styles.slotsList} id="slots-list">
-        {connectedNotes.map((note, index) => (
-          <div
-            key={note.id}
-            className={`${styles.noteSlot} ${styles.connected}`}
-            data-note-id={note.id}
-            data-index={index + 1}
-            title={(() => {
-              const displayedContent = getDisplayedNoteContent(note);
-              return `${note.title || "无标题便签"
-}: ${displayedContent.substring(0, 50)}${displayedContent.length > 50 ? "..." : ""
-}`;
-            })()}
-          >
-            {/* 圆形插槽 */}
-            <div className={styles.slotCircle}>
-              <span className={styles.slotIndex}>{index + 1}</span>
+        {connectedNotes.length === 0 ? (
+          <div className={styles.emptySlots}>
+            <div className={styles.emptySlotCircle}>
+              <span className={styles.emptySlotIcon}>○</span>
             </div>
-            {/* 删除按钮 - 使用Ant Design图标 */}
-            <div
-              className={styles.slotRemove}
-              onClick={() => onRemoveConnection(note.id)}
-              title="移除连接"
-            >
-              <CloseOutlined />
+            <div className={styles.emptyTextContainer}>
+              <span className={styles.emptyText}>暂无连接的便签</span>
+              <span className={styles.emptyHint}>
+                悬停便签并点击左下角{" "}
+                <span className={styles.connectionDotDemo}>●</span>{" "}
+                连接点来建立连接
+              </span>
             </div>
           </div>
-        ))}
+        ) : (
+          connectedNotes.map((note, index) => (
+            <div
+              key={note.id}
+              className={`${styles.noteSlot} ${styles.connected}`}
+              data-note-id={note.id}
+              data-index={index + 1}
+              title={(() => {
+                const displayedContent = getDisplayedNoteContent(note);
+                return `${
+                  note.title || "无标题便签"
+                }: ${displayedContent.substring(0, 50)}${
+                  displayedContent.length > 50 ? "..." : ""
+                }`;
+              })()}
+            >
+              {/* 圆形插槽 */}
+              <div className={styles.slotCircle}>
+                <span className={styles.slotIndex}>{index + 1}</span>
+              </div>
+              {/* 删除按钮 - 使用Ant Design图标 */}
+              <div
+                className={styles.slotRemove}
+                onClick={() => onRemoveConnection(note.id)}
+                title="移除连接"
+              >
+                <CloseOutlined />
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* 连接模式切换器 - 使用Ant Design Segmented组件 */}
@@ -136,21 +154,23 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
       </Tooltip>
 
       {/* 清空连接按钮 - 使用Ant Design Button */}
-      <Button
-        size="small"
-        type="text"
-        danger
-        icon={<ClearOutlined />}
-        onClick={onClearAllConnections}
-        style={{
-          fontSize: "12px",
-          height: "24px",
-          padding: "0 8px",
-          borderRadius: "6px",
-        }}
-      >
-        清空连接
-      </Button>
+      {connectedNotes.length > 0 && (
+        <Button
+          size="small"
+          type="text"
+          danger
+          icon={<ClearOutlined />}
+          onClick={onClearAllConnections}
+          style={{
+            fontSize: "12px",
+            height: "24px",
+            padding: "0 8px",
+            borderRadius: "6px",
+          }}
+        >
+          清空连接
+        </Button>
+      )}
     </div>
   );
 };

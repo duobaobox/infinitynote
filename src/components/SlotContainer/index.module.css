@@ -5,9 +5,9 @@
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border);
+  border: 1px solid #52c41a; /* 绿色边框 */
   border-radius: 12px;
-  box-shadow: var(--box-shadow-secondary);
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.15); /* 绿色阴影 */
   padding: 8px 12px;
   z-index: 1000;
   transition: all 0.3s ease;
@@ -17,6 +17,85 @@
   min-height: 40px;
   width: 480px;
   backdrop-filter: blur(8px);
+}
+
+/* 插槽列表容器 */
+.slotsList {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1;
+}
+
+/* 便签插槽样式 */
+.noteSlot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* 修长型插槽 - 完全匹配设计稿 */
+.slotCircle {
+  width: 18px;
+  height: 18px;
+  border-radius: 10px;
+  background: var(--color-fill-quaternary);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.noteSlot.connected .slotCircle {
+  background: #f6ffed; /* 绿色背景 */
+  border: 1px solid #52c41a; /* 绿色边框 */
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2); /* 绿色发光效果 */
+}
+
+/* 插槽索引数字 - 精致化显示 */
+.slotIndex {
+  font-size: 12px;
+  font-weight: 600;
+  color: #52c41a; /* 绿色数字 */
+  user-select: none;
+  line-height: 1;
+}
+
+/* 移除按钮 - 小巧精致 */
+.slotRemove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff4d4f; /* 红色删除按钮 */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  border: 2px solid var(--color-bg-elevated);
+  box-shadow: 0 1px 4px rgba(255, 77, 79, 0.3);
+  opacity: 0;
+}
+
+.noteSlot:hover .slotRemove {
+  opacity: 1;
+}
+
+.slotRemove:hover {
+  background: #f5222d; /* 更深的红色 */
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(255, 77, 79, 0.4);
 }
 
 /* 插槽列表容器 */
@@ -102,16 +181,16 @@
 }
 
 .noteSlot.connected .slotCircle {
-  background: var(--color-primary-bg);
-  border: 1px solid var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-bg);
+  background: #f6ffed; /* 绿色背景 */
+  border: 1px solid #52c41a; /* 绿色边框 */
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2); /* 绿色发光效果 */
 }
 
 /* 插槽索引数字 - 精致化显示 */
 .slotIndex {
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-primary);
+  color: #52c41a; /* 绿色数字 */
   user-select: none;
   line-height: 1;
 }
@@ -124,7 +203,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--color-error);
+  background: #ff4d4f; /* 红色删除按钮 */
   color: white;
   display: flex;
   align-items: center;
@@ -135,7 +214,7 @@
   transition: all 0.2s ease;
   z-index: 10;
   border: 2px solid var(--color-bg-elevated);
-  box-shadow: 0 1px 4px var(--color-error-bg-hover);
+  box-shadow: 0 1px 4px rgba(255, 77, 79, 0.3);
   opacity: 0;
 }
 
@@ -144,6 +223,7 @@
 }
 
 .slotRemove:hover {
-  background: var(--color-error-hover);
+  background: #f5222d; /* 更深的红色 */
   transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(255, 77, 79, 0.4);
 }

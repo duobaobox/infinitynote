@@ -52,6 +52,16 @@
   font-size: 14px;
 }
 
+/* 连接模式下的输入框样式 - 只改变边框颜色 */
+.consoleContainer[data-connected="true"] .consoleInput {
+  border-color: #52c41a;
+}
+
+.consoleContainer[data-connected="true"] .consoleInput:focus {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
 /* 按钮容器 - 简化 */
 .consoleExternalButtons {
   display: flex;

@@ -2,6 +2,8 @@
  * 便签工作台组件类型定义
  */
 
+import type { ConnectedNote } from "../../store/connectionStore";
+
 /**
  * 便签工作台组件属性接口
  */
@@ -11,7 +13,7 @@ export interface NoteWorkbenchProps {
   /** 输入框值变化回调 */
   onChange?: (value: string) => void;
   /** 添加便签按钮点击回调 */
-  onAddNote?: (prompt?: string) => Promise<void> | void;
+  onAddNote?: (prompt?: string, isConnectedMode?: boolean) => Promise<void> | void;
   /** 是否禁用 */
   disabled?: boolean;
   /** 自定义占位符文本 */
@@ -24,6 +26,8 @@ export interface NoteWorkbenchProps {
   onStopAI?: () => void;
   /** 当前生成便签ID（用于停止时删除） */
   currentGeneratingNoteId?: string;
+  /** 连接的便签列表，用于确定是否处于连接模式 */
+  connectedNotes?: ConnectedNote[];
 }
 
 /**
