@@ -15,6 +15,7 @@ import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import { ConnectionPoint } from "../ConnectionPoint";
 import { useConnectionStore } from "../../store/connectionStore";
 import { useVerticalScrollbarDetection } from "../../hooks/useScrollbarDetection";
+import { useSimpleAIAutoScroll } from "../../hooks/useSimpleAIAutoScroll";
 import { NOTE_COLOR_PRESETS } from "../../config/noteColors";
 import { loadSettingsFromStorage } from "../SettingsModal/utils";
 import styles from "./index.module.css";
@@ -87,6 +88,34 @@ export const NoteCard = memo<NoteCardProps>(
     const aiData = note.customProperties?.ai as
       | AICustomProperties["ai"]
       | undefined;
+
+    // AI自动滚动功能
+    const { performAutoScroll } = useSimpleAIAutoScroll();
+
+    // 监听AI流式数据变化，触发自动滚动
+    useEffect(() => {
+      if (aiGenerating[note.id] && aiStreamingData[note.id]) {
+        console.log(
+          `🔄 [AI滚动] 检测到便签 ${note.id.slice(-8)} 的AI数据更新`,
+          {
+            contentLength: aiStreamingData[note.id]?.length || 0,
+            isGenerating: aiGenerating[note.id],
+          }
+        );
+
+        // 稍微延迟以确保DOM更新完成
+        const timer = setTimeout(() => {
+          performAutoScroll(note.id);
+        }, 50);
+
+        return () => clearTimeout(timer);
+      }
+    }, [
+      aiGenerating[note.id],
+      aiStreamingData[note.id],
+      note.id,
+      performAutoScroll,
+    ]);
 
     // 调试AI数据传递
     useEffect(() => {
@@ -909,6 +938,8 @@ export const NoteCard = memo<NoteCardProps>(
                 onBlur={handleEditorBlur}
                 onEscape={handleEditorEscape}
                 debounceDelay={300}
+                enableAutoScroll={aiGenerating[note.id]}
+                autoScrollBehavior="smooth"
               />
             </div>
 

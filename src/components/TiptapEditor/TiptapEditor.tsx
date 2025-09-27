@@ -54,10 +54,13 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     maxCharacters = DEFAULT_CONFIG.MAX_CHARACTERS,
     debounceDelay = DEFAULT_CONFIG.DEBOUNCE_DELAY,
     enableShortcuts = true,
+    enableAutoScroll = false,
+    autoScrollBehavior = "smooth",
   }) => {
     const { isDark } = useTheme();
     const editorId = useRef(generateEditorId());
     const lastValidContent = useRef(content);
+    const isStreamingRef = useRef(false);
 
     // 强制重新渲染的状态，用于更新工具栏按钮的激活状态
     const [toolbarUpdateKey, setToolbarUpdateKey] = useState(0);
@@ -225,6 +228,16 @@ export const TiptapEditor = memo<TiptapEditorProps>(
         debouncedContentChange(html);
         // 内容更新时也要更新工具栏状态
         setToolbarUpdateKey((prev) => prev + 1);
+
+        // 如果启用了自动滚动且当前在流式模式下，自动滚动到内容末尾
+        if (enableAutoScroll && readonly && isStreamingRef.current) {
+          // 使用 requestAnimationFrame 确保DOM已更新
+          requestAnimationFrame(() => {
+            if (editor && !editor.isDestroyed) {
+              editor.commands.focus('end');
+            }
+          });
+        }
       },
 
       onSelectionUpdate: () => {
@@ -318,9 +331,22 @@ export const TiptapEditor = memo<TiptapEditorProps>(
                   : undefined,
               });
               lastValidContent.current = cleanedNewContent;
+
+              // 自动滚动到内容末尾，特别是在AI流式生成时
+              if (enableAutoScroll && readonly && isStreamingContent) {
+                // 使用 requestAnimationFrame 确保DOM已更新
+                requestAnimationFrame(() => {
+                  if (editor && !editor.isDestroyed) {
+                    editor.commands.focus('end');
+                  }
+                });
+              }
             }
           });
         }
+        
+        // 跟踪是否正在流式更新
+        isStreamingRef.current = isStreamingContent;
       }
     }, [editor, content, readonly]);
 
