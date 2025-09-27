@@ -65,6 +65,11 @@ export const NoteCard = memo<NoteCardProps>(
 
     // 编辑状态
     const [isEditing, setIsEditing] = useState(false);
+    
+    // 标题编辑状态
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [titleValue, setTitleValue] = useState(note.title || "");
+    const titleInputRef = useRef<HTMLInputElement>(null);
 
     // 工具栏显示状态
     const [showToolbar, setShowToolbar] = useState(false);
@@ -501,6 +506,44 @@ export const NoteCard = memo<NoteCardProps>(
       setIsEditing(false);
     }, []);
 
+    // 点击外部退出标题编辑
+    const handleTitleBlur = useCallback(() => {
+      if (isEditingTitle) {
+        // 更新标题
+        updateNote(note.id, { title: titleValue.trim() || "Untitled" });
+        setIsEditingTitle(false);
+      }
+    }, [isEditingTitle, note.id, titleValue, updateNote]);
+
+    // ESC键或回车键处理标题编辑
+    const handleTitleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsEditingTitle(false);
+        setTitleValue(note.title || "");
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        updateNote(note.id, { title: titleValue.trim() || "Untitled" });
+        setIsEditingTitle(false);
+      }
+    }, [note.id, note.title, titleValue, updateNote]);
+
+    // 双击标题编辑
+    const handleTitleDoubleClick = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+      // 如果当前正在编辑内容，先停止内容编辑
+      if (isEditing) {
+        setIsEditing(false);
+      }
+      setIsEditingTitle(true);
+      setTitleValue(note.title || "");
+      // 延迟聚焦到输入框
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+        titleInputRef.current?.select();
+      }, 10); // 多延迟一点时间以确保组件完全渲染
+    }, [note.title, isEditing]);
+
     // 当前便签的引用
     const currentNoteRef = useRef<HTMLDivElement>(null);
 
@@ -557,27 +600,36 @@ export const NoteCard = memo<NoteCardProps>(
           target.closest(".ant-popover") ||
           target.closest(".ant-tooltip");
 
-        if (!isInNoteCard && !isInToolbar && !isInModal) {
+        // 检查点击是否在标题编辑输入框内部
+        const isInTitleInput = target === titleInputRef.current || 
+                               (titleInputRef.current && titleInputRef.current.contains(target));
+
+        if (!isInNoteCard && !isInToolbar && !isInModal && !isInTitleInput) {
           if (isEditing) {
             setIsEditing(false);
           }
           if (showToolbar) {
             setShowToolbar(false);
           }
+          if (isEditingTitle) {
+            // 更新标题
+            updateNote(note.id, { title: titleValue.trim() || "Untitled" });
+            setIsEditingTitle(false);
+          }
         }
       },
-      [isEditing, showToolbar]
+      [isEditing, showToolbar, isEditingTitle, note.id, titleValue, updateNote]
     );
 
     // 管理点击外部事件监听
     useEffect(() => {
-      if (isEditing || showToolbar) {
+      if (isEditing || showToolbar || isEditingTitle) {
         document.addEventListener("mousedown", handleClickOutside, true);
         return () => {
           document.removeEventListener("mousedown", handleClickOutside, true);
         };
       }
-    }, [isEditing, showToolbar, handleClickOutside]);
+    }, [isEditing, showToolbar, isEditingTitle, handleClickOutside]);
 
     // 缩放开始处理 - 使用useRef避免闭包问题
     const handleResizeStart = useCallback(
@@ -863,25 +915,50 @@ export const NoteCard = memo<NoteCardProps>(
               便签头部区域 - 统一拖拽管理
               拖拽策略：
               1. 非编辑状态：整个便签可拖拽（通过主容器的listeners）
-              2. 编辑状态：只有头部可拖拽（通过头部的listeners）
-              3. 缩放状态：禁用所有拖拽
+              2. 缩放状态：禁用所有拖拽
+              3. 标题编辑状态：双击可编辑标题
             */}
             <div
               className={styles.noteHeader}
-              // 编辑状态和非编辑状态下头部都可拖拽
-              {...(!isResizing ? listeners : {})}
-              {...(!isResizing ? attributes : {})}
+              // 在标题编辑模式下禁用拖拽，否则允许拖拽
+              {...(!isResizing && !isEditingTitle ? listeners : {})}
+              {...(!isResizing && !isEditingTitle ? attributes : {})}
               style={{
-                cursor: !isResizing ? "grab" : "default",
+                cursor: !isResizing && !isEditingTitle ? "grab" : "default",
               }}
               onMouseDown={(e) => {
-                if (!isResizing) {
+                // 在标题编辑模式下，不处理mousedown事件
+                if (!isResizing && !isEditingTitle) {
                   handleMouseDown(e);
                 }
               }}
-              onDoubleClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => {
+                // 如果点击的是标题区域，则允许双击标题编辑事件发生
+                const target = e.target as HTMLElement;
+                if (target.tagName !== 'H3' && !target.closest('h3') && !target.classList.contains('titleInput')) {
+                  e.stopPropagation();
+                }
+              }}
             >
-              <h3 className={styles.noteTitle}>{note.title || "Untitled"}</h3>
+              {isEditingTitle ? (
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={titleValue}
+                  onChange={(e) => setTitleValue(e.target.value)}
+                  onBlur={handleTitleBlur}
+                  onKeyDown={handleTitleKeyDown}
+                  className={styles.titleInput}
+                  autoFocus
+                />
+              ) : (
+                <h3 
+                  className={styles.noteTitle}
+                  onDoubleClick={handleTitleDoubleClick}
+                >
+                  {note.title || "Untitled"}
+                </h3>
+              )}
             </div>
 
             {/* 思维链显示区域 - 基于数据存在性自动显示 */}

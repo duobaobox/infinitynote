@@ -217,8 +217,8 @@ export abstract class BaseAIProvider implements AIProvider {
     const timeoutPromise = new Promise<Response>((_, reject) => {
       setTimeout(() => {
         abortController.abort();
-        reject(new Error("请求超时（30秒）"));
-      }, 30000); // 增加到30秒以适应AI生成
+        reject(new Error("请求超时（5分钟）"));
+      }, 300000); // 增加到5分钟以适应复杂AI生成
     });
 
     let response: Response;

@@ -532,3 +532,26 @@
 .noteCard .tiptap-editor-content::after {
   display: none !important;
 }
+
+/* 标题编辑输入框样式 */
+.noteHeader input[type="text"].titleInput {
+  width: 100%;
+  border: 1px solid #1677ff;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  background: white;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+  margin: 0;
+  line-height: normal;
+}
+
+.noteCard[data-theme="dark"] .noteHeader input[type="text"].titleInput {
+  background: #262626;
+  color: #fff;
+  border-color: #177ddc;
+  box-shadow: 0 0 0 2px rgba(23, 125, 220, 0.2);
+}
