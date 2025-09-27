@@ -14,7 +14,6 @@ import type {
   AIGenerationOptions,
   AICustomProperties,
 } from "../../types/ai";
-import { markdownConverter } from "../../utils/markdownConverter";
 import { ThinkingChainDetector } from "../../utils/thinkingChainDetector";
 
 /**
@@ -422,7 +421,6 @@ export abstract class BaseAIProvider implements AIProvider {
                 (deltaContent.length > 100 ? "..." : "")
             );
             fullMarkdown += deltaContent;
-            const html = markdownConverter.convertStreamChunk(fullMarkdown);
 
             // 构建实时AI数据，包含当前的思维链信息
             const currentAIData = this.buildStreamingAIData(
@@ -430,7 +428,7 @@ export abstract class BaseAIProvider implements AIProvider {
               fullMarkdown,
               thinkingChain
             );
-            options.onStream?.(html, currentAIData);
+            options.onStream?.(fullMarkdown, currentAIData);
           } else {
             console.log(`⚠️ [${this.name}] 数据块中未提取到有效内容`);
           }
@@ -458,13 +456,12 @@ export abstract class BaseAIProvider implements AIProvider {
             }
 
             // 思维链数据更新时也要通知
-            const html = markdownConverter.convertStreamChunk(fullMarkdown);
             const currentAIData = this.buildStreamingAIData(
               options,
               fullMarkdown,
               thinkingChain
             );
-            options.onStream?.(html, currentAIData);
+            options.onStream?.(fullMarkdown, currentAIData);
           }
 
           retryCount = 0; // 重置重试计数
@@ -480,7 +477,6 @@ export abstract class BaseAIProvider implements AIProvider {
 
       // 生成完成，构建最终数据
       if (!abortController.signal.aborted) {
-        const finalHTML = markdownConverter.convertComplete(fullMarkdown);
         const aiData = this.buildAIData(options, fullMarkdown, thinkingChain);
 
         // 记录便签生成结果到测试面板
@@ -510,7 +506,7 @@ export abstract class BaseAIProvider implements AIProvider {
             requestId: aiData?.requestId || "unknown",
             noteId: options.noteId,
             timestamp: Date.now(),
-            finalContent: finalHTML,
+            finalContent: fullMarkdown,
             originalMarkdown: fullMarkdown,
             hasThinkingChain: !!aiData?.thinkingChain,
             thinkingChain: aiData?.thinkingChain,
@@ -538,7 +534,7 @@ export abstract class BaseAIProvider implements AIProvider {
           console.warn("记录便签生成结果到测试面板失败:", error);
         }
 
-        options.onComplete?.(finalHTML, aiData);
+        options.onComplete?.(fullMarkdown, aiData);
       }
     } finally {
       reader.releaseLock();
