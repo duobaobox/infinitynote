@@ -422,13 +422,24 @@ export abstract class BaseAIProvider implements AIProvider {
             );
             fullMarkdown += deltaContent;
 
+            // 将 Markdown 转换为 HTML 以供编辑器显示
+            const MarkdownItConstructor = await import("markdown-it");
+            const md = new MarkdownItConstructor.default({
+              html: false,
+              breaks: true,
+              linkify: true,
+              typographer: true,
+              quotes: "\"\"''",
+            });
+            const html = md.render(fullMarkdown);
+
             // 构建实时AI数据，包含当前的思维链信息
             const currentAIData = this.buildStreamingAIData(
               options,
               fullMarkdown,
               thinkingChain
             );
-            options.onStream?.(fullMarkdown, currentAIData);
+            options.onStream?.(html, currentAIData);
           } else {
             console.log(`⚠️ [${this.name}] 数据块中未提取到有效内容`);
           }
@@ -456,12 +467,21 @@ export abstract class BaseAIProvider implements AIProvider {
             }
 
             // 思维链数据更新时也要通知
+            const MarkdownItConstructor = await import("markdown-it");
+            const md = new MarkdownItConstructor.default({
+              html: false,
+              breaks: true,
+              linkify: true,
+              typographer: true,
+              quotes: "\"\"''",
+            });
+            const html = md.render(fullMarkdown);
             const currentAIData = this.buildStreamingAIData(
               options,
               fullMarkdown,
               thinkingChain
             );
-            options.onStream?.(fullMarkdown, currentAIData);
+            options.onStream?.(html, currentAIData);
           }
 
           retryCount = 0; // 重置重试计数
@@ -477,6 +497,16 @@ export abstract class BaseAIProvider implements AIProvider {
 
       // 生成完成，构建最终数据
       if (!abortController.signal.aborted) {
+        // 将最终的 Markdown 转换为 HTML 以供编辑器正确显示（保持与流式过程一致）
+        const MarkdownItConstructor = await import("markdown-it");
+        const md = new MarkdownItConstructor.default({
+          html: false,
+          breaks: true,
+          linkify: true,
+          typographer: true,
+          quotes: "\"\"''",
+        });
+        const finalHtml = md.render(fullMarkdown);
         const aiData = this.buildAIData(options, fullMarkdown, thinkingChain);
 
         // 记录便签生成结果到测试面板
@@ -506,7 +536,7 @@ export abstract class BaseAIProvider implements AIProvider {
             requestId: aiData?.requestId || "unknown",
             noteId: options.noteId,
             timestamp: Date.now(),
-            finalContent: fullMarkdown,
+            finalContent: finalHtml, // 保存HTML格式的最终内容
             originalMarkdown: fullMarkdown,
             hasThinkingChain: !!aiData?.thinkingChain,
             thinkingChain: aiData?.thinkingChain,
@@ -534,7 +564,7 @@ export abstract class BaseAIProvider implements AIProvider {
           console.warn("记录便签生成结果到测试面板失败:", error);
         }
 
-        options.onComplete?.(fullMarkdown, aiData);
+        options.onComplete?.(finalHtml, aiData); // 传递HTML格式的最终内容
       }
     } finally {
       reader.releaseLock();

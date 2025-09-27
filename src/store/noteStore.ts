@@ -1032,17 +1032,19 @@ export const useNoteStore = create<NoteStore>()(
           aiStreamingData: { ...state.aiStreamingData, [noteId]: content },
         }));
 
-        // 如果有AI数据（包含思维链），但只更新AI相关数据，不更新内容
-        // 内容将在生成完成时一次性转换并保存为JSONContent格式
+        // 如果有AI数据（包含思维链），更新AI相关数据和内容
+        // 在流式过程中，content 会是 HTML 格式，与手动编辑一致
         if (aiData) {
           const note = get().notes.find((n) => n.id === noteId);
           if (note) {
-            // 直接更新内存中的便签AI数据，不更新content字段（避免在流式过程中存储Markdown格式）
+            // 直接更新内存中的便签数据，包括内容
+            // content 在流式过程中是 HTML 格式
             set((state) => ({
               notes: state.notes.map((n) =>
                 n.id === noteId
                   ? {
                       ...n,
+                      content: content, // 这里 content 是 HTML 格式
                       customProperties: {
                         ...n.customProperties,
                         ai: aiData,
@@ -1063,13 +1065,9 @@ export const useNoteStore = create<NoteStore>()(
         aiData: AICustomProperties["ai"]
       ) => {
         try {
-          // 将 Markdown 转换为 JSONContent 格式进行存储
-          const { markdownToJSON } = await import("../utils/markdownToJSON");
-          const finalJSONContent = markdownToJSON(finalContent);
-
-          // 更新便签内容和AI数据
+          // 更新便签内容和AI数据 - 保存HTML格式，与手动编辑一致
           await get().updateNote(noteId, {
-            content: finalJSONContent,
+            content: finalContent,
             customProperties: {
               ...get().notes.find((n) => n.id === noteId)?.customProperties,
               ai: aiData,

@@ -24,8 +24,8 @@ export interface Note {
   id: string;
   /** 便签标题 */
   title: string;
-  /** 便签内容 - 支持富文本/Markdown，现在使用JSONContent格式存储 */
-  content: string | any;
+  /** 便签内容 - 支持富文本/Markdown */
+  content: string;
   /** 便签颜色 */
   color: string;
   /** 位置信息 */

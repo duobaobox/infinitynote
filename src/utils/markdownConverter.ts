@@ -1,12 +1,7 @@
 /**
- * Markdown 转换工具（保留用于向后兼容和特殊用途）
- * 
- * 注意：当前 AI 生成流程已简化，不再使用此工具进行实时 HTML 转换。
- * AI 生成的 Markdown 现在直接传递给 TipTap 编辑器进行解析和显示。
- * 此工具保留用于可能的其他用途或向后兼容性。
- * 
- * 新流程：
- * AI生成Markdown → 直接传递给TipTap → TipTap解析显示 → 生成完成后转换为JSONContent存储
+ * 简化的 Markdown 转换工具
+ * 核心理念：让 TipTap 编辑器自己处理 Markdown，我们只负责流式缓冲和基础清理
+ * 避免重复造轮子，专注于核心问题解决
  */
 
 import type { JSONContent } from "@tiptap/core";

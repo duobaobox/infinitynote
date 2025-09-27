@@ -294,98 +294,60 @@ export const TiptapEditor = memo<TiptapEditorProps>(
       },
     });
 
-    // 当外部 content 或 readonly 状态改变时更新编辑器
+    // 当外部 content 改变时更新编辑器
     useEffect(() => {
-      if (editor) {
-        // 检查内容类型：JSONContent对象、HTML字符串、Markdown字符串或普通文本
+      if (editor && content !== lastValidContent.current) {
+        // 检查是否为流式 Markdown 内容（只读模式下）
+        const isStreamingMarkdown = readonly && typeof content === 'string' && /[#$*\-_`\\]/.test(content) && !content.includes("<");
+        
         let processedContent = content;
-        let isStreamingContent = false;
-        let isMarkdownContent = false;
-        let isJSONContent = typeof content === 'object' && content !== null && content.type === 'doc';
-        
-        // 检查是否为流式内容（只读模式下）
-        if (readonly && typeof content === 'string') {
-          // 如果内容包含HTML标签，说明是HTML格式
-          if (content.includes("<")) {
-            isStreamingContent = true;
-          } 
-          // 如果内容包含Markdown特征字符，但不包含HTML标签，可能是Markdown格式
-          else if (/[#$*\-_`\\]/.test(content)) { // Markdown特征字符
-            isMarkdownContent = true;
-            isStreamingContent = true;
-            
-            // 使用markdown-it将Markdown转换为HTML
-            const md = new MarkdownIt({
-              html: false,
-              breaks: true,
-              linkify: true,
-              typographer: true,
-              quotes: '""\'\'',
-            });
-            processedContent = md.render(content);
-          }
+        if (isStreamingMarkdown) {
+          // 对于流式 Markdown 内容，转换为 HTML
+          const md = new MarkdownIt({
+            html: false,
+            breaks: true,
+            linkify: true,
+            typographer: true,
+            quotes: '""\'\'',
+          });
+          processedContent = md.render(content);
         }
         
-        // 确定最终要设置的内容
-        let finalContent;
-        if (isJSONContent) {
-          // JSONContent格式，直接使用
-          finalContent = content;
-        } else if (isStreamingContent && !isMarkdownContent) {
-          // 流式HTML内容
-          finalContent = content;
-        } else if (typeof content === 'string') {
-          // 普通字符串内容，包括转换后的Markdown
-          finalContent = isMarkdownContent ? processedContent : cleanHtmlContent(content);
-        } else {
-          finalContent = "";
-        }
+        // 对于非流式内容，执行标准清理
+        const finalContent = typeof processedContent === 'string' 
+          ? (isStreamingMarkdown ? processedContent : cleanHtmlContent(processedContent))
+          : processedContent;
 
-        // 检查是否需要更新内容
+        // 比较逻辑
         let shouldUpdate = false;
-        
-        // 如果只读状态发生变化，或者内容发生变化，则需要更新
-        if (content !== lastValidContent.current || 
-            (isStreamingContent !== isStreamingRef.current) ||
-            (readonly !== isStreamingRef.current)) {
-          // 检查内容是否真正不同
-          if (isJSONContent) {
-            // 对于JSONContent，通过序列化比较
-            const currentJSON = JSON.stringify(editor.getJSON());
-            const newJSON = JSON.stringify(finalContent);
-            shouldUpdate = currentJSON !== newJSON;
-          } else {
-            const currentContent = editor.getHTML();
-            shouldUpdate = currentContent !== finalContent;
-          }
+        if (isStreamingMarkdown) {
+          // 对于流式 Markdown 内容，比较转换后的文本
+          const currentText = editor.getText();
+          const newText = content; // 使用原始 Markdown 文本进行比较
+          shouldUpdate = currentText !== newText.replace(/[#*\-_`\\]/g, ''); // 简化文本比较
+        } else {
+          // 对于非流式内容，使用标准比较
+          const currentContent = editor.getHTML();
+          shouldUpdate = currentContent !== finalContent;
         }
 
         if (shouldUpdate) {
           // 使用requestAnimationFrame优化流式更新的渲染性能
           requestAnimationFrame(() => {
             if (editor && !editor.isDestroyed) {
-              // 根据内容类型选择合适的方法设置内容
-              if (isJSONContent) {
-                // 对于JSONContent，使用setContent设置JSON格式
-                editor.commands.setContent(finalContent, {
-                  emitUpdate: false,
-                });
-              } else {
-                // 对于HTML/字符串内容，使用原有方法
-                editor.commands.setContent(finalContent, {
-                  emitUpdate: false,
-                  parseOptions: isStreamingContent
-                    ? {
-                        // 流式内容解析优化：保持空白字符格式
-                        preserveWhitespace: "full",
-                      }
-                    : undefined,
-                });
-              }
+              editor.commands.setContent(finalContent, {
+                emitUpdate: false,
+                parseOptions: isStreamingMarkdown
+                  ? {
+                      // 流式内容解析优化：保持空白字符格式
+                      preserveWhitespace: "full",
+                    }
+                  : undefined,
+              });
               lastValidContent.current = finalContent;
 
               // 自动滚动到内容末尾，特别是在AI流式生成时
-              if (enableAutoScroll && readonly && isStreamingContent) {
+              if (enableAutoScroll && readonly && isStreamingMarkdown) {
                 // 使用 requestAnimationFrame 确保DOM已更新
                 requestAnimationFrame(() => {
                   if (editor && !editor.isDestroyed) {
@@ -395,13 +357,10 @@ export const TiptapEditor = memo<TiptapEditorProps>(
               }
             }
           });
-        } else if (content !== lastValidContent.current) {
-          // 即使不需要更新内容，也要更新缓存的内容
-          lastValidContent.current = finalContent;
         }
         
         // 跟踪是否正在流式更新
-        isStreamingRef.current = isStreamingContent;
+        isStreamingRef.current = isStreamingMarkdown;
       }
     }, [editor, content, readonly]);
 
