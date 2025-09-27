@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Input, Button } from "antd";
-import { PlusOutlined, RobotOutlined, MergeOutlined } from "@ant-design/icons";
+import { PlusOutlined, RobotOutlined, MergeOutlined, LoadingOutlined, CloseOutlined } from "@ant-design/icons";
 import type { NoteWorkbenchProps, WorkbenchStatus } from "./types";
 import styles from "./index.module.css";
 
@@ -36,6 +36,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);
   const [status, setStatus] = useState<WorkbenchStatus>("idle");
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
 
   // AI状态计算
   const isAnyAIGenerating = Object.values(aiGenerating).some(Boolean);
@@ -138,8 +139,10 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   };
 
   // 按钮类型和图标 - 连接模式下使用不同的样式
-  const buttonType = isConnectedMode ? "default" : "primary";
-  const buttonIcon = isConnectedMode ? (
+  const buttonType = isAnyAIGenerating ? "default" : (isConnectedMode ? "default" : "primary");
+  const buttonIcon = isAnyAIGenerating ? (
+    isButtonHovered ? <CloseOutlined /> : <LoadingOutlined spin={true} /> // 生成中：悬停时显示停止图标，正常时显示加载图标
+  ) : isConnectedMode ? (
     <MergeOutlined /> // 连接模式下使用合并图标
   ) : hasPrompt ? (
     <RobotOutlined />
@@ -147,13 +150,12 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     <PlusOutlined />
   );
 
-  // 按钮样式 - 连接模式下使用绿色按钮
-  const buttonStyle = isConnectedMode
-    ? { backgroundColor: "#52c41a", borderColor: "#52c41a", color: "white" }
+  // 按钮样式 - 在生成状态或连接模式下使用不同颜色
+  const buttonStyle = isAnyAIGenerating 
+    ? { backgroundColor: "#ff4d4f", borderColor: "#ff4d4f", color: "white" } // 红色表示停止状态
+    : isConnectedMode
+    ? { backgroundColor: "#52c41a", borderColor: "#52c41a", color: "white" }  // 绿色表示连接模式
     : {};
-
-  // 按钮文本 - 连接模式下显示"汇总"
-  const buttonText = isConnectedMode ? "汇总" : hasPrompt ? "AI生成" : "新建";
 
   // 工具提示文本
   const getTooltipText = () => {
@@ -200,11 +202,13 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
           size="small"
           icon={buttonIcon}
           style={buttonStyle}
-          loading={isAnyAIGenerating}
+          loading={false}  // 不使用loading状态，以便按钮可以被点击停止
           onClick={handleButtonClick}
           disabled={isButtonDisabled}
           title={getTooltipText()}
           className={styles.addExternalButton}
+          onMouseEnter={() => setIsButtonHovered(true)}
+          onMouseLeave={() => setIsButtonHovered(false)}
         />
       </div>
     </div>
