@@ -39,13 +39,16 @@ export const useNoteDatabase = () => {
   ) => {
     try {
       const now = new Date();
-      const id = await dbOperations.addNote({
+      const id = crypto.randomUUID(); // 使用浏览器内置的UUID生成器
+      const newNote = {
         ...note,
+        id,
         createdAt: now,
         updatedAt: now,
-      });
+      };
+      await dbOperations.addNote(newNote);
       await loadNotes();
-      return id.toString();
+      return id;
     } catch (err) {
       setError(err instanceof Error ? err.message : "添加便签失败");
       throw err;

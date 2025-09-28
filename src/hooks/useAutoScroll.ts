@@ -28,7 +28,7 @@ export function useAutoScroll(options: AutoScrollOptions) {
   } = options;
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollTimeoutRef = useRef<number | undefined>(undefined);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | number | undefined>(undefined);
   const lastScrollTopRef = useRef(0);
 
   // 滚动到底部
@@ -37,7 +37,7 @@ export function useAutoScroll(options: AutoScrollOptions) {
       clearTimeout(scrollTimeoutRef.current);
     }
 
-    scrollTimeoutRef.current = setTimeout(() => {
+    scrollTimeoutRef.current = window.setTimeout(() => {
       // 检查用户是否主动向上滚动了很多
       const currentScrollTop = element.scrollTop;
       const scrollHeight = element.scrollHeight;

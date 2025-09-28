@@ -189,7 +189,7 @@ export const compactTheme: ThemeConfig = {
 export type ThemeType = "light" | "dark" | "compact" | "auto";
 
 // 主题映射
-export const themes: Record<ThemeType, ThemeConfig> = {
+export const themes: Record<Exclude<ThemeType, 'auto'>, ThemeConfig> = {
   light: lightTheme,
   dark: darkTheme,
   compact: compactTheme,
@@ -197,5 +197,10 @@ export const themes: Record<ThemeType, ThemeConfig> = {
 
 // 获取主题配置
 export const getThemeConfig = (themeType: ThemeType): ThemeConfig => {
+  if (themeType === 'auto') {
+    // 根据系统主题决定使用哪个主题
+    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return isDarkMode ? darkTheme : lightTheme;
+  }
   return themes[themeType] || lightTheme;
 };

@@ -13,7 +13,7 @@ export function debounce<T extends (...args: any[]) => any>(
   wait: number,
   immediate = false
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: number | null = null;
   
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
@@ -24,7 +24,7 @@ export function debounce<T extends (...args: any[]) => any>(
     const callNow = immediate && !timeout;
     
     if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+    timeout = window.setTimeout(later, wait) as unknown as number;
     
     if (callNow) func(...args);
   };
@@ -152,7 +152,7 @@ export class MemoryManager {
    * 强制垃圾回收（仅在开发环境）
    */
   static forceGC(): void {
-    if (process.env.NODE_ENV === 'development' && 'gc' in window) {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && 'gc' in window) {
       (window as any).gc();
     }
   }
@@ -265,7 +265,9 @@ export class CacheManager<T> {
     // 如果缓存已满，删除最旧的项
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
     }
     
     this.cache.set(key, {
@@ -359,8 +361,9 @@ export const PerformanceMonitor = {
   getNavigationTiming(): PerformanceNavigationTiming | null {
     if ('getEntriesByType' in performance) {
       const entries = performance.getEntriesByType('navigation');
-      return entries[0] as PerformanceNavigationTiming;
+      return entries[0] as PerformanceNavigationTiming | null;
     }
+    return null;
     return null;
   },
 };

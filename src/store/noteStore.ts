@@ -640,7 +640,7 @@ export const useNoteStore = create<NoteStore>()(
       },
 
       // 防抖置顶操作的映射表
-      _debouncedBringToFrontMap: new Map<string, number>(),
+      _debouncedBringToFrontMap: new Map<string, ReturnType<typeof setTimeout>>(),
 
       // 带防抖的数据库同步方法（只处理数据库操作）
       debouncedBringToFront: (id: string, delay = 100) => {
@@ -653,7 +653,7 @@ export const useNoteStore = create<NoteStore>()(
         }
 
         // 设置新的定时器，只同步数据库
-        const timer = setTimeout(async () => {
+        const timer = window.setTimeout(async () => {
           try {
             const { notes } = get();
             const targetNote = notes.find((note) => note.id === id);

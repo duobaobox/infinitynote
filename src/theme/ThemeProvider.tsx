@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { getThemeConfig, type ThemeType } from "./antd";
@@ -129,7 +129,13 @@ export const ThemeToggle: React.FC<{
   className?: string;
   size?: "small" | "middle" | "large";
 }> = ({ className, size = "middle" }) => {
-  const { isDark, toggleTheme } = useTheme();
+  const context = useContext(ThemeContext);
+  
+  if (context === undefined) {
+    throw new Error("ThemeToggle must be used within a ThemeProvider");
+  }
+  
+  const { isDark, toggleTheme } = context;
 
   return (
     <button
