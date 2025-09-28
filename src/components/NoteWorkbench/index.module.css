@@ -20,7 +20,7 @@
   backdrop-filter: blur(8px);
   z-index: 1001;
   height: 56px;
-  width: 480px;
+  width: 400px;
   transition: all 0.3s ease;
 }
 

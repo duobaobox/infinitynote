@@ -34,7 +34,6 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
   onModeChange,
   onRemoveConnection,
   onClearAllConnections,
-  className = "",
 }) => {
   // 获取模式提示信息
   const getModeTooltip = () => {
@@ -71,10 +70,7 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
   }
 
   return (
-    <div 
-      className={`${styles.slotContainer}`} 
-      data-slot-container
-    >
+    <div className={`${styles.slotContainer}`} data-slot-container>
       {/* 插槽列表 */}
       <div className={styles.slotsList} id="slots-list">
         {connectedNotes.map((note, index) => (
@@ -85,9 +81,11 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
             data-index={index + 1}
             title={(() => {
               const displayedContent = getDisplayedNoteContent(note);
-              return `${note.title || "无标题便签"
-}: ${displayedContent.substring(0, 50)}${displayedContent.length > 50 ? "..." : ""
-}`;
+              return `${
+                note.title || "无标题便签"
+              }: ${displayedContent.substring(0, 50)}${
+                displayedContent.length > 50 ? "..." : ""
+              }`;
             })()}
           >
             {/* 圆形插槽 */}
@@ -148,9 +146,8 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
           padding: "0 8px",
           borderRadius: "6px",
         }}
-      >
-        清空连接
-      </Button>
+        aria-label="删除全部连接"
+      />
     </div>
   );
 };
