@@ -56,7 +56,6 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     debounceDelay = DEFAULT_CONFIG.DEBOUNCE_DELAY,
     enableShortcuts = true,
     enableAutoScroll = false,
-    autoScrollBehavior = "smooth",
   }) => {
     const { isDark } = useTheme();
     const editorId = useRef(generateEditorId());

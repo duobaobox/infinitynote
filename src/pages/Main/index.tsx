@@ -11,7 +11,6 @@ import {
 import { useConnectionStore } from "../../store/connectionStore";
 // 引入主题
 import { useTheme } from "../../theme";
-import { NoteColor } from "../../types";
 import type { Position, Note } from "../../types";
 import { NOTE_DEFAULT_SIZE } from "../../types/constants";
 // 引入画布组件
@@ -103,7 +102,6 @@ const Main: React.FC = () => {
   const {
     notes,
     createNote,
-    deleteNote,
     getNotesByCanvas,
     initialize,
     selectNote,

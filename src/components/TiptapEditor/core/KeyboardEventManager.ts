@@ -430,7 +430,7 @@ export function createTiptapKeyboardHandler(): KeyboardEventHandler {
     context: {
       type: "editor",
     },
-    handler: (event: KeyboardEvent) => {
+    handler: (_event: KeyboardEvent) => {
       // Tiptap编辑器内的键盘事件让编辑器自己处理
       return false;
     },

@@ -24,7 +24,6 @@ import { iconRegistry } from "../../utils/iconRegistry";
 import { useOptimizedCanvasPan } from "../../utils/dragOptimization";
 import type { IconType } from "../../utils/iconRegistry";
 import type { Position, Note } from "../../types";
-import { NoteColor } from "../../types";
 import { NOTE_DEFAULT_SIZE } from "../../types/constants";
 import { Alert } from "antd";
 import styles from "./index.module.css";

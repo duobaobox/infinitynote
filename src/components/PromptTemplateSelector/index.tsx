@@ -9,7 +9,6 @@ import {
   Space,
   Typography,
   Empty,
-  Tooltip,
 } from "antd";
 import {
   SearchOutlined,
@@ -31,7 +30,6 @@ import {
   CarOutlined,
 } from "@ant-design/icons";
 import {
-  PROMPT_TEMPLATES,
   PROMPT_CATEGORIES,
   getTemplatesByCategory,
   searchTemplates,

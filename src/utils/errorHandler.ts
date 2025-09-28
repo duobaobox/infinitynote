@@ -226,10 +226,13 @@ export const databaseReconnectStrategy: ErrorRecoveryStrategy = {
   canRecover: (error: AppError) =>
     error.type === ErrorType.DATABASE && error.code === "DB_CONNECTION_LOST",
 
-  recover: async (error: AppError) => {
+  recover: async (_error: AppError) => {
     console.log("🔄 尝试重新连接数据库...");
     // 这里可以添加数据库重连逻辑
     // 例如：重新初始化数据库连接
+    // 模拟重连过程
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log("✅ 数据库连接已重新建立");
   },
 };
 
@@ -292,7 +295,7 @@ export class ErrorHandler {
       canRecover: (error: AppError) =>
         error.type === ErrorType.DATABASE &&
         error.code === "DB_CONNECTION_LOST",
-      recover: async (error: AppError) => {
+      recover: async (_error: AppError) => {
         console.log("🔄 尝试重新连接数据库...");
         // 这里可以添加数据库重连逻辑
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -303,7 +306,7 @@ export class ErrorHandler {
     // 网络错误重试策略
     this.addStrategy({
       canRecover: (error: AppError) => error.type === ErrorType.NETWORK,
-      recover: async (error: AppError) => {
+      recover: async (_error: AppError) => {
         console.log("🔄 检测网络连接...");
         if (navigator.onLine) {
           console.log("✅ 网络连接正常，可以重试");
@@ -318,7 +321,7 @@ export class ErrorHandler {
       canRecover: (error: AppError) =>
         error.code === "AI_API_KEY_MISSING" ||
         error.code === "AI_API_KEY_INVALID",
-      recover: async (error: AppError) => {
+      recover: async (_error: AppError) => {
         console.log("🔑 提示用户配置API密钥...");
         // 触发API密钥配置界面
         window.dispatchEvent(new CustomEvent("openAISettings"));

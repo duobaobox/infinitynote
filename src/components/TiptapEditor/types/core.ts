@@ -10,7 +10,6 @@
 
 import type {
   Editor,
-  EditorOptions,
   Extension,
   Mark,
   Node,

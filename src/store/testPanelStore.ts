@@ -30,12 +30,11 @@ const useTestPanelStore = create<TestPanelStore>()(
           if (isNewGeneration && state.requests.length > 0) {
             // 新的便签开始生成，清空所有记录
             return {
-              requests: [request],
+              requests: [request], // 只保留当前请求
               responses: [],
-              generations: []
+              generations: [],
             };
           }
-          // 同一个便签的生成过程，添加请求记录
           return { requests: [...state.requests, request] };
         });
       },
@@ -55,7 +54,7 @@ const useTestPanelStore = create<TestPanelStore>()(
 
       // 添加便签生成记录 - 标记当前会话完成
       addGeneration: (generation: NoteGeneration) => {
-        set((state) => {
+        set((_state) => {
           // 生成完成，保存最终结果
           return { generations: [generation] }; // 只保留最新一次
         });
@@ -72,7 +71,7 @@ const useTestPanelStore = create<TestPanelStore>()(
 
       // 切换面板显示状态
       toggleVisibility: () => {
-        set((state) => ({ isVisible: !state.isVisible }));
+        set((_state) => ({ isVisible: !_state.isVisible }));
       },
 
       // 设置最大记录数量
@@ -83,16 +82,12 @@ const useTestPanelStore = create<TestPanelStore>()(
           // 如果新的限制更小，需要截断现有数据
           if (count < state.maxEntries) {
             const { requests, responses, generations } = state;
-
-            if (requests.length > count) {
-              (newState as any).requests = requests.slice(-count);
-            }
-            if (responses.length > count) {
-              (newState as any).responses = responses.slice(-count);
-            }
-            if (generations.length > count) {
-              (newState as any).generations = generations.slice(-count);
-            }
+            return {
+              ...newState,
+              requests: requests.slice(-count),
+              responses: responses.slice(-count),
+              generations: generations.slice(-count),
+            };
           }
 
           return newState;

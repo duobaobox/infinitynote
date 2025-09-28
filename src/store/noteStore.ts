@@ -174,6 +174,15 @@ interface NoteActions {
     position?: Position
   ) => Promise<string>;
 
+  // === 便签整理相关方法 ===
+  /** 整理当前画布的便签 */
+  organizeCurrentCanvasNotes: (
+    canvasId: string,
+    config?: Partial<import("../utils/noteOrganizer").OrganizeConfig>
+  ) => Promise<void>;
+  /** 检查便签是否需要整理 */
+  checkNeedsOrganization: (canvasId: string) => boolean;
+
   // 层级管理常量
   readonly LAYER_STEP: number;
   readonly MAX_Z_INDEX: number;
@@ -1180,6 +1189,114 @@ export const useNoteStore = create<NoteStore>()(
         } catch (error) {
           console.error("创建AI便签失败:", error);
           throw error;
+        }
+      },
+
+      // === 便签整理相关方法实现 ===
+
+      // 整理当前画布的便签
+      organizeCurrentCanvasNotes: async (
+        canvasId: string,
+        config?: Partial<import("../utils/noteOrganizer").OrganizeConfig>
+      ) => {
+        try {
+          // 动态导入整理工具函数
+          const { organizeNotes } = await import("../utils/noteOrganizer");
+          
+          // 获取当前画布的便签
+          const canvasNotes = get().getNotesByCanvas(canvasId);
+          
+          if (canvasNotes.length === 0) {
+            console.log("📋 当前画布没有便签，无需整理");
+            return;
+          }
+
+          // 获取画布状态和视口信息
+          const { useCanvasStore } = await import("./canvasStore");
+          const canvasStore = useCanvasStore.getState();
+          const viewport = canvasStore.viewport;
+          const windowSize = { width: window.innerWidth, height: window.innerHeight };
+
+          console.log(`🔄 开始整理画布 ${canvasId.slice(-8)} 的 ${canvasNotes.length} 个便签...`);
+
+          // 计算整理后的布局
+          const { updates, gridInfo } = organizeNotes(canvasNotes, viewport, windowSize, config);
+
+          if (updates.length === 0) {
+            console.log("📋 没有需要更新的便签");
+            return;
+          }
+
+          // 批量更新便签位置和尺寸
+          const updatePromises = updates.map(async (update) => {
+            // 先更新内存状态
+            set((state) => ({
+              notes: state.notes.map((note) =>
+                note.id === update.id
+                  ? {
+                      ...note,
+                      position: update.position,
+                      size: update.size,
+                      updatedAt: new Date(),
+                    }
+                  : note
+              ),
+            }));
+
+            // 同步到数据库
+            return dbOperations.updateNote(update.id, {
+              position: update.position,
+              size: update.size,
+              updatedAt: new Date(),
+            });
+          });
+
+          await Promise.all(updatePromises);
+
+          console.log(`✅ 便签整理完成！`);
+          console.log(`📊 整理结果: ${gridInfo.columns} 列 × ${gridInfo.rows} 行`);
+          console.log(`📏 网格尺寸: ${gridInfo.totalWidth.toFixed(0)} × ${gridInfo.totalHeight.toFixed(0)} px`);
+
+          // 发送整理完成事件
+          noteStoreEvents.notifyNoteUpdated("organize", canvasId);
+
+        } catch (error) {
+          console.error("❌ 便签整理失败:", error);
+          throw new Error(
+            `便签整理失败: ${
+              error instanceof Error ? error.message : "未知错误"
+            }`
+          );
+        }
+      },
+
+      // 检查便签是否需要整理
+      checkNeedsOrganization: (canvasId: string): boolean => {
+        try {
+          // 动态导入检查函数
+          import("../utils/noteOrganizer").then(({ needsOrganization }) => {
+            const canvasNotes = get().getNotesByCanvas(canvasId);
+            return needsOrganization(canvasNotes);
+          });
+          
+          // 同步版本的简单检查
+          const canvasNotes = get().getNotesByCanvas(canvasId);
+          
+          if (canvasNotes.length <= 1) {
+            return false;
+          }
+
+          // 检查尺寸是否统一（简单版本）
+          const firstSize = canvasNotes[0].size;
+          const hasUniformSize = canvasNotes.every(note => 
+            Math.abs(note.size.width - firstSize.width) <= 10 &&
+            Math.abs(note.size.height - firstSize.height) <= 10
+          );
+
+          return !hasUniformSize; // 如果尺寸不统一，则需要整理
+        } catch (error) {
+          console.warn("检查整理需求时出错:", error);
+          return true; // 出错时默认认为需要整理
         }
       },
     }),
