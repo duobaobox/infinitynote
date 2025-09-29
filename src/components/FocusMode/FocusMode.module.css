@@ -1,4 +1,4 @@
-/* 专注模式组件样式 */
+/* 专注模式组件样式 - Notion风格 */
 
 .focusMode {
   position: fixed;
@@ -9,57 +9,73 @@
   background-color: var(--color-background);
   z-index: 9999;
   display: flex;
-  animation: slideIn 0.3s ease-out;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease-out;
 }
 
-@keyframes slideIn {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
 .focusMode.closing {
-  animation: slideOut 0.2s ease-in forwards;
+  animation: fadeOut 0.2s ease-in forwards;
 }
 
-@keyframes slideOut {
+@keyframes fadeOut {
   from {
     opacity: 1;
-    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: scale(0.95);
   }
 }
 
-.header {
+/* 极简头部 */
+.notionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--color-border-light);
   background-color: var(--color-surface);
+  height: 52px;
 }
 
-.title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0;
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.headerActions {
+.headerCenter {
+  flex: 1;
+  text-align: center;
+}
+
+.headerRight {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.appTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.breadcrumbTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.menuButton,
 .helpButton,
 .closeButton {
   display: flex;
@@ -75,6 +91,7 @@
   transition: all 0.2s ease;
 }
 
+.menuButton:hover,
 .helpButton:hover,
 .closeButton:hover {
   background-color: var(--color-hover);
@@ -84,7 +101,7 @@
 .content {
   display: flex;
   flex: 1;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 52px);
 }
 
 .sidebar {
@@ -97,110 +114,32 @@
   flex-direction: column;
 }
 
-.sidebarHeader {
-  padding: 16px;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.searchBox {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
-  font-size: 14px;
-  transition: border-color 0.2s ease;
-}
-
-.searchBox:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-primary-alpha);
-}
-
-.searchBox::placeholder {
-  color: var(--color-text-placeholder);
-}
-
-.noteList {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.noteListItem {
-  padding: 12px 16px;
-  margin-bottom: 4px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-left: 4px solid transparent;
-}
-
-.noteListItem:hover {
-  background-color: var(--color-hover);
-}
-
-.noteListItem.active {
-  background-color: var(--color-primary-alpha);
-  border-left-color: var(--color-primary);
-}
-
-.noteTitle {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  margin-bottom: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.2;
-}
-
-.notePreview {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.noteDate {
-  font-size: 11px;
-  color: var(--color-text-tertiary);
-  margin-top: 4px;
-}
-
 .editor {
   flex: 1;
   display: flex;
   flex-direction: column;
   background-color: var(--color-background);
+  padding: 24px;
+  overflow-y: auto;
 }
 
 .editorHeader {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--color-border-light);
-  background-color: var(--color-surface);
+  margin-bottom: 24px;
+  padding: 8px 0;
 }
 
 .titleInput {
   width: 100%;
   border: none;
   background: transparent;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
   color: var(--color-text-primary);
   padding: 8px 0;
-  line-height: 1.2;
+  line-height: 1.3;
   resize: none;
   outline: none;
+  font-family: inherit;
 }
 
 .titleInput::placeholder {
@@ -209,8 +148,23 @@
 
 .editorContent {
   flex: 1;
-  padding: 24px;
-  overflow-y: auto;
+  padding: 0;
+  max-width: 720px; /* 类似Notion的内容宽度 */
+  margin: 0 auto;
+  width: 100%;
+}
+
+.editorFooter {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  margin-top: 16px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.noteInfo {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
 }
 
 .emptyState {
@@ -240,24 +194,24 @@
 }
 
 /* 滚动条样式 */
-.noteList::-webkit-scrollbar,
-.editorContent::-webkit-scrollbar {
+.sidebar::-webkit-scrollbar,
+.editor::-webkit-scrollbar {
   width: 6px;
 }
 
-.noteList::-webkit-scrollbar-track,
-.editorContent::-webkit-scrollbar-track {
+.sidebar::-webkit-scrollbar-track,
+.editor::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.noteList::-webkit-scrollbar-thumb,
-.editorContent::-webkit-scrollbar-thumb {
+.sidebar::-webkit-scrollbar-thumb,
+.editor::-webkit-scrollbar-thumb {
   background: var(--color-scrollbar);
   border-radius: 3px;
 }
 
-.noteList::-webkit-scrollbar-thumb:hover,
-.editorContent::-webkit-scrollbar-thumb:hover {
+.sidebar::-webkit-scrollbar-thumb:hover,
+.editor::-webkit-scrollbar-thumb:hover {
   background: var(--color-scrollbar-hover);
 }
 
@@ -268,8 +222,24 @@
     min-width: 260px;
   }
 
-  .editorContent {
+  .editor {
     padding: 16px;
+  }
+  
+  .titleInput {
+    font-size: 24px;
+  }
+  
+  .headerLeft {
+    gap: 8px;
+  }
+  
+  .appTitle {
+    font-size: 14px;
+  }
+  
+  .breadcrumbTitle {
+    font-size: 13px;
   }
 }
 
@@ -277,5 +247,9 @@
 @media (prefers-color-scheme: dark) {
   .focusMode {
     color-scheme: dark;
+  }
+  
+  .notionHeader {
+    border-bottom: 1px solid var(--color-border-light);
   }
 }

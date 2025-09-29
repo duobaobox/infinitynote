@@ -1,6 +1,6 @@
 /**
  * 专注模式主组件
- * 提供沉浸式的便签编辑体验，包含便签列表和编辑器
+ * 提供类似Notion的简洁便签编辑体验，保留左右分栏布局
  */
 
 import { memo, useState, useEffect, useCallback } from "react";
@@ -8,6 +8,7 @@ import {
   CloseOutlined,
   EditOutlined,
   QuestionCircleOutlined,
+  MenuOutlined,
 } from "@ant-design/icons";
 import { useNoteStore } from "../../store/noteStore";
 import { useFocusModeStore } from "../../store/focusModeStore";
@@ -115,10 +116,26 @@ const FocusMode = memo<FocusModeProps>(
 
     return (
       <div className={`${styles.focusMode} ${closing ? styles.closing : ""}`}>
-        {/* 头部 */}
-        <div className={styles.header}>
-          <h1 className={styles.title}>专注模式</h1>
-          <div className={styles.headerActions}>
+        {/* 极简头部 */}
+        <div className={styles.notionHeader}>
+          <div className={styles.headerLeft}>
+            <button
+              className={styles.menuButton}
+              onClick={() => {}}
+              title="菜单"
+            >
+              <MenuOutlined />
+            </button>
+            <span className={styles.appTitle}>InfinityNote</span>
+          </div>
+          <div className={styles.headerCenter}>
+            {currentNote && (
+              <span className={styles.breadcrumbTitle}>
+                {currentNote.title || "无标题"}
+              </span>
+            )}
+          </div>
+          <div className={styles.headerRight}>
             <button
               className={styles.helpButton}
               onClick={() => setShowShortcuts(true)}
@@ -155,7 +172,7 @@ const FocusMode = memo<FocusModeProps>(
                 <div className={styles.editorHeader}>
                   <textarea
                     className={styles.titleInput}
-                    placeholder="便签标题..."
+                    placeholder="无标题"
                     value={currentNote.title}
                     onChange={(e) => handleTitleChange(e.target.value)}
                     rows={1}
@@ -173,9 +190,21 @@ const FocusMode = memo<FocusModeProps>(
                     key={currentNote.id}
                     content={currentNote.content}
                     onContentChange={handleContentChange}
-                    placeholder="开始编写便签内容..."
+                    placeholder="输入 / 以使用命令"
                     autoFocus
                   />
+                </div>
+                
+                {/* 底部信息 */}
+                <div className={styles.editorFooter}>
+                  {currentNote && (
+                    <>
+                      <span className={styles.noteInfo}>
+                        {new Date(currentNote.updatedAt).toLocaleDateString('zh-CN')} • 
+                        {currentNote.content.replace(/<[^>]*>/g, '').length} 字
+                      </span>
+                    </>
+                  )}
                 </div>
               </>
             ) : (

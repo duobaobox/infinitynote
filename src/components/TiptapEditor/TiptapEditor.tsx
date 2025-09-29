@@ -416,8 +416,8 @@ export const TiptapEditor = memo<TiptapEditorProps>(
           {/* 编辑器内容区域 - 充满主要空间 */}
           <EditorContent editor={editor} className="tiptap-editor-content" />
 
-          {/* 底部工具栏 */}
-          {editor && (
+          {/* 底部工具栏 - 仅在非readonly模式下显示 */}
+          {editor && !readonly && (
             <Toolbar
               key={toolbarUpdateKey}
               editor={editor}
