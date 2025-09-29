@@ -15,10 +15,38 @@ body {
 /* 主题基础样式 */
 .theme-light {
   color-scheme: light;
+  /* 专注模式专用变量 */
+  --color-surface: #ffffff;
+  --color-background: #fafafa;
+  --color-text-primary: #262626;
+  --color-text-secondary: #8c8c8c;
+  --color-text-tertiary: #bfbfbf;
+  --color-text-placeholder: #d9d9d9;
+  --color-border: #d9d9d9;
+  --color-border-light: #f0f0f0;
+  --color-hover: #fafafa;
+  --color-primary: #1890ff;
+  --color-primary-alpha: rgba(24, 144, 255, 0.1);
+  --color-scrollbar: #d9d9d9;
+  --color-scrollbar-hover: #bfbfbf;
 }
 
 .theme-dark {
   color-scheme: dark;
+  /* 专注模式专用变量 */
+  --color-surface: #141414;
+  --color-background: #000000;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a6a6a6;
+  --color-text-tertiary: #595959;
+  --color-text-placeholder: #434343;
+  --color-border: #303030;
+  --color-border-light: #1f1f1f;
+  --color-hover: #1f1f1f;
+  --color-primary: #1890ff;
+  --color-primary-alpha: rgba(24, 144, 255, 0.1);
+  --color-scrollbar: #434343;
+  --color-scrollbar-hover: #595959;
 }
 
 .theme-compact {

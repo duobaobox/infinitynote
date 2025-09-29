@@ -1,0 +1,108 @@
+/* 键盘快捷键帮助样式 */
+
+.shortcutsModal {
+  color-scheme: inherit;
+}
+
+.shortcutsContainer {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.categoryGroup {
+  margin-bottom: 24px;
+}
+
+.categoryGroup:last-child {
+  margin-bottom: 0;
+}
+
+.categoryTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: 8px;
+}
+
+.shortcutsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcutItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.shortcutKey {
+  background: var(--color-fill-quaternary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 2px 0 var(--color-border);
+}
+
+.shortcutDescription {
+  flex: 1;
+  margin-left: 16px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.tip {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--color-fill-quaternary);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.tip kbd {
+  background: var(--color-text-primary);
+  color: var(--color-bg-base);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  margin: 0 2px;
+}
+
+/* 滚动条样式 */
+.shortcutsContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shortcutsContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shortcutsContainer::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar);
+  border-radius: 3px;
+}
+
+.shortcutsContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-hover);
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .shortcutKey {
+    background: var(--color-fill-tertiary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+    box-shadow: 0 2px 0 var(--color-border);
+  }
+}

@@ -1,6 +1,6 @@
 /**
  * 便签工具栏常量配置
- * 
+ *
  * 定义工具栏按钮和颜色选项的配置
  * @author InfinityNote2 Team
  */
@@ -10,6 +10,13 @@ import { NoteColorConfig } from "../../config/noteColors";
 
 // 基础工具栏按钮配置
 export const BASE_TOOLBAR_BUTTONS: ToolbarButton[] = [
+  {
+    id: "focus-mode",
+    label: "专注模式",
+    icon: "EyeOutlined",
+    tooltip: "进入专注模式编辑",
+    separator: true, // 在专注模式前添加分隔符
+  },
   {
     id: "color",
     label: "更改颜色",
@@ -63,11 +70,12 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
 
 /**
  * 颜色选项配置
- * 
+ *
  * 从统一的颜色配置系统获取工具栏颜色选项
  * 修改颜色请编辑 src/config/noteColors.ts
  */
-export const COLOR_OPTIONS: ColorOption[] = NoteColorConfig.getToolbarColorOptions();
+export const COLOR_OPTIONS: ColorOption[] =
+  NoteColorConfig.getToolbarColorOptions();
 
 // 工具栏尺寸配置 - 更小巧精致
 export const TOOLBAR_CONFIG = {

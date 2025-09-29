@@ -6,6 +6,7 @@ import {
   DeleteOutlined,
   RobotOutlined,
   SettingOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import type { NoteToolbarProps, ToolbarAction } from "./types";
 import {
@@ -24,6 +25,7 @@ const IconMap: Record<string, React.ComponentType<any>> = {
   DeleteOutlined,
   RobotOutlined,
   SettingOutlined,
+  EyeOutlined,
 };
 
 const renderIcon = (iconName: string) => {
@@ -91,6 +93,14 @@ export const NoteToolbar = memo<NoteToolbarProps>(
         if (action === "ai-config") {
           // 触发AI配置，这里可以打开设置模态框的AI标签页
           onAction?.("ai-config", { noteId });
+          return;
+        }
+
+        if (action === "focus-mode") {
+          // 触发专注模式
+          onAction?.("focus-mode", { noteId });
+          // 专注模式打开后自动关闭工具栏
+          onClose?.();
           return;
         }
 

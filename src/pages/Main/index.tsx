@@ -9,6 +9,7 @@ import {
   initializeDefaultCanvas,
 } from "../../store/canvasStore";
 import { useConnectionStore } from "../../store/connectionStore";
+import { useFocusModeStore } from "../../store/focusModeStore";
 // 引入主题
 import { useTheme } from "../../theme";
 import type { Position, Note } from "../../types";
@@ -21,6 +22,8 @@ import { CanvasToolbar } from "../../components/CanvasToolbar";
 import { NoteWorkbench } from "../../components/NoteWorkbench";
 // 引入设置弹窗组件
 import SettingsModal from "../../components/SettingsModal/index";
+// 引入专注模式组件
+import { FocusMode } from "../../components/FocusMode";
 // 引入Ant Design组件
 import {
   Layout, // 用于整体页面布局，包含Sider和Content
@@ -85,6 +88,14 @@ const Main: React.FC = () => {
     string | undefined
   >(undefined);
 
+  // 专注模式状态
+  const {
+    isVisible: focusModeVisible,
+    activeNoteId: focusActiveNoteId,
+    closeFocusMode,
+    setActiveNote: setFocusActiveNote,
+  } = useFocusModeStore();
+
   // 获取App Context中的modal和notification实例
   const { modal, notification } = App.useApp();
 
@@ -119,7 +130,7 @@ const Main: React.FC = () => {
     deleteCanvas,
     focusToNote,
   } = useCanvasStore();
-  
+
   // 连接状态管理
   const { connectedNotes } = useConnectionStore();
 
@@ -580,118 +591,22 @@ const Main: React.FC = () => {
   ));
 
   // 处理AI生成的函数，支持连接模式和普通模式
-  const handleAddNote = useCallback(async (prompt?: string, isConnectedMode: boolean = false) => {
-    if (!activeCanvasId) {
-      console.error("❌ 没有活动画布");
-      return;
-    }
+  const handleAddNote = useCallback(
+    async (prompt?: string, isConnectedMode: boolean = false) => {
+      if (!activeCanvasId) {
+        console.error("❌ 没有活动画布");
+        return;
+      }
 
-    try {
-      if (isConnectedMode && connectedNotes.length > 0) {
-        // 连接模式：汇总连接的便签内容
-        console.log("🤖 连接模式 - 汇总便签内容，提示:", prompt);
-
-        // 检查AI配置是否完整（包括API密钥和模型配置）
-        console.log("🔍 开始检查AI配置完整性...");
-        const { aiService } = await import("../../services/aiService");
-        const configStatus = await aiService.isCurrentConfigurationReady();
-        console.log("🔍 AI配置检查结果:", configStatus);
-
-        if (configStatus.status !== "ready") {
-          console.log("❌ AI配置不完整，显示错误提醒...");
-
-          // 根据不同的错误状态显示相应的错误信息
-          let errorMessage = "🔑 AI功能需要配置";
-          let errorDescription = configStatus.message || "请检查AI配置";
-
-          if (configStatus.status === "unconfigured") {
-            errorMessage = "🔑 API密钥未配置";
-            errorDescription = "请先配置API密钥才能使用AI功能";
-          } else if (configStatus.status === "error") {
-            errorMessage = "⚙️ AI配置错误";
-            errorDescription = "AI配置存在问题，请重新配置";
-          }
-
-          // 显示配置错误提醒
-          notification.error({
-            message: errorMessage,
-            description: errorDescription,
-            duration: 0, // 不自动关闭
-            key: "ai-config-error", // 防止重复显示
-            placement: "topRight",
-            btn: (
-              <button
-                onClick={() => {
-                  setSettingsOpen(true);
-                  notification.destroy("ai-config-error");
-                }}
-                style={{
-                  background: "#1890ff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  padding: "4px 12px",
-                  cursor: "pointer",
-                }}
-              >
-                打开设置
-              </button>
-            ),
-          });
-          console.log("✅ 错误提醒已显示");
-          return; // 阻止便签创建
-        }
-
-        // 构建AI提示词，包含所有连接便签的内容
-        const connectedNotesContent = connectedNotes
-          .map((note, index) => `便签${index + 1}: ${note.title || '无标题'}\n内容: ${note.content || '无内容'}\n---`)
-          .join('\n');
-
-        const aiPrompt = `请根据以下便签内容进行处理（指令：${prompt || '汇总'}）：\n\n${connectedNotesContent}`;
-
-        // 获取智能位置
-        const { generateSmartPosition } = await import(
-          "../../utils/notePositioning"
-        );
-        const currentCanvasNotes = notes.filter(
-          (note: Note) => note.canvasId === activeCanvasId
-        );
-
-        const position = generateSmartPosition(
-          viewport,
-          { width: window.innerWidth, height: window.innerHeight },
-          { width: 200, height: 150 },
-          currentCanvasNotes
-        );
-
-        // 创建AI便签占位符
-        const noteId = await createAINoteFromPrompt(
-          activeCanvasId,
-          aiPrompt,
-          position
-        );
-
-        // 记录当前生成的便签ID
-        setCurrentGeneratingNoteId(noteId);
-
-        // 开始AI生成
-        await startAIGeneration(noteId, aiPrompt);
-
-        // 生成完成后清理状态
-        setCurrentGeneratingNoteId(undefined);
-
-        console.log("✅ 连接模式AI便签创建成功");
-      } else {
-        // 普通模式：根据提示词创建便签或创建空白便签
-        if (prompt && prompt.trim()) {
-          // 有提示词：使用AI生成便签
-          console.log("🤖 AI生成便签，提示:", prompt);
+      try {
+        if (isConnectedMode && connectedNotes.length > 0) {
+          // 连接模式：汇总连接的便签内容
+          console.log("🤖 连接模式 - 汇总便签内容，提示:", prompt);
 
           // 检查AI配置是否完整（包括API密钥和模型配置）
           console.log("🔍 开始检查AI配置完整性...");
           const { aiService } = await import("../../services/aiService");
-          const configStatus =
-            await aiService.isCurrentConfigurationReady();
+          const configStatus = await aiService.isCurrentConfigurationReady();
           console.log("🔍 AI配置检查结果:", configStatus);
 
           if (configStatus.status !== "ready") {
@@ -739,6 +654,20 @@ const Main: React.FC = () => {
             return; // 阻止便签创建
           }
 
+          // 构建AI提示词，包含所有连接便签的内容
+          const connectedNotesContent = connectedNotes
+            .map(
+              (note, index) =>
+                `便签${index + 1}: ${note.title || "无标题"}\n内容: ${
+                  note.content || "无内容"
+                }\n---`
+            )
+            .join("\n");
+
+          const aiPrompt = `请根据以下便签内容进行处理（指令：${
+            prompt || "汇总"
+          }）：\n\n${connectedNotesContent}`;
+
           // 获取智能位置
           const { generateSmartPosition } = await import(
             "../../utils/notePositioning"
@@ -757,7 +686,7 @@ const Main: React.FC = () => {
           // 创建AI便签占位符
           const noteId = await createAINoteFromPrompt(
             activeCanvasId,
-            prompt,
+            aiPrompt,
             position
           );
 
@@ -765,34 +694,136 @@ const Main: React.FC = () => {
           setCurrentGeneratingNoteId(noteId);
 
           // 开始AI生成
-          await startAIGeneration(noteId, prompt);
+          await startAIGeneration(noteId, aiPrompt);
 
           // 生成完成后清理状态
           setCurrentGeneratingNoteId(undefined);
 
-          console.log("✅ AI便签创建成功");
+          console.log("✅ 连接模式AI便签创建成功");
         } else {
-          // 无提示词：创建空白便签
-          console.log("📝 创建空白便签");
-          await handleCreateNote();
+          // 普通模式：根据提示词创建便签或创建空白便签
+          if (prompt && prompt.trim()) {
+            // 有提示词：使用AI生成便签
+            console.log("🤖 AI生成便签，提示:", prompt);
+
+            // 检查AI配置是否完整（包括API密钥和模型配置）
+            console.log("🔍 开始检查AI配置完整性...");
+            const { aiService } = await import("../../services/aiService");
+            const configStatus = await aiService.isCurrentConfigurationReady();
+            console.log("🔍 AI配置检查结果:", configStatus);
+
+            if (configStatus.status !== "ready") {
+              console.log("❌ AI配置不完整，显示错误提醒...");
+
+              // 根据不同的错误状态显示相应的错误信息
+              let errorMessage = "🔑 AI功能需要配置";
+              let errorDescription = configStatus.message || "请检查AI配置";
+
+              if (configStatus.status === "unconfigured") {
+                errorMessage = "🔑 API密钥未配置";
+                errorDescription = "请先配置API密钥才能使用AI功能";
+              } else if (configStatus.status === "error") {
+                errorMessage = "⚙️ AI配置错误";
+                errorDescription = "AI配置存在问题，请重新配置";
+              }
+
+              // 显示配置错误提醒
+              notification.error({
+                message: errorMessage,
+                description: errorDescription,
+                duration: 0, // 不自动关闭
+                key: "ai-config-error", // 防止重复显示
+                placement: "topRight",
+                btn: (
+                  <button
+                    onClick={() => {
+                      setSettingsOpen(true);
+                      notification.destroy("ai-config-error");
+                    }}
+                    style={{
+                      background: "#1890ff",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      padding: "4px 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    打开设置
+                  </button>
+                ),
+              });
+              console.log("✅ 错误提醒已显示");
+              return; // 阻止便签创建
+            }
+
+            // 获取智能位置
+            const { generateSmartPosition } = await import(
+              "../../utils/notePositioning"
+            );
+            const currentCanvasNotes = notes.filter(
+              (note: Note) => note.canvasId === activeCanvasId
+            );
+
+            const position = generateSmartPosition(
+              viewport,
+              { width: window.innerWidth, height: window.innerHeight },
+              { width: 200, height: 150 },
+              currentCanvasNotes
+            );
+
+            // 创建AI便签占位符
+            const noteId = await createAINoteFromPrompt(
+              activeCanvasId,
+              prompt,
+              position
+            );
+
+            // 记录当前生成的便签ID
+            setCurrentGeneratingNoteId(noteId);
+
+            // 开始AI生成
+            await startAIGeneration(noteId, prompt);
+
+            // 生成完成后清理状态
+            setCurrentGeneratingNoteId(undefined);
+
+            console.log("✅ AI便签创建成功");
+          } else {
+            // 无提示词：创建空白便签
+            console.log("📝 创建空白便签");
+            await handleCreateNote();
+          }
+        }
+      } catch (error) {
+        console.error("❌ 添加便签失败:", error);
+        // 清理状态
+        setCurrentGeneratingNoteId(undefined);
+
+        // 显示通用错误提醒（API密钥错误已在前面处理）
+        if (error instanceof Error) {
+          notification.error({
+            message: "❌ 操作失败",
+            description: error.message || "操作失败，请重试",
+            duration: 4, // 4秒后自动关闭
+            placement: "topRight",
+          });
         }
       }
-    } catch (error) {
-      console.error("❌ 添加便签失败:", error);
-      // 清理状态
-      setCurrentGeneratingNoteId(undefined);
-
-      // 显示通用错误提醒（API密钥错误已在前面处理）
-      if (error instanceof Error) {
-        notification.error({
-          message: "❌ 操作失败",
-          description: error.message || "操作失败，请重试",
-          duration: 4, // 4秒后自动关闭
-          placement: "topRight",
-        });
-      }
-    }
-  }, [activeCanvasId, connectedNotes, createAINoteFromPrompt, startAIGeneration, viewport, notes, notification, setSettingsOpen, handleCreateNote, setCurrentGeneratingNoteId]);
+    },
+    [
+      activeCanvasId,
+      connectedNotes,
+      createAINoteFromPrompt,
+      startAIGeneration,
+      viewport,
+      notes,
+      notification,
+      setSettingsOpen,
+      handleCreateNote,
+      setCurrentGeneratingNoteId,
+    ]
+  );
 
   return (
     // 主布局容器
@@ -954,6 +985,14 @@ const Main: React.FC = () => {
       <SettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      {/* 专注模式 */}
+      <FocusMode
+        visible={focusModeVisible}
+        activeNoteId={focusActiveNoteId}
+        onClose={closeFocusMode}
+        onNoteChange={setFocusActiveNote}
       />
     </div>
   );

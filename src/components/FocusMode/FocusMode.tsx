@@ -1,0 +1,205 @@
+/**
+ * 专注模式主组件
+ * 提供沉浸式的便签编辑体验，包含便签列表和编辑器
+ */
+
+import { memo, useState, useEffect, useCallback } from "react";
+import {
+  CloseOutlined,
+  EditOutlined,
+  QuestionCircleOutlined,
+} from "@ant-design/icons";
+import { useNoteStore } from "../../store/noteStore";
+import { useFocusModeStore } from "../../store/focusModeStore";
+import { TiptapEditor } from "../TiptapEditor";
+import { NoteList } from "./NoteList";
+import KeyboardShortcuts from "./KeyboardShortcuts";
+import type { FocusModeProps } from "./types";
+import styles from "./FocusMode.module.css";
+
+const FocusMode = memo<FocusModeProps>(
+  ({ visible, activeNoteId, onClose, onNoteChange }) => {
+    const [closing, setClosing] = useState(false);
+    const [showShortcuts, setShowShortcuts] = useState(false);
+
+    // 从专注模式store获取状态和操作
+    const { searchKeyword, setSearchKeyword, closeFocusMode, setActiveNote } =
+      useFocusModeStore();
+
+    // 从便签store获取便签相关数据和方法
+    const { notes, updateNote } = useNoteStore();
+
+    // 获取当前编辑的便签
+    const currentNote = activeNoteId
+      ? notes.find((note) => note.id === activeNoteId)
+      : undefined;
+
+    // 处理便签点击
+    const handleNoteClick = useCallback(
+      (noteId: string) => {
+        setActiveNote(noteId);
+        onNoteChange(noteId);
+      },
+      [onNoteChange, setActiveNote]
+    );
+
+    // 处理标题变化
+    const handleTitleChange = useCallback(
+      (value: string) => {
+        if (activeNoteId && currentNote) {
+          updateNote(activeNoteId, { title: value });
+        }
+      },
+      [activeNoteId, currentNote, updateNote]
+    );
+
+    // 处理内容变化
+    const handleContentChange = useCallback(
+      (content: string) => {
+        if (activeNoteId && currentNote) {
+          updateNote(activeNoteId, { content });
+        }
+      },
+      [activeNoteId, currentNote, updateNote]
+    );
+
+    // 处理关闭
+    const handleClose = useCallback(() => {
+      setClosing(true);
+      setTimeout(() => {
+        setClosing(false);
+        closeFocusMode();
+        onClose();
+      }, 200);
+    }, [onClose, closeFocusMode]);
+
+    // ESC键关闭，Ctrl+F搜索，?键显示帮助
+    useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (!visible) return;
+
+        if (event.key === "Escape") {
+          if (showShortcuts) {
+            setShowShortcuts(false);
+          } else {
+            handleClose();
+          }
+        }
+
+        // ? 键显示键盘快捷键帮助
+        if (event.key === "?" && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault();
+          setShowShortcuts(true);
+        }
+
+        // Ctrl+F 或 Cmd+F 聚焦搜索框
+        if ((event.ctrlKey || event.metaKey) && event.key === "f") {
+          event.preventDefault();
+          const searchInput = document.querySelector(
+            ".focus-mode-search-input"
+          ) as HTMLInputElement;
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        }
+      };
+
+      if (visible) {
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+      }
+    }, [visible, showShortcuts, handleClose]);
+
+    if (!visible) return null;
+
+    return (
+      <div className={`${styles.focusMode} ${closing ? styles.closing : ""}`}>
+        {/* 头部 */}
+        <div className={styles.header}>
+          <h1 className={styles.title}>专注模式</h1>
+          <div className={styles.headerActions}>
+            <button
+              className={styles.helpButton}
+              onClick={() => setShowShortcuts(true)}
+              title="键盘快捷键 (?)"
+            >
+              <QuestionCircleOutlined />
+            </button>
+            <button
+              className={styles.closeButton}
+              onClick={handleClose}
+              title="关闭专注模式 (ESC)"
+            >
+              <CloseOutlined />
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.content}>
+          {/* 侧边栏 - 便签列表 */}
+          <div className={styles.sidebar}>
+            <NoteList
+              notes={notes}
+              activeNoteId={activeNoteId}
+              searchKeyword={searchKeyword}
+              onNoteClick={handleNoteClick}
+              onSearchChange={setSearchKeyword}
+            />
+          </div>
+
+          {/* 编辑器区域 */}
+          <div className={styles.editor}>
+            {currentNote ? (
+              <>
+                <div className={styles.editorHeader}>
+                  <textarea
+                    className={styles.titleInput}
+                    placeholder="便签标题..."
+                    value={currentNote.title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    rows={1}
+                    style={{ height: "auto" }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = "auto";
+                      target.style.height = target.scrollHeight + "px";
+                    }}
+                  />
+                </div>
+
+                <div className={styles.editorContent}>
+                  <TiptapEditor
+                    key={currentNote.id}
+                    content={currentNote.content}
+                    onContentChange={handleContentChange}
+                    placeholder="开始编写便签内容..."
+                    autoFocus
+                  />
+                </div>
+              </>
+            ) : (
+              <div className={styles.emptyState}>
+                <EditOutlined className={styles.emptyIcon} />
+                <div className={styles.emptyTitle}>选择一个便签开始编辑</div>
+                <div className={styles.emptyDescription}>
+                  从左侧列表中选择便签，或创建一个新便签
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 键盘快捷键帮助 */}
+        <KeyboardShortcuts
+          visible={showShortcuts}
+          onClose={() => setShowShortcuts(false)}
+        />
+      </div>
+    );
+  }
+);
+
+FocusMode.displayName = "FocusMode";
+
+export default FocusMode;

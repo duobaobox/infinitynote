@@ -4,6 +4,7 @@ import type { Note, Size } from "../../types";
 import type { AICustomProperties } from "../../types/ai";
 import { NOTE_MIN_SIZE } from "../../types/constants";
 import { useNoteStore } from "../../store/noteStore";
+import { useFocusModeStore } from "../../store/focusModeStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
 import { ThinkingChainDisplay } from "../TiptapEditor/ThinkingChainDisplay";
@@ -54,6 +55,9 @@ export const NoteCard = memo<NoteCardProps>(
       aiStreamingData,
     } = useNoteStore();
 
+    // 专注模式状态
+    const { openFocusMode } = useFocusModeStore();
+
     // 连接状态
     const {
       isNoteConnected,
@@ -65,7 +69,7 @@ export const NoteCard = memo<NoteCardProps>(
 
     // 编辑状态
     const [isEditing, setIsEditing] = useState(false);
-    
+
     // 标题编辑状态
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleValue, setTitleValue] = useState(note.title || "");
@@ -441,6 +445,11 @@ export const NoteCard = memo<NoteCardProps>(
             // TODO: 实现置顶功能
             console.log("Pin note:", note.id);
             break;
+          case "focus-mode":
+            // 打开专注模式，传入当前便签ID
+            openFocusMode(note.id);
+            setShowToolbar(false);
+            break;
           case "ai-generate":
             handleAIGenerate();
             break;
@@ -452,7 +461,14 @@ export const NoteCard = memo<NoteCardProps>(
             console.log("Unhandled action:", action);
         }
       },
-      [note.id, updateNote, deleteNote, handleAIGenerate, handleAIConfig]
+      [
+        note.id,
+        updateNote,
+        deleteNote,
+        openFocusMode,
+        handleAIGenerate,
+        handleAIConfig,
+      ]
     ); // 关闭工具栏
     const handleCloseToolbar = useCallback(() => {
       setShowToolbar(false);
@@ -516,33 +532,39 @@ export const NoteCard = memo<NoteCardProps>(
     }, [isEditingTitle, note.id, titleValue, updateNote]);
 
     // ESC键或回车键处理标题编辑
-    const handleTitleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setIsEditingTitle(false);
-        setTitleValue(note.title || "");
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        updateNote(note.id, { title: titleValue.trim() || "Untitled" });
-        setIsEditingTitle(false);
-      }
-    }, [note.id, note.title, titleValue, updateNote]);
+    const handleTitleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setIsEditingTitle(false);
+          setTitleValue(note.title || "");
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          updateNote(note.id, { title: titleValue.trim() || "Untitled" });
+          setIsEditingTitle(false);
+        }
+      },
+      [note.id, note.title, titleValue, updateNote]
+    );
 
     // 双击标题编辑
-    const handleTitleDoubleClick = useCallback((e: React.MouseEvent) => {
-      e.stopPropagation();
-      // 如果当前正在编辑内容，先停止内容编辑
-      if (isEditing) {
-        setIsEditing(false);
-      }
-      setIsEditingTitle(true);
-      setTitleValue(note.title || "");
-      // 延迟聚焦到输入框
-      setTimeout(() => {
-        titleInputRef.current?.focus();
-        titleInputRef.current?.select();
-      }, 10); // 多延迟一点时间以确保组件完全渲染
-    }, [note.title, isEditing]);
+    const handleTitleDoubleClick = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // 如果当前正在编辑内容，先停止内容编辑
+        if (isEditing) {
+          setIsEditing(false);
+        }
+        setIsEditingTitle(true);
+        setTitleValue(note.title || "");
+        // 延迟聚焦到输入框
+        setTimeout(() => {
+          titleInputRef.current?.focus();
+          titleInputRef.current?.select();
+        }, 10); // 多延迟一点时间以确保组件完全渲染
+      },
+      [note.title, isEditing]
+    );
 
     // 当前便签的引用
     const currentNoteRef = useRef<HTMLDivElement>(null);
@@ -601,8 +623,9 @@ export const NoteCard = memo<NoteCardProps>(
           target.closest(".ant-tooltip");
 
         // 检查点击是否在标题编辑输入框内部
-        const isInTitleInput = target === titleInputRef.current || 
-                               (titleInputRef.current && titleInputRef.current.contains(target));
+        const isInTitleInput =
+          target === titleInputRef.current ||
+          (titleInputRef.current && titleInputRef.current.contains(target));
 
         if (!isInNoteCard && !isInToolbar && !isInModal && !isInTitleInput) {
           if (isEditing) {
@@ -935,7 +958,11 @@ export const NoteCard = memo<NoteCardProps>(
               onDoubleClick={(e) => {
                 // 如果点击的是标题区域，则允许双击标题编辑事件发生
                 const target = e.target as HTMLElement;
-                if (target.tagName !== 'H3' && !target.closest('h3') && !target.classList.contains('titleInput')) {
+                if (
+                  target.tagName !== "H3" &&
+                  !target.closest("h3") &&
+                  !target.classList.contains("titleInput")
+                ) {
                   e.stopPropagation();
                 }
               }}
@@ -952,7 +979,7 @@ export const NoteCard = memo<NoteCardProps>(
                   autoFocus
                 />
               ) : (
-                <h3 
+                <h3
                   className={styles.noteTitle}
                   onDoubleClick={handleTitleDoubleClick}
                 >
