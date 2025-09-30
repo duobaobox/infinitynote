@@ -138,17 +138,13 @@ export const TiptapEditor = memo<TiptapEditorProps>(
           alignments: ["left", "center", "right", "justify"],
           defaultAlignment: "left",
         }),
-        // 添加任务列表支持
+        // 添加任务列表支持 - 按照官方demo配置
         TaskList.configure({
-          HTMLAttributes: {
-            class: "ProseMirror-taskList",
-          },
+          HTMLAttributes: {},
         }),
         TaskItem.configure({
           nested: true, // 支持嵌套任务
-          HTMLAttributes: {
-            class: "ProseMirror-taskItem",
-          },
+          HTMLAttributes: {},
         }),
         // 添加表格支持
         Table.configure({

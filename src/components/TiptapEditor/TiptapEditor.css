@@ -197,58 +197,52 @@
   border-radius: 2px;
 }
 
-/* 任务列表样式 - 符合ProseMirror规范 */
-.ProseMirror-taskList {
+/* 任务列表样式 - 按照官方demo一比一复刻 */
+ul[data-type="taskList"] {
   list-style: none;
-  padding-left: 0;
-  margin: 8px 0;
+  margin-left: 0;
+  padding: 0;
+  margin: 1.25rem 1rem 1.25rem 0.4rem;
 }
 
-.ProseMirror-taskItem {
-  display: flex;
+ul[data-type="taskList"] li {
   align-items: flex-start;
-  margin: 4px 0;
-}
-
-.ProseMirror-taskItem label {
   display: flex;
-  align-items: center;
-  margin-right: 8px;
+}
+
+ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
   user-select: none;
-  cursor: pointer;
-  flex-shrink: 0;
+  padding-top: 0.35em;
 }
 
-.ProseMirror-taskItem input[type="checkbox"] {
-  margin: 0;
-  margin-right: 6px;
-  cursor: pointer;
-  width: 14px;
-  height: 14px;
-  accent-color: var(--color-primary, #1677ff);
+ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
 }
 
-.ProseMirror-taskItem > div {
-  flex: 1;
-  min-height: 1.2em;
-  line-height: 1.5;
+ul[data-type="taskList"] input[type="checkbox"] {
+  cursor: pointer;
 }
 
 /* 嵌套任务列表样式 */
-.ProseMirror-taskItem .ProseMirror-taskList {
-  margin-top: 4px;
-  padding-left: 20px;
+ul[data-type="taskList"] ul[data-type="taskList"] {
+  margin: 0;
+  padding-left: 0.1rem;
 }
 
-/* 已完成任务的样式 */
-.ProseMirror-taskItem[data-checked="true"] > div {
+/* 任务列表项段落样式 */
+ul[data-type="taskList"] li p {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  line-height: 1.5;
+}
+
+/* 已完成任务的样式 - 划掉和置灰 */
+ul[data-type="taskList"] li[data-checked="true"] > div {
   text-decoration: line-through;
   opacity: 0.6;
-}
-
-/* 任务列表在暗色主题下的适配 */
-.tiptap-editor-dark .ProseMirror-taskItem input[type="checkbox"] {
-  filter: brightness(0.8);
+  color: #6a737d;
 }
 .tiptap-editor-content .ProseMirror {
   flex: 1;
