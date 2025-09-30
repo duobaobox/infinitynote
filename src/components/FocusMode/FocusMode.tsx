@@ -9,7 +9,11 @@ import {
   EditOutlined,
   QuestionCircleOutlined,
   MenuOutlined,
+  SearchOutlined,
+  PlusOutlined,
+  FolderAddOutlined,
 } from "@ant-design/icons";
+import { Button, Tooltip } from "antd";
 import { useNoteStore } from "../../store/noteStore";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useFocusModeStore } from "../../store/focusModeStore";
@@ -29,10 +33,10 @@ const FocusMode = memo<FocusModeProps>(
       useFocusModeStore();
 
     // 从便签store获取便签相关数据和方法
-    const { notes, updateNote } = useNoteStore();
+    const { notes, updateNote, createNote } = useNoteStore();
 
     // 从画布store获取画布相关数据
-    const { canvases, activeCanvasId, setActiveCanvas } = useCanvasStore();
+    const { canvases, activeCanvasId, setActiveCanvas, createCanvas } = useCanvasStore();
 
     // 获取当前编辑的便签
     const currentNote = activeNoteId
@@ -75,6 +79,23 @@ const FocusMode = memo<FocusModeProps>(
       },
       [activeNoteId, currentNote, updateNote]
     );
+
+    // 处理创建新便签
+    const handleCreateNote = useCallback(async () => {
+      if (activeCanvasId) {
+        // 生成一个默认位置，比如在画布的某个位置
+        const newPosition = { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 };
+        const newNoteId = await createNote(activeCanvasId, newPosition);
+        setActiveNote(newNoteId);
+        onNoteChange(newNoteId);
+      }
+    }, [activeCanvasId, createNote, setActiveNote, onNoteChange]);
+
+    // 处理创建新画布
+    const handleCreateCanvas = useCallback(async () => {
+      const newCanvasId = await createCanvas("新画布");
+      setActiveCanvas(newCanvasId);
+    }, [createCanvas, setActiveCanvas]);
 
     // 处理关闭
     const handleClose = useCallback(() => {
@@ -128,46 +149,82 @@ const FocusMode = memo<FocusModeProps>(
 
     return (
       <div className={`${styles.focusMode} ${closing ? styles.closing : ""}`}>
-        {/* 极简头部 */}
-        <div className={styles.notionHeader}>
-          <div className={styles.headerLeft}>
-            <button
-              className={styles.menuButton}
-              onClick={() => {}}
-              title="菜单"
-            >
-              <MenuOutlined />
-            </button>
+        {/* 顶部工具栏 */}
+        <div className={styles.topToolbar}>
+          <div className={styles.toolbarLeft}>
+            <Tooltip title="菜单" placement="bottom">
+              <button
+                className={styles.toolbarButton}
+                onClick={() => {}}
+                aria-label="菜单"
+              >
+                <MenuOutlined />
+              </button>
+            </Tooltip>
             <span className={styles.appTitle}>InfinityNote</span>
           </div>
-          <div className={styles.headerCenter}>
-            {currentNote && (
-              <span className={styles.breadcrumbTitle}>
-                {currentNote.title || "无标题"}
-              </span>
-            )}
-          </div>
-          <div className={styles.headerRight}>
-            <button
-              className={styles.helpButton}
-              onClick={() => setShowShortcuts(true)}
-              title="键盘快捷键 (?)"
-            >
-              <QuestionCircleOutlined />
-            </button>
-            <button
-              className={styles.closeButton}
-              onClick={handleClose}
-              title="关闭专注模式 (ESC)"
-            >
-              <CloseOutlined />
-            </button>
+          
+          <div className={styles.toolbarRight}>
+            <Tooltip title="创建新便签" placement="bottom">
+              <Button
+                type="text"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={async () => await handleCreateNote()}
+                className={styles.toolbarButton}
+                aria-label="创建新便签"
+              />
+            </Tooltip>
+            <Tooltip title="创建新画布" placement="bottom">
+              <Button
+                type="text"
+                size="small"
+                icon={<FolderAddOutlined />}
+                onClick={async () => await handleCreateCanvas()}
+                className={styles.toolbarButton}
+                aria-label="创建新画布"
+              />
+            </Tooltip>
+            <Tooltip title="键盘快捷键" placement="bottom">
+              <Button
+                type="text"
+                size="small"
+                icon={<QuestionCircleOutlined />}
+                onClick={() => setShowShortcuts(true)}
+                className={styles.toolbarButton}
+                aria-label="键盘快捷键"
+              />
+            </Tooltip>
+            <Tooltip title="关闭专注模式 (ESC)" placement="bottom">
+              <Button
+                type="text"
+                size="small"
+                icon={<CloseOutlined />}
+                onClick={handleClose}
+                className={styles.toolbarButton}
+                aria-label="关闭专注模式"
+              />
+            </Tooltip>
           </div>
         </div>
 
-        <div className={styles.content}>
+        <div className={styles.mainContent}>
           {/* 侧边栏 - 便签树 */}
           <div className={styles.sidebar}>
+            <div className={styles.sidebarHeader}>
+              <h3 className={styles.sidebarTitle}>笔记本</h3>
+              <div className={styles.sidebarActions}>
+                <Tooltip title="搜索" placement="bottom">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<SearchOutlined />}
+                    className={styles.sidebarButton}
+                    aria-label="搜索"
+                  />
+                </Tooltip>
+              </div>
+            </div>
             <NoteTree
               notes={notes}
               canvases={canvases}
@@ -180,8 +237,8 @@ const FocusMode = memo<FocusModeProps>(
             />
           </div>
 
-          {/* 编辑器区域 */}
-          <div className={styles.editor}>
+          {/* 主编辑器区域 */}
+          <div className={styles.mainEditor}>
             {currentNote ? (
               <>
                 <div className={styles.editorHeader}>
@@ -210,22 +267,24 @@ const FocusMode = memo<FocusModeProps>(
                   />
                 </div>
 
-                {/* 底部信息 */}
-                <div className={styles.editorFooter}>
-                  {currentNote && (
-                    <>
-                      <span className={styles.noteInfo}>
-                        {new Date(currentNote.updatedAt).toLocaleDateString(
-                          "zh-CN"
-                        )}{" "}
-                        •
-                        {currentNote.content
-                          ? currentNote.content.replace(/<[^>]*>/g, "").length
-                          : 0}{" "}
-                        字
-                      </span>
-                    </>
-                  )}
+                {/* 底部状态栏 */}
+                <div className={styles.statusBar}>
+                  <span className={styles.statusText}>
+                    {currentNote && (
+                      <>
+                        <span className={styles.noteInfo}>
+                          {new Date(currentNote.updatedAt).toLocaleDateString(
+                            "zh-CN"
+                          )}{" "}
+                          •
+                          {currentNote.content
+                            ? currentNote.content.replace(/<[^>]*>/g, "").length
+                            : 0}{" "}
+                          字
+                        </span>
+                      </>
+                    )}
+                  </span>
                 </div>
               </>
             ) : (

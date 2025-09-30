@@ -153,7 +153,6 @@
   color: #e7e7e7;
   padding: 8px;
   border-radius: 4px;
-  /* overflow-x: auto; */
   font-family: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
     Menlo, Courier, monospace;
   font-size: 0.95em;
@@ -387,6 +386,16 @@
 .tiptap-editor-dark .tiptap-editor-prose code {
   background: var(--color-fill-quaternary, #2a2a2a);
   color: var(--color-text, #ffffff);
+}
+
+.tiptap-editor-dark .ProseMirror-code {
+  background: #000000cb;
+  color: #e7e7e7;
+}
+
+.tiptap-editor-dark .ProseMirror-codeBlock {
+  background: #000000cb;
+  color: #e7e7e7;
 }
 
 .tiptap-editor-dark .tiptap-editor-prose pre {
