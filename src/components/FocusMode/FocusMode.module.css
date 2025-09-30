@@ -47,7 +47,7 @@
   padding: 8px 12px;
   border-bottom: 1px solid var(--color-border-light);
   background-color: var(--color-surface);
-  height: 40px;
+  height: 47px;
   flex-shrink: 0;
 }
 
@@ -76,8 +76,6 @@
   color: var(--color-text-secondary);
   margin-left: 4px;
 }
-
-
 
 .toolbarButton {
   display: flex;
@@ -169,21 +167,24 @@
 }
 
 .editorHeader {
-  padding: 16px 24px 8px;
+  padding: 0 24px;
   border-bottom: 1px solid var(--color-border-light);
   background-color: var(--color-background);
   flex-shrink: 0;
+  height: 47px;
+  display: flex;
+  align-items: center;
 }
 
 .titleInput {
   width: 100%;
   border: none;
   background: transparent;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--color-text-primary);
-  padding: 8px 0;
-  line-height: 1.4;
+  padding: 0;
+  line-height: 1.2;
   resize: none;
   outline: none;
   font-family: inherit;
@@ -295,9 +296,12 @@
   }
 
   .editorHeader {
-    padding: 12px 16px 6px;
+    padding: 0 16px;
+    height: 47px;
+    display: flex;
+    align-items: center;
   }
-  
+
   .editorContent {
     padding: 12px 16px;
   }
@@ -305,9 +309,11 @@
   .statusBar {
     padding: 6px 16px;
   }
-  
+
   .titleInput {
-    font-size: 18px;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1.2;
   }
 }
 
@@ -316,15 +322,15 @@
   .focusMode {
     color-scheme: dark;
   }
-  
+
   .topToolbar {
     border-bottom: 1px solid var(--color-border-light);
   }
-  
+
   .editorHeader {
     border-bottom: 1px solid var(--color-border-light);
   }
-  
+
   .sidebarHeader {
     border-bottom: 1px solid var(--color-border-light);
   }

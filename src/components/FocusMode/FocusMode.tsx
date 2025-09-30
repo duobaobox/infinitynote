@@ -36,7 +36,8 @@ const FocusMode = memo<FocusModeProps>(
     const { notes, updateNote, createNote } = useNoteStore();
 
     // 从画布store获取画布相关数据
-    const { canvases, activeCanvasId, setActiveCanvas, createCanvas } = useCanvasStore();
+    const { canvases, activeCanvasId, setActiveCanvas, createCanvas } =
+      useCanvasStore();
 
     // 获取当前编辑的便签
     const currentNote = activeNoteId
@@ -84,7 +85,10 @@ const FocusMode = memo<FocusModeProps>(
     const handleCreateNote = useCallback(async () => {
       if (activeCanvasId) {
         // 生成一个默认位置，比如在画布的某个位置
-        const newPosition = { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 };
+        const newPosition = {
+          x: Math.random() * 200 + 100,
+          y: Math.random() * 200 + 100,
+        };
         const newNoteId = await createNote(activeCanvasId, newPosition);
         setActiveNote(newNoteId);
         onNoteChange(newNoteId);
@@ -152,59 +156,49 @@ const FocusMode = memo<FocusModeProps>(
         {/* 顶部工具栏 */}
         <div className={styles.topToolbar}>
           <div className={styles.toolbarLeft}>
-            <Tooltip title="菜单" placement="bottom">
-              <button
-                className={styles.toolbarButton}
-                onClick={() => {}}
-                aria-label="菜单"
-              >
-                <MenuOutlined />
-              </button>
-            </Tooltip>
+            <button
+              className={styles.toolbarButton}
+              onClick={() => {}}
+              aria-label="菜单"
+            >
+              <MenuOutlined />
+            </button>
             <span className={styles.appTitle}>InfinityNote</span>
           </div>
-          
+
           <div className={styles.toolbarRight}>
-            <Tooltip title="创建新便签" placement="bottom">
-              <Button
-                type="text"
-                size="small"
-                icon={<PlusOutlined />}
-                onClick={async () => await handleCreateNote()}
-                className={styles.toolbarButton}
-                aria-label="创建新便签"
-              />
-            </Tooltip>
-            <Tooltip title="创建新画布" placement="bottom">
-              <Button
-                type="text"
-                size="small"
-                icon={<FolderAddOutlined />}
-                onClick={async () => await handleCreateCanvas()}
-                className={styles.toolbarButton}
-                aria-label="创建新画布"
-              />
-            </Tooltip>
-            <Tooltip title="键盘快捷键" placement="bottom">
-              <Button
-                type="text"
-                size="small"
-                icon={<QuestionCircleOutlined />}
-                onClick={() => setShowShortcuts(true)}
-                className={styles.toolbarButton}
-                aria-label="键盘快捷键"
-              />
-            </Tooltip>
-            <Tooltip title="关闭专注模式 (ESC)" placement="bottom">
-              <Button
-                type="text"
-                size="small"
-                icon={<CloseOutlined />}
-                onClick={handleClose}
-                className={styles.toolbarButton}
-                aria-label="关闭专注模式"
-              />
-            </Tooltip>
+            <Button
+              type="text"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={async () => await handleCreateNote()}
+              className={styles.toolbarButton}
+              aria-label="创建新便签"
+            />
+            <Button
+              type="text"
+              size="small"
+              icon={<FolderAddOutlined />}
+              onClick={async () => await handleCreateCanvas()}
+              className={styles.toolbarButton}
+              aria-label="创建新画布"
+            />
+            <Button
+              type="text"
+              size="small"
+              icon={<QuestionCircleOutlined />}
+              onClick={() => setShowShortcuts(true)}
+              className={styles.toolbarButton}
+              aria-label="键盘快捷键"
+            />
+            <Button
+              type="text"
+              size="small"
+              icon={<CloseOutlined />}
+              onClick={handleClose}
+              className={styles.toolbarButton}
+              aria-label="关闭专注模式"
+            />
           </div>
         </div>
 
