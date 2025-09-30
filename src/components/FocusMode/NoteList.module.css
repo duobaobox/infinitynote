@@ -22,7 +22,7 @@
   color: var(--color-text-primary);
   font-size: 14px;
   transition: border-color 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .searchBox:focus {

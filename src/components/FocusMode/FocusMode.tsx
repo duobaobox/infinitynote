@@ -30,7 +30,7 @@ const FocusMode = memo<FocusModeProps>(
 
     // 从便签store获取便签相关数据和方法
     const { notes, updateNote } = useNoteStore();
-    
+
     // 从画布store获取画布相关数据
     const { canvases, activeCanvasId, setActiveCanvas } = useCanvasStore();
 
@@ -209,14 +209,20 @@ const FocusMode = memo<FocusModeProps>(
                     autoFocus
                   />
                 </div>
-                
+
                 {/* 底部信息 */}
                 <div className={styles.editorFooter}>
                   {currentNote && (
                     <>
                       <span className={styles.noteInfo}>
-                        {new Date(currentNote.updatedAt).toLocaleDateString('zh-CN')} • 
-                        {currentNote.content ? currentNote.content.replace(/<[^>]*>/g, '').length : 0} 字
+                        {new Date(currentNote.updatedAt).toLocaleDateString(
+                          "zh-CN"
+                        )}{" "}
+                        •
+                        {currentNote.content
+                          ? currentNote.content.replace(/<[^>]*>/g, "").length
+                          : 0}{" "}
+                        字
                       </span>
                     </>
                   )}
