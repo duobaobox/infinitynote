@@ -1,6 +1,6 @@
 /**
  * 专注模式主组件
- * 提供类似Notion的简洁便签编辑体验，保留左右分栏布局
+ * 提供类似思源笔记的树形结构，显示画布和便签的层级关系
  */
 
 import { memo, useState, useEffect, useCallback } from "react";
@@ -11,9 +11,10 @@ import {
   MenuOutlined,
 } from "@ant-design/icons";
 import { useNoteStore } from "../../store/noteStore";
+import { useCanvasStore } from "../../store/canvasStore";
 import { useFocusModeStore } from "../../store/focusModeStore";
 import { TiptapEditor } from "../TiptapEditor";
-import { NoteList } from "./NoteList";
+import { NoteTree } from "./NoteTree";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import type { FocusModeProps } from "./types";
 import styles from "./FocusMode.module.css";
@@ -29,6 +30,9 @@ const FocusMode = memo<FocusModeProps>(
 
     // 从便签store获取便签相关数据和方法
     const { notes, updateNote } = useNoteStore();
+    
+    // 从画布store获取画布相关数据
+    const { canvases, activeCanvasId, setActiveCanvas } = useCanvasStore();
 
     // 获取当前编辑的便签
     const currentNote = activeNoteId
@@ -42,6 +46,14 @@ const FocusMode = memo<FocusModeProps>(
         onNoteChange(noteId);
       },
       [onNoteChange, setActiveNote]
+    );
+
+    // 处理画布点击
+    const handleCanvasClick = useCallback(
+      (canvasId: string) => {
+        setActiveCanvas(canvasId);
+      },
+      [setActiveCanvas]
     );
 
     // 处理标题变化
@@ -154,13 +166,16 @@ const FocusMode = memo<FocusModeProps>(
         </div>
 
         <div className={styles.content}>
-          {/* 侧边栏 - 便签列表 */}
+          {/* 侧边栏 - 便签树 */}
           <div className={styles.sidebar}>
-            <NoteList
+            <NoteTree
               notes={notes}
+              canvases={canvases}
               activeNoteId={activeNoteId}
+              activeCanvasId={activeCanvasId || undefined}
               searchKeyword={searchKeyword}
               onNoteClick={handleNoteClick}
+              onCanvasClick={handleCanvasClick}
               onSearchChange={setSearchKeyword}
             />
           </div>
@@ -201,7 +216,7 @@ const FocusMode = memo<FocusModeProps>(
                     <>
                       <span className={styles.noteInfo}>
                         {new Date(currentNote.updatedAt).toLocaleDateString('zh-CN')} • 
-                        {currentNote.content.replace(/<[^>]*>/g, '').length} 字
+                        {currentNote.content ? currentNote.content.replace(/<[^>]*>/g, '').length : 0} 字
                       </span>
                     </>
                   )}
@@ -212,7 +227,7 @@ const FocusMode = memo<FocusModeProps>(
                 <EditOutlined className={styles.emptyIcon} />
                 <div className={styles.emptyTitle}>选择一个便签开始编辑</div>
                 <div className={styles.emptyDescription}>
-                  从左侧列表中选择便签，或创建一个新便签
+                  从左侧树状结构中选择画布或便签
                 </div>
               </div>
             )}

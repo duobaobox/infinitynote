@@ -1,0 +1,226 @@
+/* 便签树组件样式 */
+
+.noteTree {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-surface);
+}
+
+.searchContainer {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-surface);
+}
+
+.searchBox {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.searchBox:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-alpha);
+}
+
+.searchBox::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.treeContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.tree {
+  background: transparent;
+}
+
+/* Ant Design Tree 样式覆盖 */
+.noteTree :global(.ant-tree) {
+  background: transparent;
+  font-size: 14px;
+}
+
+.noteTree :global(.ant-tree-node-content-wrapper) {
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: 0 4px;
+  display: flex;
+  align-items: center;
+  width: calc(100% - 20px); /* 留出空间给展开/收起图标 */
+}
+
+.noteTree :global(.ant-tree-node-content-wrapper:hover) {
+  background-color: var(--color-hover) !important;
+}
+
+.noteTree :global(.ant-tree-node-content-wrapper.ant-tree-node-selected) {
+  background-color: var(--color-primary-alpha) !important;
+  color: var(--color-text-primary);
+}
+
+.noteTree :global(.ant-tree-title) {
+  padding: 4px 0;
+  flex: 1;
+  min-width: 0; /* 允许收缩 */
+  display: inline-block;
+  vertical-align: top;
+}
+
+.noteTree :global(.ant-tree-switcher) {
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.noteTree :global(.ant-tree-iconEle) {
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+}
+
+/* 树节点标题样式 */
+.noteTitle,
+.canvasTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0; /* 允许收缩 */
+}
+
+.noteTitle {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.canvasTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* 树节点项目样式 */
+.treeItem {
+  padding: 6px 12px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.treeItem:hover {
+  background-color: var(--color-hover);
+}
+
+.treeItem.active {
+  background-color: var(--color-primary-alpha);
+  color: var(--color-text-primary);
+}
+
+.treeItemTitle {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.treeItemPreview {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.treeItemDate {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 20px;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.emptyDescription {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* 滚动条样式 */
+.treeContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.treeContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.treeContainer::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar);
+  border-radius: 3px;
+}
+
+.treeContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-hover);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .searchContainer {
+    padding: 10px 12px;
+  }
+
+  .treeItem {
+    padding: 5px 10px;
+  }
+
+  .emptyState {
+    height: 160px;
+    padding: 16px;
+  }
+}

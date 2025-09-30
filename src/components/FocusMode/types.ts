@@ -2,6 +2,8 @@
  * 专注模式组件类型定义
  */
 
+import type { Note, Canvas } from "../../types";
+
 export interface FocusModeProps {
   /** 是否显示专注模式 */
   visible: boolean;
@@ -20,6 +22,25 @@ export interface NoteListProps {
   onNoteClick: (noteId: string) => void;
   /** 搜索关键字 */
   searchKeyword?: string;
+  /** 搜索关键字变化回调 */
+  onSearchChange: (keyword: string) => void;
+}
+
+export interface NoteTreeProps {
+  /** 便签列表 */
+  notes: Note[];
+  /** 画布列表 */
+  canvases: Canvas[];
+  /** 当前激活的便签ID */
+  activeNoteId?: string;
+  /** 当前激活的画布ID */
+  activeCanvasId?: string;
+  /** 搜索关键字 */
+  searchKeyword: string;
+  /** 点击便签回调 */
+  onNoteClick: (noteId: string) => void;
+  /** 点击画布回调 */
+  onCanvasClick?: (canvasId: string) => void;
   /** 搜索关键字变化回调 */
   onSearchChange: (keyword: string) => void;
 }
