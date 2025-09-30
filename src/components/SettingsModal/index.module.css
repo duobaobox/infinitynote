@@ -278,7 +278,7 @@
 
 .settingLabel .ant-typography + .ant-typography {
   margin-top: 4px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* 密码输入框样式 */
@@ -345,7 +345,7 @@
   border-radius: 4px;
   font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
     "Courier New", monospace;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   border: 1px solid var(--color-border);
 }
@@ -574,7 +574,7 @@
 }
 
 .configFormItem .configHint {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-tertiary);
   margin-top: 4px;
   line-height: 1.4;
@@ -626,7 +626,7 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
 }
 

@@ -43,7 +43,7 @@
 }
 
 .expandIcon {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-secondary);
   transition: transform 0.2s ease, color 0.2s ease;
   user-select: none;
@@ -82,7 +82,7 @@
 
 /* 思考文本 - 优化布局和样式 */
 .thinkingText {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5; /* 增加行高，提高可读性 */
   color: var(--color-text);
   margin-bottom: 8px; /* 增加间距 */
@@ -141,7 +141,7 @@
   }
 
   .thinkingTitle {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .thinkingText {

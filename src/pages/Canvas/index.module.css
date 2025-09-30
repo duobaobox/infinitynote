@@ -57,7 +57,7 @@
 }
 
 .scaleInfo {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--scale-info-color);
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   background: var(--scale-info-bg);
@@ -236,7 +236,7 @@
 }
 
 .empty .emptyHint {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-quaternary);
   text-align: center;
 }
@@ -307,7 +307,7 @@
 }
 
 .dragModeHint {
-  font-size: 12px;
+  font-size: 14px;
   opacity: 0.8;
   margin-left: 4px;
 }

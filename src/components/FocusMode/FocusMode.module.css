@@ -216,7 +216,7 @@
   padding: 8px 24px;
   border-top: 1px solid var(--color-border-light);
   background-color: var(--color-surface);
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-tertiary);
   flex-shrink: 0;
 }
@@ -228,7 +228,7 @@
 }
 
 .noteInfo {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-tertiary);
 }
 

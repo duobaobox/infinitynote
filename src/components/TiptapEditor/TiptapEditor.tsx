@@ -234,7 +234,7 @@ export const TiptapEditor = memo<TiptapEditorProps>(
           // 使用 requestAnimationFrame 确保DOM已更新
           requestAnimationFrame(() => {
             if (editor && !editor.isDestroyed) {
-              editor.commands.focus('end');
+              editor.commands.focus("end");
             }
           });
         }
@@ -297,8 +297,12 @@ export const TiptapEditor = memo<TiptapEditorProps>(
     useEffect(() => {
       if (editor && content !== lastValidContent.current) {
         // 检查是否为流式 Markdown 内容（只读模式下）
-        const isStreamingMarkdown = readonly && typeof content === 'string' && /[#$*\-_`\\]/.test(content) && !content.includes("<");
-        
+        const isStreamingMarkdown =
+          readonly &&
+          typeof content === "string" &&
+          /[#$*\-_`\\]/.test(content) &&
+          !content.includes("<");
+
         let processedContent = content;
         if (isStreamingMarkdown) {
           // 对于流式 Markdown 内容，转换为 HTML
@@ -307,15 +311,18 @@ export const TiptapEditor = memo<TiptapEditorProps>(
             breaks: true,
             linkify: true,
             typographer: true,
-            quotes: '""\'\'',
+            quotes: "\"\"''",
           });
           processedContent = md.render(content);
         }
-        
+
         // 对于非流式内容，执行标准清理
-        const finalContent = typeof processedContent === 'string' 
-          ? (isStreamingMarkdown ? processedContent : cleanHtmlContent(processedContent))
-          : processedContent;
+        const finalContent =
+          typeof processedContent === "string"
+            ? isStreamingMarkdown
+              ? processedContent
+              : cleanHtmlContent(processedContent)
+            : processedContent;
 
         // 比较逻辑
         let shouldUpdate = false;
@@ -323,7 +330,7 @@ export const TiptapEditor = memo<TiptapEditorProps>(
           // 对于流式 Markdown 内容，比较转换后的文本
           const currentText = editor.getText();
           const newText = content; // 使用原始 Markdown 文本进行比较
-          shouldUpdate = currentText !== newText.replace(/[#*\-_`\\]/g, ''); // 简化文本比较
+          shouldUpdate = currentText !== newText.replace(/[#*\-_`\\]/g, ""); // 简化文本比较
         } else {
           // 对于非流式内容，使用标准比较
           const currentContent = editor.getHTML();
@@ -350,14 +357,14 @@ export const TiptapEditor = memo<TiptapEditorProps>(
                 // 使用 requestAnimationFrame 确保DOM已更新
                 requestAnimationFrame(() => {
                   if (editor && !editor.isDestroyed) {
-                    editor.commands.focus('end');
+                    editor.commands.focus("end");
                   }
                 });
               }
             }
           });
         }
-        
+
         // 跟踪是否正在流式更新
         isStreamingRef.current = isStreamingMarkdown;
       }

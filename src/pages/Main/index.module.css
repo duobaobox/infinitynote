@@ -168,12 +168,12 @@
 /* 画布标题文本样式 */
 .canvasTitle {
   color: var(--text-color-secondary);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 /* 星标图标样式 */
 .starIcon {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-warning);
 }
 
@@ -282,7 +282,7 @@
   padding: 2px 6px;
   background: var(--color-bg-layout);
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--color-text-tertiary);
 }
 
@@ -337,7 +337,7 @@
 /* 便签标题文本样式 */
 .noteTitle {
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: 14px;
   flex: 1;
   margin-left: 8px;
   overflow: hidden;

@@ -70,7 +70,7 @@
 }
 
 .example {
-  font-size: 12px;
+  font-size: 14px;
   font-style: italic;
   color: var(--color-text-tertiary);
 }
@@ -114,7 +114,7 @@
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .templateCard {
     margin-bottom: 0;
   }
@@ -176,7 +176,7 @@
 /* 自定义输入区域 */
 .customInput.ant-input {
   border-radius: 6px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
 }
 
 .customActions .ant-btn {

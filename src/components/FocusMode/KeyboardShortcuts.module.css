@@ -45,7 +45,7 @@
   border-radius: 4px;
   padding: 4px 8px;
   font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-text-primary);
   min-width: 120px;
@@ -75,7 +75,7 @@
   color: var(--color-bg-base);
   padding: 2px 6px;
   border-radius: 3px;
-  font-size: 12px;
+  font-size: 14px;
   margin: 0 2px;
 }
 

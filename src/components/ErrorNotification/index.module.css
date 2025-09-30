@@ -22,8 +22,8 @@
   padding: 4px 8px;
   background: var(--color-bg-secondary);
   border-radius: 4px;
-  font-size: 12px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
 }
@@ -36,7 +36,7 @@
 
 .errorActions .ant-btn {
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 14px;
   height: 28px;
   padding: 0 12px;
 }
@@ -73,17 +73,17 @@
     margin-top: 8px;
     padding-top: 6px;
   }
-  
+
   .errorActions .ant-btn {
     font-size: 11px;
     height: 24px;
     padding: 0 8px;
   }
-  
+
   .userMessage {
     font-size: 13px;
   }
-  
+
   .errorCode {
     font-size: 11px;
     padding: 3px 6px;
@@ -218,11 +218,11 @@
   .errorNotification {
     border: 2px solid var(--color-border);
   }
-  
+
   .errorCode {
     border: 2px solid var(--color-border);
   }
-  
+
   .errorActions {
     border-top: 2px solid var(--color-border);
   }

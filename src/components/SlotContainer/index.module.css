@@ -58,7 +58,7 @@
 
 /* 插槽索引数字 - 精致化显示 */
 .slotIndex {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #52c41a; /* 绿色数字 */
   user-select: none;
@@ -112,7 +112,7 @@
   align-items: center;
   gap: 8px;
   color: var(--color-text-tertiary);
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .emptySlotCircle {
@@ -127,7 +127,7 @@
 }
 
 .emptySlotIcon {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .emptyTextContainer {
@@ -188,7 +188,7 @@
 
 /* 插槽索引数字 - 精致化显示 */
 .slotIndex {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #52c41a; /* 绿色数字 */
   user-select: none;
