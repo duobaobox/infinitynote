@@ -6,10 +6,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.errorDescription {
-  /* 错误描述容器 */
-}
-
 .userMessage {
   margin-bottom: 8px;
   font-size: 14px;
@@ -123,22 +119,7 @@
   border-left: 4px solid #1890ff;
 }
 
-/* 错误类型特定样式 */
-.errorNotification.database {
-  /* 数据库错误样式 */
-}
-
-.errorNotification.network {
-  /* 网络错误样式 */
-}
-
-.errorNotification.validation {
-  /* 验证错误样式 */
-}
-
-.errorNotification.permission {
-  /* 权限错误样式 */
-}
+/* 错误类型特定样式 - 预留给未来扩展 */
 
 /* 加载状态 */
 .errorActions .ant-btn-loading {

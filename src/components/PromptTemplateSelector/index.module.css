@@ -1,9 +1,5 @@
 /* 提示词模板选择器样式 */
 
-.templateModal {
-  /* 模态框样式 */
-}
-
 .modalContent {
   padding: 0;
 }
@@ -20,10 +16,6 @@
   display: block;
   margin-bottom: 12px;
   font-size: 16px;
-}
-
-.templateTabs {
-  /* 标签页样式 */
 }
 
 .templateTabs .ant-tabs-tab {
