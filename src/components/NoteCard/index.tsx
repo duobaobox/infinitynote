@@ -917,6 +917,7 @@ export const NoteCard = memo<NoteCardProps>(
             } ${isSelected ? styles.selected : ""} ${
               isResizing ? styles.resizing : ""
             } ${isEditing ? styles.editing : ""}`}
+            data-theme={isDark ? "dark" : "light"}
             style={{
               width: resizeSize?.width ?? note.size.width,
               height: resizeSize?.height ?? note.size.height,

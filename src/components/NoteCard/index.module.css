@@ -133,7 +133,7 @@
 .noteTitle {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-primary);
   margin: 0;
   word-wrap: break-word;
   cursor: inherit; /* 继承父容器的拖拽光标 */
@@ -536,22 +536,22 @@
 /* 标题编辑输入框样式 */
 .noteHeader input[type="text"].titleInput {
   width: 100%;
-  border: 1px solid #1677ff;
+  border: 1px solid var(--color-primary);
   border-radius: 4px;
   padding: 4px 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
-  background: white;
+  color: var(--color-text-primary);
+  background: var(--color-bg-container);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
   margin: 0;
   line-height: normal;
 }
 
 .noteCard[data-theme="dark"] .noteHeader input[type="text"].titleInput {
-  background: #262626;
-  color: #fff;
-  border-color: #177ddc;
-  box-shadow: 0 0 0 2px rgba(23, 125, 220, 0.2);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
 }
