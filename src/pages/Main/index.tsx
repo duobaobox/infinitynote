@@ -867,6 +867,8 @@ const Main: React.FC = () => {
                 type="text"
                 size="small"
                 icon={<DynamicIcon type="RedoOutlined" />}
+                onClick={() => window.location.reload()}
+                title="刷新页面"
               ></Button>
               <Button
                 type="text"
