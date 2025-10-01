@@ -6,13 +6,14 @@
 /* 主容器样式 */
 .container {
   width: 100%;
-  height: 100%;
+  height: 100vh; /* 固定视口高度 */
   min-height: 100vh;
   position: relative;
   margin: 0;
-  padding: 0;
+  padding: 8px 0; /* 添加上下8px的padding，确保顶部和底部都有间距 */
   display: flex;
   background: var(--color-bg-layout); /* 使用主题背景色 */
+  box-sizing: border-box; /* 确保padding包含在高度内 */
 }
 
 /* 明亮主题样式 */
@@ -35,11 +36,11 @@
 
 /* 侧边栏样式 */
 .sidebar {
-  margin: 8px 4px 8px 8px; /* 添加右侧4px间距 */
+  margin: 0 4px 0 8px; /* 只保留左右间距 */
   border-radius: 6px;
   border: 1px solid var(--color-border-secondary);
   background: var(--color-bg-container);
-  height: calc(100vh - 16px);
+  height: 100%; /* 使用flex布局自适应高度 */
   overflow: hidden;
   position: relative;
 }
@@ -348,10 +349,10 @@
 /* 画布区域样式 */
 .canvas {
   flex: 1;
-  margin: 8px 8px 8px 4px; /* 左侧添加4px间距，与侧边栏右侧对称 */
+  margin: 0 8px 0 4px; /* 只保留左右间距 */
   background: var(--color-bg-container); /* 使用主题背景色 */
   border-radius: 6px;
-  height: calc(100vh - 16px);
+  height: 100%; /* 使用flex布局自适应高度 */
   overflow: hidden;
   position: relative;
 }
@@ -359,10 +360,10 @@
 /* 画布区域折叠样式 */
 .canvasCollapsed {
   flex: 1;
-  margin: 8px 8px 8px 8px; /* 折叠时左侧边距为8px */
+  margin: 0 8px 0 8px; /* 只保留左右间距，折叠时左侧边距为8px */
   background: var(--color-bg-container); /* 使用主题背景色 */
   border-radius: 6px;
-  height: calc(100vh - 16px);
+  height: 100%; /* 使用flex布局自适应高度 */
   overflow: hidden;
   position: relative;
 }
