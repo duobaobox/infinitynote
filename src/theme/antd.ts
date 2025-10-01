@@ -93,6 +93,8 @@ export const lightTheme: ThemeConfig = {
     // 工具提示组件主题
     Tooltip: {
       borderRadius: 6,
+      colorBgSpotlight: "rgba(0, 0, 0, 0.85)", // 明亮主题下 tooltip 深色背景
+      colorTextLightSolid: "#ffffff", // tooltip 文字颜色
     },
 
     // 下拉菜单组件主题
@@ -149,6 +151,12 @@ export const darkTheme: ThemeConfig = {
   components: {
     // 继承明亮主题的组件配置
     ...lightTheme.components,
+    // 暗黑主题下 Tooltip 使用浅色背景
+    Tooltip: {
+      borderRadius: 6,
+      colorBgSpotlight: "rgba(255, 255, 255, 0.9)", // 暗黑主题下 tooltip 浅色背景
+      colorTextLightSolid: "#000000", // tooltip 文字颜色
+    },
   },
 };
 
@@ -189,7 +197,7 @@ export const compactTheme: ThemeConfig = {
 export type ThemeType = "light" | "dark" | "compact" | "auto";
 
 // 主题映射
-export const themes: Record<Exclude<ThemeType, 'auto'>, ThemeConfig> = {
+export const themes: Record<Exclude<ThemeType, "auto">, ThemeConfig> = {
   light: lightTheme,
   dark: darkTheme,
   compact: compactTheme,
@@ -197,9 +205,11 @@ export const themes: Record<Exclude<ThemeType, 'auto'>, ThemeConfig> = {
 
 // 获取主题配置
 export const getThemeConfig = (themeType: ThemeType): ThemeConfig => {
-  if (themeType === 'auto') {
+  if (themeType === "auto") {
     // 根据系统主题决定使用哪个主题
-    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
     return isDarkMode ? darkTheme : lightTheme;
   }
   return themes[themeType] || lightTheme;

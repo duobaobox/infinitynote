@@ -118,8 +118,6 @@ export const THEME_OPTIONS = [
   { value: "auto", label: "跟随系统" },
 ] as const;
 
-
-
 /**
  * 画布颜色预设配置
  */

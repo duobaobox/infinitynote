@@ -84,6 +84,11 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                     handleParameterChange("temperature", value)
                   }
                   marks={{ 0: "精确", 1: "创意" }}
+                  tooltip={{
+                    open: undefined, // 让 Slider 自动控制显示/隐藏
+                    formatter: (value) => value?.toFixed(1),
+                    placement: "top",
+                  }}
                 />
               </Form.Item>
             </div>

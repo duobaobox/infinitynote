@@ -353,7 +353,10 @@ export const validateSettings = (
 
   if (settings.model?.apiKeys && settings.model?.provider) {
     const providerApiKey = settings.model.apiKeys[settings.model.provider];
-    if (providerApiKey && !validateApiKey(settings.model.provider, providerApiKey)) {
+    if (
+      providerApiKey &&
+      !validateApiKey(settings.model.provider, providerApiKey)
+    ) {
       errors.push("API 密钥格式不正确");
     }
   }
