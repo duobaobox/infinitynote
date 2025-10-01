@@ -88,7 +88,7 @@ export interface ModelSettings {
   maxTokens: number;
   /** 是否显示思维链 */
   showThinking: boolean;
-  /** 是否自动保存AI生成的内容 */
+  /** @internal 是否自动保存AI生成的内容 - 系统内部使用，不再暴露给用户 */
   autoSave: boolean;
   /** 自定义API端点映射 */
   customEndpoints?: Record<string, string>;
@@ -98,7 +98,7 @@ export interface ModelSettings {
  * 常规设置
  */
 export interface GeneralSettings {
-  /** 自动保存 */
+  /** @internal 自动保存 - 系统内部使用，不再暴露给用户 */
   autoSave: boolean;
   /** 启动时恢复上次会话 */
   restoreSession: boolean;

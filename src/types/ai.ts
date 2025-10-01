@@ -149,8 +149,9 @@ export interface AISettings {
   /** 生成参数 */
   temperature: number;
   maxTokens: number;
+  /** @internal 流式输出控制 - 系统内部使用，默认启用 */
   stream: boolean;
-  /** 是否自动保存AI生成的内容 */
+  /** @internal 自动保存控制 - 系统内部使用，默认启用 */
   autoSave: boolean;
 
   // 向后兼容字段（将逐步废弃）

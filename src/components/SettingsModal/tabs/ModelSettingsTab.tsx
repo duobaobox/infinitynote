@@ -1,19 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
-import {
-  Typography,
-  Card,
-  Form,
-  Slider,
-  Switch,
-  InputNumber,
-} from "antd";
+import { Card, Form, Slider, InputNumber } from "antd";
 import { useTheme } from "../../../theme";
 import type { ModelSettings } from "../types";
 import { aiService } from "../../../services/aiService";
 import { ModelSettingsContainer } from "../components/ModelSettingsContainer";
 import styles from "../index.module.css";
-
-const { Text } = Typography;
 
 export interface ModelSettingsTabProps {
   settings: ModelSettings;
@@ -73,7 +64,9 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
     >
       {/* 新的模型设置容器组件 */}
       <div style={{ marginBottom: "16px" }}>
-        <ModelSettingsContainer onSettingChange={handleCompatibleSettingChange} />
+        <ModelSettingsContainer
+          onSettingChange={handleCompatibleSettingChange}
+        />
       </div>
 
       {/* 生成参数设置 */}
@@ -106,25 +99,6 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-            </div>
-          </div>
-
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <Text>流式输出</Text>
-              <Switch
-                checked={aiSettings.stream}
-                onChange={(value) => handleParameterChange("stream", value)}
-              />
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <Text>自动保存</Text>
-              <Switch
-                checked={aiSettings.autoSave}
-                onChange={(value) => handleParameterChange("autoSave", value)}
-              />
             </div>
           </div>
         </Form>

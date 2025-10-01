@@ -2,13 +2,12 @@
  * GeneralSettingsTab - 常规设置选项卡组件
  *
  * 功能说明：
- * 提供应用程序的基础行为配置，包括自动保存、会话恢复、通知设置
+ * 提供应用程序的基础行为配置，包括会话恢复、通知设置
  * 和界面语言选择等常用功能的开关和配置。
  *
  * 主要功能：
  *
  * 📱 应用行为：
- * - 🔄 自动保存：自动保存笔记内容，避免数据丢失
  * - 🔁 会话恢复：启动时恢复上次的笔记状态和工作环境
  * - 🔔 系统通知：接收应用相关的系统提醒和通知
  *
@@ -54,27 +53,6 @@ const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
           <div
             style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <Text strong>自动保存</Text>
-                <div
-                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
-                >
-                  自动保存笔记内容，避免数据丢失
-                </div>
-              </div>
-              <Switch
-                checked={settings.autoSave}
-                onChange={(checked) => onSettingChange("autoSave", checked)}
-              />
-            </div>
-
             <div
               style={{
                 display: "flex",

@@ -117,8 +117,9 @@ class AIService {
     // 生成参数
     temperature: 0.7,
     maxTokens: 3500,
-    stream: true,
-    autoSave: true,
+    // 系统内部使用的固定配置（不再暴露给用户）
+    stream: true, // 流式输出：默认启用，提供更好的用户体验
+    autoSave: true, // 自动保存：默认启用，避免数据丢失
 
     // 向后兼容字段
     provider: "zhipu",
