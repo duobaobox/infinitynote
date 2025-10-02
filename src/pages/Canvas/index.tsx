@@ -323,11 +323,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       const note = active.data.current?.note as Note;
 
       if (note && delta) {
-        // dnd-kit 的 delta 已经是 canvas 坐标系的值（受父元素 transform 影响）
-        // 因此直接使用，不需要再除以 scale
+        // dnd-kit 的 delta 是屏幕像素偏移，需要转换为 canvas 坐标
+        // 因为 canvasContent 有 scale transform，所以需要除以 scale
         const newPosition = {
-          x: note.position.x + delta.x,
-          y: note.position.y + delta.y,
+          x: note.position.x + delta.x / viewport.scale,
+          y: note.position.y + delta.y / viewport.scale,
         };
 
         moveNote(note.id, newPosition);
@@ -335,7 +335,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
 
       endDrag();
     },
-    [moveNote, endDrag]
+    [moveNote, endDrag, viewport.scale]
   );
 
   // 鼠标滚轮缩放（严格档位：每次滚轮触发一档）

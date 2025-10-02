@@ -43,7 +43,7 @@ interface NoteCardProps {
  * - 硬件加速的拖拽动画
  */
 export const NoteCard = memo<NoteCardProps>(
-  ({ note, onSelect, isSelected, onResize }) => {
+  ({ note, onSelect, isSelected, onResize, scale }) => {
     const { isDark } = useTheme();
     const {
       updateNote,
@@ -885,9 +885,13 @@ export const NoteCard = memo<NoteCardProps>(
     };
 
     // 计算拖拽时的样式
+    // dnd-kit 的 transform 是屏幕坐标偏移，但会被父容器的 scale 放大
+    // 所以需要除以 scale 来抵消这个放大效果，保持拖动跟手
     const dragStyle = transform
       ? {
-          transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+          transform: `translate3d(${transform.x / scale}px, ${
+            transform.y / scale
+          }px, 0)`,
         }
       : {};
 
