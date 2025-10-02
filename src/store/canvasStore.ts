@@ -98,8 +98,42 @@ const generateId = (): string => {
 const DEFAULT_VIEWPORT: CanvasViewport = {
   scale: 1,
   offset: { x: 0, y: 0 },
-  minScale: 0.1,
-  maxScale: 5,
+  minScale: 0.25,
+  maxScale: 2,
+};
+
+
+// 固定缩放档位（严格模式）
+const ZOOM_LEVELS: number[] = [
+  0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2,
+];
+
+const clampToRange = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+const getNearestZoomLevel = (scale: number): number => {
+  const clamped = clampToRange(scale, DEFAULT_VIEWPORT.minScale, DEFAULT_VIEWPORT.maxScale);
+  let nearest = ZOOM_LEVELS[0];
+  let minDiff = Math.abs(clamped - nearest);
+  for (const lvl of ZOOM_LEVELS) {
+    const diff = Math.abs(clamped - lvl);
+    if (diff < minDiff) {
+      minDiff = diff;
+      nearest = lvl;
+    }
+  }
+  return nearest;
+};
+
+const getNextZoomLevel = (scale: number): number => {
+  const nearest = getNearestZoomLevel(scale);
+  const idx = ZOOM_LEVELS.indexOf(nearest);
+  return ZOOM_LEVELS[Math.min(idx + 1, ZOOM_LEVELS.length - 1)];
+};
+
+const getPrevZoomLevel = (scale: number): number => {
+  const nearest = getNearestZoomLevel(scale);
+  const idx = ZOOM_LEVELS.indexOf(nearest);
+  return ZOOM_LEVELS[Math.max(idx - 1, 0)];
 };
 
 /**
@@ -520,11 +554,13 @@ export const useCanvasStore = create<CanvasStore>()(
         const { activeCanvasId: currentActiveCanvasId } = get();
         const canvas = get().canvases.find((c) => c.id === id);
         if (canvas) {
+          // 切换画布时，将缩放值吸附到最近的固定档位，保持行为一致
+          const snappedScale = getNearestZoomLevel(canvas.scale);
           set({
             activeCanvasId: id,
             viewport: {
               ...get().viewport,
-              scale: canvas.scale,
+              scale: snappedScale,
               offset: canvas.offset,
             },
           });
@@ -606,17 +642,17 @@ export const useCanvasStore = create<CanvasStore>()(
         get().setOffset({ x: 0, y: 0 });
       },
 
-      // 放大
+      // 放大（严格档位）
       zoomIn: () => {
         const { viewport } = get();
-        const newScale = Math.min(viewport.maxScale, viewport.scale * 1.2);
+        const newScale = getNextZoomLevel(viewport.scale);
         get().setScale(newScale);
       },
 
-      // 缩小
+      // 缩小（严格档位）
       zoomOut: () => {
         const { viewport } = get();
-        const newScale = Math.max(viewport.minScale, viewport.scale / 1.2);
+        const newScale = getPrevZoomLevel(viewport.scale);
         get().setScale(newScale);
       },
 

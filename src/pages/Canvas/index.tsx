@@ -151,7 +151,6 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   const {
     activeCanvasId,
     viewport,
-    setScale,
     resetViewport,
     zoomIn,
     zoomOut,
@@ -336,22 +335,19 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     [moveNote, endDrag, viewport.scale]
   );
 
-  // 鼠标滚轮缩放
+  // 鼠标滚轮缩放（严格档位：每次滚轮触发一档）
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-
-        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        const newScale = Math.max(
-          viewport.minScale,
-          Math.min(viewport.maxScale, viewport.scale * scaleFactor)
-        );
-
-        setScale(newScale);
+        if (e.deltaY > 0) {
+          zoomOut();
+        } else if (e.deltaY < 0) {
+          zoomIn();
+        }
       }
     },
-    [viewport, setScale]
+    [zoomIn, zoomOut]
   );
 
   // 鼠标拖拽平移
@@ -498,17 +494,19 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
             Math.pow(touch2.clientY - touch1.clientY, 2)
         );
 
-        const scaleFactor = distance / lastTouchDistance;
-        const newScale = Math.max(
-          viewport.minScale,
-          Math.min(viewport.maxScale, viewport.scale * scaleFactor)
-        );
-
-        setScale(newScale);
-        setLastTouchDistance(distance);
+        // 严格档位：基于距离变化阈值进行一档一档跳转
+        const ratio = distance / lastTouchDistance;
+        const THRESHOLD = 1.05; // 5% 阈值，避免抖动
+        if (ratio > THRESHOLD) {
+          zoomIn();
+          setLastTouchDistance(distance);
+        } else if (ratio < 1 / THRESHOLD) {
+          zoomOut();
+          setLastTouchDistance(distance);
+        }
       }
     },
-    [lastTouchDistance, viewport, setScale]
+    [lastTouchDistance, zoomIn, zoomOut]
   );
 
   const handleTouchEnd = useCallback(() => {
