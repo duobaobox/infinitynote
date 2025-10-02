@@ -384,8 +384,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     (e: React.MouseEvent) => {
       if (panningRef.current && panStartRef.current) {
         e.preventDefault();
-        const deltaX = e.clientX - panStartRef.current.x;
-        const deltaY = e.clientY - panStartRef.current.y;
+        // CSS zoom 会影响坐标系统，需要将鼠标位移除以 scale
+        const deltaX = (e.clientX - panStartRef.current.x) / viewport.scale;
+        const deltaY = (e.clientY - panStartRef.current.y) / viewport.scale;
 
         // 取消之前的动画帧
         if (animationFrameRef.current) {
@@ -399,7 +400,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         });
       }
     },
-    [updatePan]
+    [updatePan, viewport.scale]
   );
 
   const handleMouseUp = useCallback(
@@ -428,8 +429,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (panningRef.current && panStartRef.current) {
         e.preventDefault();
-        const deltaX = e.clientX - panStartRef.current.x;
-        const deltaY = e.clientY - panStartRef.current.y;
+        // CSS zoom 会影响坐标系统，需要将鼠标位移除以 scale
+        const deltaX = (e.clientX - panStartRef.current.x) / viewport.scale;
+        const deltaY = (e.clientY - panStartRef.current.y) / viewport.scale;
 
         // 取消之前的动画帧
         if (animationFrameRef.current) {
@@ -754,8 +756,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           <div
             className={`${styles.canvasContent} canvasContent`}
             style={{
-              transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0) scale(${viewport.scale})`,
+              transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0)`,
               transformOrigin: "0 0",
+              zoom: viewport.scale,
             }}
             data-smooth-zoom={displaySettings.smoothZoom}
             data-dragging={isPanning}

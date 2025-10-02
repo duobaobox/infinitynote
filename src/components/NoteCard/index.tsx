@@ -708,45 +708,49 @@ export const NoteCard = memo<NoteCardProps>(
     });
 
     // 缩放过程处理 - 使用useRef避免闭包问题
-    const handleResizeMove = useCallback((e: MouseEvent) => {
-      const resizeData = resizeDataRef.current;
-      if (!resizeData || !resizeData.isActive) return;
+    const handleResizeMove = useCallback(
+      (e: MouseEvent) => {
+        const resizeData = resizeDataRef.current;
+        if (!resizeData || !resizeData.isActive) return;
 
-      e.preventDefault();
+        e.preventDefault();
 
-      const deltaX = e.clientX - resizeData.startX;
-      const deltaY = e.clientY - resizeData.startY;
+        // CSS zoom 会影响坐标系统，需要将鼠标位移除以 scale
+        const deltaX = (e.clientX - resizeData.startX) / scale;
+        const deltaY = (e.clientY - resizeData.startY) / scale;
 
-      let newWidth = resizeData.startWidth;
-      let newHeight = resizeData.startHeight;
+        let newWidth = resizeData.startWidth;
+        let newHeight = resizeData.startHeight;
 
-      // 只支持右下角缩放（最常用的缩放方式）
-      if (resizeData.direction === "se") {
-        newWidth = resizeData.startWidth + deltaX;
-        newHeight = resizeData.startHeight + deltaY;
-      }
+        // 只支持右下角缩放（最常用的缩放方式）
+        if (resizeData.direction === "se") {
+          newWidth = resizeData.startWidth + deltaX;
+          newHeight = resizeData.startHeight + deltaY;
+        }
 
-      // 应用尺寸限制，只限制最小值，不限制最大值
-      newWidth = Math.max(NOTE_MIN_SIZE.width, newWidth);
-      newHeight = Math.max(NOTE_MIN_SIZE.height, newHeight);
+        // 应用尺寸限制，只限制最小值，不限制最大值
+        newWidth = Math.max(NOTE_MIN_SIZE.width, newWidth);
+        newHeight = Math.max(NOTE_MIN_SIZE.height, newHeight);
 
-      const finalWidth = Math.round(newWidth);
-      const finalHeight = Math.round(newHeight);
+        const finalWidth = Math.round(newWidth);
+        const finalHeight = Math.round(newHeight);
 
-      // 更新ref中的当前尺寸，避免不必要的调用
-      if (
-        finalWidth !== resizeData.currentWidth ||
-        finalHeight !== resizeData.currentHeight
-      ) {
-        resizeData.currentWidth = finalWidth;
-        resizeData.currentHeight = finalHeight;
+        // 更新ref中的当前尺寸，避免不必要的调用
+        if (
+          finalWidth !== resizeData.currentWidth ||
+          finalHeight !== resizeData.currentHeight
+        ) {
+          resizeData.currentWidth = finalWidth;
+          resizeData.currentHeight = finalHeight;
 
-        // 只更新本地视觉状态，避免频繁触发全局状态更新
-        setResizeSize({ width: finalWidth, height: finalHeight });
+          // 只更新本地视觉状态，避免频繁触发全局状态更新
+          setResizeSize({ width: finalWidth, height: finalHeight });
 
-        // console.log(`📏 缩放中: ${finalWidth}x${finalHeight}`);
-      }
-    }, []);
+          // console.log(`📏 缩放中: ${finalWidth}x${finalHeight}`);
+        }
+      },
+      [scale]
+    );
 
     // 缩放结束处理 - 使用useRef避免闭包问题
     const handleResizeEnd = useCallback(() => {
