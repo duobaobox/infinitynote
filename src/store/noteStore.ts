@@ -234,7 +234,7 @@ export const useNoteStore = create<NoteStore>()(
         const tempId = generateId();
         const now = new Date();
         const { maxZIndex } = get();
-        
+
         // 从存储中加载设置以获取默认便签尺寸和随机颜色设置
         const settings = loadSettingsFromStorage();
         const noteSettings = settings.note;
@@ -253,9 +253,9 @@ export const useNoteStore = create<NoteStore>()(
           content: "",
           color: selectedColor,
           position,
-          size: { 
+          size: {
             width: noteSettings.defaultWidth || NOTE_DEFAULT_SIZE.width,
-            height: noteSettings.defaultHeight || NOTE_DEFAULT_SIZE.height
+            height: noteSettings.defaultHeight || NOTE_DEFAULT_SIZE.height,
           },
           zIndex: maxZIndex + 1,
           canvasId,
@@ -649,7 +649,10 @@ export const useNoteStore = create<NoteStore>()(
       },
 
       // 防抖置顶操作的映射表
-      _debouncedBringToFrontMap: new Map<string, ReturnType<typeof setTimeout>>(),
+      _debouncedBringToFrontMap: new Map<
+        string,
+        ReturnType<typeof setTimeout>
+      >(),
 
       // 带防抖的数据库同步方法（只处理数据库操作）
       debouncedBringToFront: (id: string, delay = 100) => {
@@ -1165,10 +1168,7 @@ export const useNoteStore = create<NoteStore>()(
       ): Promise<string> => {
         try {
           // 直接调用createNote，不传入颜色值，让createNote方法根据设置决定是否使用随机颜色
-          const noteId = await get().createNote(
-            canvasId,
-            position
-          );
+          const noteId = await get().createNote(canvasId, position);
 
           // 更新便签标题为提示词的前几个字
           const title =
@@ -1202,10 +1202,10 @@ export const useNoteStore = create<NoteStore>()(
         try {
           // 动态导入整理工具函数
           const { organizeNotes } = await import("../utils/noteOrganizer");
-          
+
           // 获取当前画布的便签
           const canvasNotes = get().getNotesByCanvas(canvasId);
-          
+
           if (canvasNotes.length === 0) {
             console.log("📋 当前画布没有便签，无需整理");
             return;
@@ -1215,12 +1215,24 @@ export const useNoteStore = create<NoteStore>()(
           const { useCanvasStore } = await import("./canvasStore");
           const canvasStore = useCanvasStore.getState();
           const viewport = canvasStore.viewport;
-          const windowSize = { width: window.innerWidth, height: window.innerHeight };
+          const windowSize = {
+            width: window.innerWidth,
+            height: window.innerHeight,
+          };
 
-          console.log(`🔄 开始整理画布 ${canvasId.slice(-8)} 的 ${canvasNotes.length} 个便签...`);
+          console.log(
+            `🔄 开始整理画布 ${canvasId.slice(-8)} 的 ${
+              canvasNotes.length
+            } 个便签...`
+          );
 
           // 计算整理后的布局
-          const { updates, gridInfo } = organizeNotes(canvasNotes, viewport, windowSize, config);
+          const { updates, gridInfo } = organizeNotes(
+            canvasNotes,
+            viewport,
+            windowSize,
+            config
+          );
 
           if (updates.length === 0) {
             console.log("📋 没有需要更新的便签");
@@ -1254,12 +1266,17 @@ export const useNoteStore = create<NoteStore>()(
           await Promise.all(updatePromises);
 
           console.log(`✅ 便签整理完成！`);
-          console.log(`📊 整理结果: ${gridInfo.columns} 列 × ${gridInfo.rows} 行`);
-          console.log(`📏 网格尺寸: ${gridInfo.totalWidth.toFixed(0)} × ${gridInfo.totalHeight.toFixed(0)} px`);
+          console.log(
+            `📊 整理结果: ${gridInfo.columns} 列 × ${gridInfo.rows} 行`
+          );
+          console.log(
+            `📏 网格尺寸: ${gridInfo.totalWidth.toFixed(
+              0
+            )} × ${gridInfo.totalHeight.toFixed(0)} px`
+          );
 
           // 发送整理完成事件
           noteStoreEvents.notifyNoteUpdated("organize", canvasId);
-
         } catch (error) {
           console.error("❌ 便签整理失败:", error);
           throw new Error(
@@ -1278,19 +1295,20 @@ export const useNoteStore = create<NoteStore>()(
             const canvasNotes = get().getNotesByCanvas(canvasId);
             return needsOrganization(canvasNotes);
           });
-          
+
           // 同步版本的简单检查
           const canvasNotes = get().getNotesByCanvas(canvasId);
-          
+
           if (canvasNotes.length <= 1) {
             return false;
           }
 
           // 检查尺寸是否统一（简单版本）
           const firstSize = canvasNotes[0].size;
-          const hasUniformSize = canvasNotes.every(note => 
-            Math.abs(note.size.width - firstSize.width) <= 10 &&
-            Math.abs(note.size.height - firstSize.height) <= 10
+          const hasUniformSize = canvasNotes.every(
+            (note) =>
+              Math.abs(note.size.width - firstSize.width) <= 10 &&
+              Math.abs(note.size.height - firstSize.height) <= 10
           );
 
           return !hasUniformSize; // 如果尺寸不统一，则需要整理
@@ -1309,14 +1327,14 @@ export const useNoteStore = create<NoteStore>()(
 // 设置Store事件监听器
 if (typeof window !== "undefined") {
   // 监听设置变化事件，以便实时获取最新的便签设置
-  window.addEventListener('settingsChanged', (event: Event) => {
+  window.addEventListener("settingsChanged", (event: Event) => {
     const customEvent = event as CustomEvent;
-    if (customEvent.detail?.section === 'note') {
+    if (customEvent.detail?.section === "note") {
       // 当便签设置变更时，创建便签时将使用新的默认值
       // 由于createNote方法每次都从本地存储加载设置，所以无需额外操作
     }
   });
-  
+
   // 监听便签重新加载请求
   storeEventBus.on("notes:reload", ({ canvasId }) => {
     const store = useNoteStore.getState();
@@ -1357,11 +1375,16 @@ if (typeof window !== "undefined") {
 // 设置Store事件监听器
 if (typeof window !== "undefined") {
   // 监听设置变化事件，以便实时获取最新的便签设置
-  window.addEventListener('settingsChanged', (event: Event) => {
+  window.addEventListener("settingsChanged", (event: Event) => {
     const customEvent = event as CustomEvent;
-    if (customEvent.detail?.section === 'note') {
+    if (customEvent.detail?.section === "note") {
       // 当便签设置变更时，创建便签时将使用新的默认值
       // 由于createNote方法每次都从本地存储加载设置，所以无需额外操作
     }
   });
+
+  // 开发环境下暴露到 window（便于调试）
+  if (process.env.NODE_ENV === "development") {
+    (window as any).useNoteStore = useNoteStore;
+  }
 }

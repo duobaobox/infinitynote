@@ -93,25 +93,44 @@ const generateId = (): string => {
 };
 
 /**
+ * 获取屏幕中心偏移量
+ * 用于将屏幕中心对齐到画布坐标 (0, 0)
+ */
+const getDefaultOffset = (): { x: number; y: number } => {
+  if (typeof window === "undefined") {
+    // 服务端渲染或初始化时的默认值
+    return { x: 960, y: 540 };
+  }
+  return {
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+  };
+};
+
+/**
  * 默认视口配置
+ * 初始位置：屏幕中心对齐画布中心 (0, 0)
+ * 这样用户可以向四面八方自由扩展，符合"无限画布"的理念
  */
 const DEFAULT_VIEWPORT: CanvasViewport = {
   scale: 1,
-  offset: { x: 0, y: 0 },
+  offset: getDefaultOffset(), // 屏幕中心对齐画布 (0, 0)
   minScale: 0.25,
   maxScale: 2,
 };
 
-
 // 固定缩放档位（严格模式）
-const ZOOM_LEVELS: number[] = [
-  0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2,
-];
+const ZOOM_LEVELS: number[] = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
-const clampToRange = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+const clampToRange = (v: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, v));
 
 const getNearestZoomLevel = (scale: number): number => {
-  const clamped = clampToRange(scale, DEFAULT_VIEWPORT.minScale, DEFAULT_VIEWPORT.maxScale);
+  const clamped = clampToRange(
+    scale,
+    DEFAULT_VIEWPORT.minScale,
+    DEFAULT_VIEWPORT.maxScale
+  );
   let nearest = ZOOM_LEVELS[0];
   let minDiff = Math.abs(clamped - nearest);
   for (const lvl of ZOOM_LEVELS) {
@@ -615,7 +634,13 @@ export const useCanvasStore = create<CanvasStore>()(
 
       // 重置画布视图
       resetViewport: () => {
-        const resetViewport = { ...DEFAULT_VIEWPORT };
+        // 重新计算默认偏移量，确保使用当前窗口尺寸
+        const resetViewport: CanvasViewport = {
+          scale: 1,
+          offset: getDefaultOffset(), // 动态计算，确保屏幕中心对齐画布中心
+          minScale: 0.25,
+          maxScale: 2,
+        };
 
         set((state) => {
           // 重置视图时立即保存，因为这是用户主动操作
@@ -639,7 +664,7 @@ export const useCanvasStore = create<CanvasStore>()(
       zoomToFit: () => {
         // TODO: 根据便签分布计算合适的缩放比例和偏移
         get().setScale(1);
-        get().setOffset({ x: 0, y: 0 });
+        get().setOffset(getDefaultOffset()); // 重置到中心位置
       },
 
       // 放大（严格档位）
@@ -941,3 +966,8 @@ export const initializeDefaultCanvas = async () => {
     // 即使失败也不阻止应用启动
   }
 };
+
+// 开发环境下暴露到 window（便于调试）
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  (window as any).useCanvasStore = useCanvasStore;
+}

@@ -146,7 +146,8 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   } = useNoteStore();
 
   // 测试面板状态
-  const { isVisible: isTestPanelVisible, toggleVisibility: toggleTestPanel } = useTestPanelStore();
+  const { isVisible: isTestPanelVisible, toggleVisibility: toggleTestPanel } =
+    useTestPanelStore();
 
   const {
     activeCanvasId,
@@ -322,9 +323,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       const note = active.data.current?.note as Note;
 
       if (note && delta) {
+        // dnd-kit 的 delta 已经是 canvas 坐标系的值（受父元素 transform 影响）
+        // 因此直接使用，不需要再除以 scale
         const newPosition = {
-          x: note.position.x + delta.x / viewport.scale,
-          y: note.position.y + delta.y / viewport.scale,
+          x: note.position.x + delta.x,
+          y: note.position.y + delta.y,
         };
 
         moveNote(note.id, newPosition);
@@ -332,7 +335,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
 
       endDrag();
     },
-    [moveNote, endDrag, viewport.scale]
+    [moveNote, endDrag]
   );
 
   // 鼠标滚轮缩放（严格档位：每次滚轮触发一档）
@@ -722,6 +725,26 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
             : displaySettings.canvasColor || "#f0f2f5",
         }}
       >
+        {/* 网格背景层 - 独立渲染，不受内容影响 */}
+        {displaySettings.showGrid && (
+          <div
+            className={`${styles.grid} grid`}
+            style={
+              {
+                "--grid-color": gridTheme.gridColor,
+                "--grid-size": `${gridTheme.gridSize}px`,
+                "--grid-opacity": gridTheme.gridOpacity,
+                // 应用主题颜色
+                backgroundImage: `radial-gradient(circle, ${gridTheme.gridColor} 1px, transparent 1px)`,
+                opacity: gridTheme.gridOpacity,
+                // 网格随画布偏移和缩放
+                transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0) scale(${viewport.scale})`,
+                backgroundSize: `${gridTheme.gridSize}px ${gridTheme.gridSize}px`,
+              } as React.CSSProperties
+            }
+          />
+        )}
+
         <DndContext
           onDragStart={handleDragStart}
           onDragMove={handleDragMove}
@@ -737,22 +760,78 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
             data-smooth-zoom={displaySettings.smoothZoom}
             data-dragging={isPanning}
           >
-            {/* 网格背景 - 根据设置控制显示 */}
-            {displaySettings.showGrid && (
-              <div
-                className={`${styles.grid} grid`}
-                style={
-                  {
-                    "--grid-color": gridTheme.gridColor,
-                    "--grid-size": `${gridTheme.gridSize}px`,
-                    "--grid-opacity": gridTheme.gridOpacity,
-                    // 应用主题颜色，覆盖原有的固定颜色
-                    backgroundImage: `radial-gradient(circle, ${gridTheme.gridColor} 1px, transparent 1px)`,
-                    opacity: gridTheme.gridOpacity,
-                  } as React.CSSProperties
-                }
-              />
-            )}
+            {/* 🎯 临时：画布中心标记（测试用） */}
+            <div
+              style={{
+                position: "absolute",
+                left: "-25px",
+                top: "-25px",
+                width: "50px",
+                height: "50px",
+                pointerEvents: "none",
+                zIndex: 9999,
+              }}
+            >
+              {/* X 标记 */}
+              <svg width="50" height="50" style={{ overflow: "visible" }}>
+                {/* 红色 X */}
+                <line
+                  x1="10"
+                  y1="10"
+                  x2="40"
+                  y2="40"
+                  stroke="red"
+                  strokeWidth="3"
+                />
+                <line
+                  x1="40"
+                  y1="10"
+                  x2="10"
+                  y2="40"
+                  stroke="red"
+                  strokeWidth="3"
+                />
+                {/* 白色外框，增强可见性 */}
+                <line
+                  x1="10"
+                  y1="10"
+                  x2="40"
+                  y2="40"
+                  stroke="white"
+                  strokeWidth="5"
+                  opacity="0.5"
+                />
+                <line
+                  x1="40"
+                  y1="10"
+                  x2="10"
+                  y2="40"
+                  stroke="white"
+                  strokeWidth="5"
+                  opacity="0.5"
+                />
+                {/* 中心圆点 */}
+                <circle
+                  cx="25"
+                  cy="25"
+                  r="3"
+                  fill="red"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+                {/* 坐标文字 */}
+                <text
+                  x="25"
+                  y="60"
+                  textAnchor="middle"
+                  fill="red"
+                  fontSize="12"
+                  fontWeight="bold"
+                >
+                  (0, 0)
+                </text>
+              </svg>
+            </div>
 
             {/* 便签列表 */}
             <VirtualizedNoteContainer
@@ -817,10 +896,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       )}
 
       {/* 测试面板 */}
-      <TestPanel
-        visible={isTestPanelVisible}
-        onClose={toggleTestPanel}
-      />
+      <TestPanel visible={isTestPanelVisible} onClose={toggleTestPanel} />
     </div>
   );
 };
