@@ -384,7 +384,8 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     (e: React.MouseEvent) => {
       if (panningRef.current && panStartRef.current) {
         e.preventDefault();
-        // CSS zoom 会影响坐标系统，需要将鼠标位移除以 scale
+        // CSS zoom 会放大 transform 效果，需要除以 scale 来补偿
+        // 这样：鼠标移动 100px → offset 增加 50px → 被 zoom:2 放大 → 实际移动 100px
         const deltaX = (e.clientX - panStartRef.current.x) / viewport.scale;
         const deltaY = (e.clientY - panStartRef.current.y) / viewport.scale;
 
@@ -429,7 +430,8 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
       if (panningRef.current && panStartRef.current) {
         e.preventDefault();
-        // CSS zoom 会影响坐标系统，需要将鼠标位移除以 scale
+        // CSS zoom 会放大 transform 效果，需要除以 scale 来补偿
+        // 这样：鼠标移动 100px → offset 增加 50px → 被 zoom:2 放大 → 实际移动 100px
         const deltaX = (e.clientX - panStartRef.current.x) / viewport.scale;
         const deltaY = (e.clientY - panStartRef.current.y) / viewport.scale;
 
@@ -472,7 +474,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       document.removeEventListener("mousemove", handleGlobalMouseMove);
       document.removeEventListener("mouseup", handleGlobalMouseUp);
     };
-  }, [isPanning, updatePan, endPan]);
+  }, [isPanning, updatePan, endPan, viewport.scale]);
 
   // 触摸事件处理
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -739,8 +741,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
                 // 应用主题颜色
                 backgroundImage: `radial-gradient(circle, ${gridTheme.gridColor} 1px, transparent 1px)`,
                 opacity: gridTheme.gridOpacity,
-                // 网格随画布偏移和缩放
-                transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0) scale(${viewport.scale})`,
+                // 网格随画布偏移和缩放 - 使用 CSS zoom 与内容保持一致
+                transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0)`,
+                zoom: viewport.scale,
                 backgroundSize: `${gridTheme.gridSize}px ${gridTheme.gridSize}px`,
               } as React.CSSProperties
             }
