@@ -11,10 +11,10 @@ const commonTokens = {
   fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
   fontSize: 14,
 
-  // 动画
-  motion: true,
-  motionUnit: 0.1,
-  motionBase: 0.2,
+  // 动画配置 - 禁用动画以提升性能和用户体验
+  motion: false, // 完全禁用动画
+  motionUnit: 0, // 动画单位设为 0（如果 motion 为 true 时生效）
+  motionBase: 0, // 动画基础时长设为 0（如果 motion 为 true 时生效）
 
   // 阴影
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",

@@ -5,6 +5,7 @@ import { getThemeConfig, type ThemeType } from "./antd";
 import { applyCSSVariables } from "./variables";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { ThemeContext, type ThemeContextType } from "./context";
+import { CONFIG_PROVIDER_PROPS } from "../config/antdAnimations";
 
 // 主题提供者组件属性
 interface ThemeProviderProps {
@@ -115,6 +116,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
         theme={getThemeConfig(currentTheme)}
         locale={zhCN}
         componentSize={currentTheme === "compact" ? "small" : "middle"}
+        modal={CONFIG_PROVIDER_PROPS.modal}
+        drawer={CONFIG_PROVIDER_PROPS.drawer}
       >
         {children}
       </ConfigProvider>
@@ -130,11 +133,11 @@ export const ThemeToggle: React.FC<{
   size?: "small" | "middle" | "large";
 }> = ({ className, size = "middle" }) => {
   const context = useContext(ThemeContext);
-  
+
   if (context === undefined) {
     throw new Error("ThemeToggle must be used within a ThemeProvider");
   }
-  
+
   const { isDark, toggleTheme } = context;
 
   return (

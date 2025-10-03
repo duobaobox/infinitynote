@@ -39,6 +39,7 @@ import type {
   SettingTabKey,
   SettingsConfig,
 } from "./types";
+import { MODAL_CONFIG, MODAL_METHOD_CONFIG } from "../../config/antdAnimations";
 import { MENU_ITEMS, EDIT_SHORTCUTS, VIEW_SHORTCUTS } from "./constants";
 import {
   loadSettingsFromStorage,
@@ -176,6 +177,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
 
       // 显示确认对话框
       modal.confirm({
+        ...MODAL_METHOD_CONFIG,
         title: "确认导入数据",
         content:
           "导入数据将覆盖当前所有数据（包括笔记、画布和设置），此操作不可恢复。确定要继续吗？",
@@ -215,6 +217,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     console.log("🔧 handleClearData 被调用");
 
     modal.confirm({
+      ...MODAL_METHOD_CONFIG,
       title: "确认清除所有数据",
       content:
         "此操作将删除所有本地数据（包括笔记、画布和设置）且不可恢复，确定要继续吗？",
@@ -347,13 +350,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       footer={null}
       width="80vw"
       className={`${styles.settingsModal} settingsModal`}
-      destroyOnHidden
-      transitionName=""
-      maskTransitionName=""
+      {...MODAL_CONFIG}
       styles={{
+        ...MODAL_CONFIG.styles,
         body: { height: "calc(80vh - 55px)", padding: 0 },
         content: { height: "80vh" },
-        mask: { backgroundColor: "rgba(0, 0, 0, 0.45)", backdropFilter: "blur(8px)" },
       }}
     >
       <div className={styles.modalContent}>

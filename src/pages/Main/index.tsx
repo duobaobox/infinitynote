@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect } from "react";
 // 引入图标注册表
 import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
+// 引入统一的动画配置
+import { MODAL_METHOD_CONFIG } from "../../config/antdAnimations";
 // 引入状态管理
 import { useNoteStore } from "../../store/noteStore";
 import {
@@ -359,6 +361,7 @@ const Main: React.FC = () => {
 
       // 显示错误提示
       modal.error({
+        ...MODAL_METHOD_CONFIG,
         title: "创建画布失败",
         content: error instanceof Error ? error.message : "未知错误",
       });
@@ -407,6 +410,7 @@ const Main: React.FC = () => {
 
       // 显示确认对话框
       modal.confirm({
+        ...MODAL_METHOD_CONFIG,
         title: canvasNoteCount > 0 ? "确认删除画布及便签" : "确认删除画布",
         content: (
           <div style={{ lineHeight: "1.6" }}>
@@ -508,6 +512,7 @@ const Main: React.FC = () => {
             console.error("❌ 删除画布失败:", error);
             // 可以在这里添加错误提示
             modal.error({
+              ...MODAL_METHOD_CONFIG,
               title: "删除失败",
               content: `删除画布失败：${
                 error instanceof Error ? error.message : "未知错误"

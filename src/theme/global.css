@@ -279,3 +279,33 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ========================================
+ * Ant Design 组件动画优化
+ * ========================================
+ * 为了提供更流畅的用户体验，禁用或加快某些组件的动画
+ * 配置位置：src/config/antdAnimations.ts
+ */
+
+/* Drawer 组件禁用动画 */
+.drawer-no-animation .ant-drawer-content-wrapper {
+  transition: none !important;
+}
+
+/* Modal 组件禁用动画 */
+.ant-modal.modal-no-animation {
+  animation: none !important;
+}
+
+.ant-modal.modal-no-animation .ant-modal-mask {
+  animation: none !important;
+}
+
+/* 如果需要完全禁用所有 Ant Design 动画（可选） */
+/* 取消注释下面的代码以启用 */
+/*
+.antd-no-animation * {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+*/
