@@ -1,6 +1,14 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Input, Button } from "antd";
-import { PlusOutlined, RobotOutlined, MergeOutlined, LoadingOutlined, CloseOutlined } from "@ant-design/icons";
+import { Input, Button, Space, Tooltip } from "antd";
+import {
+  PlusOutlined,
+  RobotOutlined,
+  MergeOutlined,
+  LoadingOutlined,
+  CloseOutlined,
+  DragOutlined,
+  AppstoreOutlined,
+} from "@ant-design/icons";
 import type { NoteWorkbenchProps, WorkbenchStatus } from "./types";
 import styles from "./index.module.css";
 
@@ -32,6 +40,9 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   placeholder = "输入文本AI生成便签，留空创建空白便签...",
   aiGenerating = {},
   connectedNotes = [],
+  isDragMode = false,
+  onToggleDragMode,
+  onOrganizeNotes,
 }) => {
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);
@@ -139,9 +150,17 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   };
 
   // 按钮类型和图标 - 连接模式下使用不同的样式
-  const buttonType = isAnyAIGenerating ? "default" : (isConnectedMode ? "default" : "primary");
+  const buttonType = isAnyAIGenerating
+    ? "default"
+    : isConnectedMode
+    ? "default"
+    : "primary";
   const buttonIcon = isAnyAIGenerating ? (
-    isButtonHovered ? <CloseOutlined /> : <LoadingOutlined spin={true} /> // 生成中：悬停时显示停止图标，正常时显示加载图标
+    isButtonHovered ? (
+      <CloseOutlined />
+    ) : (
+      <LoadingOutlined spin={true} />
+    ) // 生成中：悬停时显示停止图标，正常时显示加载图标
   ) : isConnectedMode ? (
     <MergeOutlined /> // 连接模式下使用合并图标
   ) : hasPrompt ? (
@@ -151,10 +170,10 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   );
 
   // 按钮样式 - 在生成状态或连接模式下使用不同颜色
-  const buttonStyle = isAnyAIGenerating 
+  const buttonStyle = isAnyAIGenerating
     ? { backgroundColor: "#ff4d4f", borderColor: "#ff4d4f", color: "white" } // 红色表示停止状态
     : isConnectedMode
-    ? { backgroundColor: "#52c41a", borderColor: "#52c41a", color: "white" }  // 绿色表示连接模式
+    ? { backgroundColor: "#52c41a", borderColor: "#52c41a", color: "white" } // 绿色表示连接模式
     : {};
 
   // 工具提示文本
@@ -180,36 +199,71 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
       data-loading={loading || status === "loading"}
       data-connected={isConnectedMode}
     >
-      {/* 输入框容器 */}
-      <div className={styles.consoleInputContainer}>
-        <Input
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={dynamicPlaceholder}
-          disabled={disabled || isAnyAIGenerating}
-          className={styles.consoleInput}
-          autoComplete="off"
-          size="small"
-        />
+      {/* 第一行：输入框和添加按钮 */}
+      <div className={styles.consoleMainRow}>
+        {/* 输入框容器 */}
+        <div className={styles.consoleInputContainer}>
+          <Input
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder={dynamicPlaceholder}
+            disabled={disabled || isAnyAIGenerating}
+            className={styles.consoleInput}
+            autoComplete="off"
+            size="small"
+          />
+        </div>
+
+        {/* 按钮容器 */}
+        <div className={styles.consoleExternalButtons}>
+          <Button
+            type={buttonType}
+            shape="circle"
+            size="small"
+            icon={buttonIcon}
+            style={buttonStyle}
+            loading={false} // 不使用loading状态，以便按钮可以被点击停止
+            onClick={handleButtonClick}
+            disabled={isButtonDisabled}
+            title={getTooltipText()}
+            className={styles.addExternalButton}
+            onMouseEnter={() => setIsButtonHovered(true)}
+            onMouseLeave={() => setIsButtonHovered(false)}
+          />
+        </div>
       </div>
 
-      {/* 按钮容器 */}
-      <div className={styles.consoleExternalButtons}>
-        <Button
-          type={buttonType}
-          shape="circle"
-          size="small"
-          icon={buttonIcon}
-          style={buttonStyle}
-          loading={false}  // 不使用loading状态，以便按钮可以被点击停止
-          onClick={handleButtonClick}
-          disabled={isButtonDisabled}
-          title={getTooltipText()}
-          className={styles.addExternalButton}
-          onMouseEnter={() => setIsButtonHovered(true)}
-          onMouseLeave={() => setIsButtonHovered(false)}
-        />
+      {/* 第二行：画布工具栏 */}
+      <div className={styles.canvasToolbarRow}>
+        <Space size={8}>
+          <Tooltip
+            title={isDragMode ? "关闭拖动模式" : "开启拖动模式（空格）"}
+            placement="top"
+          >
+            <Button
+              type={isDragMode ? "primary" : "default"}
+              size="small"
+              icon={<DragOutlined />}
+              onClick={() => onToggleDragMode?.(!isDragMode)}
+              className={styles.toolbarButton}
+            >
+              {isDragMode ? "拖动中" : "拖动画布"}
+            </Button>
+          </Tooltip>
+
+          <Tooltip title="一键整理便签" placement="top">
+            <Button
+              type="default"
+              size="small"
+              icon={<AppstoreOutlined />}
+              onClick={onOrganizeNotes}
+              className={styles.toolbarButton}
+            >
+              整理便签
+            </Button>
+          </Tooltip>
+        </Space>
       </div>
     </div>
   );

@@ -13,7 +13,10 @@ export interface NoteWorkbenchProps {
   /** 输入框值变化回调 */
   onChange?: (value: string) => void;
   /** 添加便签按钮点击回调 */
-  onAddNote?: (prompt?: string, isConnectedMode?: boolean) => Promise<void> | void;
+  onAddNote?: (
+    prompt?: string,
+    isConnectedMode?: boolean
+  ) => Promise<void> | void;
   /** 是否禁用 */
   disabled?: boolean;
   /** 自定义占位符文本 */
@@ -28,6 +31,12 @@ export interface NoteWorkbenchProps {
   currentGeneratingNoteId?: string;
   /** 连接的便签列表，用于确定是否处于连接模式 */
   connectedNotes?: ConnectedNote[];
+  /** 画布拖动模式 */
+  isDragMode?: boolean;
+  /** 拖动模式切换回调 */
+  onToggleDragMode?: (enabled: boolean) => void;
+  /** 整理便签回调 */
+  onOrganizeNotes?: () => void;
 }
 
 /**

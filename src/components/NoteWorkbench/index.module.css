@@ -3,15 +3,15 @@
  * 提供AI生成便签和创建空白便签的小巧工具栏界面
  */
 
-/* 工作台容器 - 小巧精致设计 */
+/* 工作台容器 - 两行布局 */
 .consoleContainer {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   padding: 12px 16px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
@@ -19,9 +19,36 @@
   box-shadow: var(--box-shadow-secondary);
   backdrop-filter: blur(8px);
   z-index: 1001;
-  height: 56px;
-  width: 400px;
+  width: 420px;
   transition: all 0.3s ease;
+}
+
+/* 第一行：输入框和添加按钮 */
+.consoleMainRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 第二行：画布工具栏 */
+.canvasToolbarRow {
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--color-border-secondary);
+}
+
+/* 工具栏按钮样式 */
+.toolbarButton {
+  height: 28px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.toolbarButton:hover {
+  transform: translateY(-1px);
 }
 
 /* 输入框容器 - 简化设计 */
@@ -104,10 +131,13 @@
   .consoleContainer {
     bottom: 16px;
     padding: 10px 14px;
-    gap: 10px;
-    height: 48px;
+    gap: 8px;
     width: 90%;
-    max-width: 400px;
+    max-width: 420px;
+  }
+
+  .consoleMainRow {
+    gap: 10px;
   }
 
   .consoleInputContainer {
@@ -125,5 +155,11 @@
     min-width: 28px !important;
     min-height: 28px !important;
     font-size: 14px;
+  }
+
+  .toolbarButton {
+    height: 26px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
   }
 }

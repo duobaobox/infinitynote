@@ -21,8 +21,6 @@ import type { Position, Note } from "../../types";
 import { NOTE_DEFAULT_SIZE } from "../../types/constants";
 // 引入画布组件
 import Canvas from "../Canvas";
-// 引入工具栏组件
-import { CanvasToolbar } from "../../components/CanvasToolbar";
 // 引入便签工作台组件
 import { NoteWorkbench } from "../../components/NoteWorkbench";
 // 引入设置弹窗组件
@@ -138,6 +136,7 @@ const Main: React.FC = () => {
     startAIGeneration,
     cancelAIGeneration,
     aiGenerating,
+    organizeCurrentCanvasNotes,
   } = useNoteStore();
   const {
     activeCanvasId,
@@ -375,6 +374,38 @@ const Main: React.FC = () => {
   const handleToggleDragMode = useCallback((enabled: boolean) => {
     setIsDragMode(enabled);
   }, []);
+
+  // 处理整理便签
+  const handleOrganizeNotes = useCallback(async () => {
+    if (!activeCanvasId) {
+      message.warning("没有活动画布");
+      return;
+    }
+
+    const canvasNotes = getNotesByCanvas(activeCanvasId);
+
+    if (canvasNotes.length === 0) {
+      message.info("当前画布没有便签");
+      return;
+    }
+
+    if (canvasNotes.length === 1) {
+      message.info("只有一个便签，无需整理");
+      return;
+    }
+
+    try {
+      const hideLoading = message.loading("正在整理便签...", 0);
+      await organizeCurrentCanvasNotes(activeCanvasId);
+      hideLoading();
+      message.success(`✅ 已整理 ${canvasNotes.length} 个便签`);
+    } catch (error) {
+      console.error("整理便签失败:", error);
+      message.error(
+        `整理失败: ${error instanceof Error ? error.message : "未知错误"}`
+      );
+    }
+  }, [activeCanvasId, getNotesByCanvas, organizeCurrentCanvasNotes]);
 
   // 画布名称编辑状态
   const [editingCanvasId, setEditingCanvasId] = useState<string | null>(null);
@@ -1082,13 +1113,7 @@ const Main: React.FC = () => {
         {/* 画布内容区域 */}
         <Canvas isDragMode={isDragMode} />
 
-        {/* 画布工具栏 */}
-        <CanvasToolbar
-          isDragMode={isDragMode}
-          onToggleDragMode={handleToggleDragMode}
-        />
-
-        {/* 便签工作台 - 浮动在画布底部 */}
+        {/* 便签工作台 - 浮动在画布底部，包含画布工具栏 */}
         <NoteWorkbench
           aiGenerating={aiGenerating}
           currentGeneratingNoteId={currentGeneratingNoteId}
@@ -1101,6 +1126,9 @@ const Main: React.FC = () => {
             }
           }}
           onAddNote={handleAddNote}
+          isDragMode={isDragMode}
+          onToggleDragMode={handleToggleDragMode}
+          onOrganizeNotes={handleOrganizeNotes}
         />
       </Content>
 

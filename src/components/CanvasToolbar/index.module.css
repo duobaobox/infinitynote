@@ -1,17 +1,20 @@
-/* 画布工具栏 - 竖直药丸形状 */
+/* 画布工具栏 - 横向长方形 */
 .canvasToolbar {
   position: fixed;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 90px; /* 在 NoteWorkbench 下方 */
+  left: 50%;
+  transform: translateX(-50%);
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: 20px; /* 药丸形状 */
-  padding: 8px 6px; /* 更小巧的内边距 */
+  border-radius: 12px;
+  padding: 8px 16px;
   box-shadow: var(--box-shadow-secondary);
   z-index: 1001;
   backdrop-filter: blur(8px); /* 毛玻璃效果 */
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 工具栏按钮 - 更小巧 */
@@ -73,14 +76,7 @@
   box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3) !important;
 }
 
-/* 分隔线 */
-.divider {
-  width: 16px;
-  height: 1px;
-  background: var(--color-border);
-  margin: 2px 0;
-  opacity: 0.6;
-}
+/* 分隔线 - 不再需要，已移除 */
 
 .zoomIndicator {
   display: flex;

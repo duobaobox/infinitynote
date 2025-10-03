@@ -3,29 +3,67 @@
  */
 
 .zoomIndicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-width: unset;
-  transition: none;
-  backdrop-filter: none;
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 6px 12px;
+  box-shadow: var(--box-shadow-secondary);
+  backdrop-filter: blur(8px);
+  z-index: 999;
+  transition: all 0.2s ease;
 }
 
 .zoomIndicator:hover {
-  background: none;
-  transform: none;
+  box-shadow: var(--box-shadow-primary);
+}
+
+.zoomPercentage {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 40px;
+  text-align: center;
+  user-select: none;
+}
+
+.zoomButton {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border: none !important;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.zoomButton:hover {
+  color: var(--color-primary) !important;
+  background: var(--color-bg-container) !important;
+  transform: scale(1.1);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .zoomIndicator {
+    padding: 4px 8px;
+  }
+
+  .zoomPercentage {
     font-size: 11px;
-    padding: 0;
-    min-width: unset;
+    min-width: 35px;
+  }
+
+  .zoomButton {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
   }
 }

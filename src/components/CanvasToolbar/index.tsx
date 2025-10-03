@@ -22,7 +22,7 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   isDragMode = false,
   onToggleDragMode,
 }) => {
-  const { zoomIn, zoomOut, resetViewport, activeCanvasId } = useCanvasStore();
+  const { activeCanvasId } = useCanvasStore();
   const { organizeCurrentCanvasNotes, getNotesByCanvas } = useNoteStore();
   const [isOrganizing, setIsOrganizing] = useState(false);
 
@@ -85,14 +85,14 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
 
   return (
     <div className={styles.canvasToolbar}>
-      <Space direction="vertical" align="center" size={4}>
+      <Space direction="horizontal" align="center" size={8}>
         {/* 拖动画布按钮 */}
         <Tooltip
-          title={isDragMode ? "关闭拖动模式" : "开启拖动模式"}
-          placement="left"
+          title={isDragMode ? "关闭拖动模式" : "开启拖动模式（快捷键：空格）"}
+          placement="top"
         >
           <Button
-            type={isDragMode ? "primary" : "text"}
+            type={isDragMode ? "primary" : "default"}
             shape="circle"
             icon={<DynamicIcon type="DragOutlined" />}
             onClick={handleToggleDragMode}
@@ -103,52 +103,10 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           />
         </Tooltip>
 
-        {/* 分隔线 */}
-        <div className={styles.divider} />
-
-        {/* 放大按钮 */}
-        <Tooltip title="放大画布" placement="left">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<DynamicIcon type="ZoomInOutlined" />}
-            onClick={zoomIn}
-            className={styles.toolbarButton}
-            style={buttonStyle}
-          />
-        </Tooltip>
-
-        {/* 缩小按钮 */}
-        <Tooltip title="缩小画布" placement="left">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<DynamicIcon type="ZoomOutOutlined" />}
-            onClick={zoomOut}
-            className={styles.toolbarButton}
-            style={buttonStyle}
-          />
-        </Tooltip>
-
-        {/* 重置视图按钮 */}
-        <Tooltip title="重置视图" placement="left">
-          <Button
-            type="text"
-            shape="circle"
-            icon={<DynamicIcon type="RedoOutlined" />}
-            onClick={resetViewport}
-            className={styles.toolbarButton}
-            style={buttonStyle}
-          />
-        </Tooltip>
-
-        {/* 分隔线 */}
-        <div className={styles.divider} />
-
         {/* 整理便签按钮 */}
-        <Tooltip title="一键整理便签" placement="left">
+        <Tooltip title="一键整理便签" placement="top">
           <Button
-            type="text"
+            type="default"
             shape="circle"
             icon={<DynamicIcon type="AppstoreOutlined" />}
             onClick={handleOrganizeNotes}
