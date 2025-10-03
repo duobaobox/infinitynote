@@ -8,6 +8,8 @@ import { ThemeProvider } from "./theme";
 import ErrorBoundary from "./components/ErrorBoundary";
 // 引入Ant Design App组件
 import { App as AntdApp } from "antd";
+// 引入撤销/重做快捷键
+import { useHistoryShortcuts } from "./hooks";
 
 // 引入全局样式
 import "./App.css";
@@ -32,6 +34,9 @@ import "./theme/global.css";
  * - 性能优化配置
  */
 function App() {
+  // 启用全局撤销/重做快捷键
+  useHistoryShortcuts();
+
   // 初始化错误处理系统
   useEffect(() => {
     // 监听全局未捕获的错误

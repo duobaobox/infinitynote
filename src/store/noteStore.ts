@@ -275,6 +275,15 @@ export const useNoteStore = create<NoteStore>()(
 
           console.log(`✅ 便签创建成功，ID: ${tempId}`);
 
+          // 记录历史（用于撤销）
+          try {
+            const { HistoryHelper } = await import("../utils/historyHelper");
+            HistoryHelper.recordNoteCreation(newNote);
+          } catch (historyError) {
+            console.error("记录历史失败:", historyError);
+            // 继续执行，不影响主流程
+          }
+
           // 检查便签数量是否接近上限
           get().checkNoteCountLimit();
 
@@ -339,9 +348,13 @@ export const useNoteStore = create<NoteStore>()(
       // 删除便签
       deleteNote: async (id: string) => {
         try {
-          // 获取便签信息用于事件通知
+          // 获取便签信息用于事件通知和历史记录
           const noteToDelete = get().notes.find((note) => note.id === id);
           const canvasId = noteToDelete?.canvasId;
+
+          if (!noteToDelete) {
+            throw new Error("便签不存在");
+          }
 
           // === 新增：删除所有与该便签相关的连接线 ===
           try {
@@ -370,6 +383,15 @@ export const useNoteStore = create<NoteStore>()(
 
           console.log(`✅ 便签删除成功，ID: ${id}`);
 
+          // 记录历史（用于撤销）
+          try {
+            const { HistoryHelper } = await import("../utils/historyHelper");
+            HistoryHelper.recordNoteDeletion(noteToDelete);
+          } catch (historyError) {
+            console.error("记录历史失败:", historyError);
+            // 继续执行，不影响主流程
+          }
+
           // 发送便签删除事件
           if (canvasId) {
             noteStoreEvents.notifyNoteDeleted(id, canvasId);
@@ -389,6 +411,11 @@ export const useNoteStore = create<NoteStore>()(
       // 删除多个便签
       deleteNotes: async (ids: string[]) => {
         try {
+          // 先获取所有要删除的便签数据（用于历史记录）
+          const notesToDelete = get().notes.filter((note) =>
+            ids.includes(note.id)
+          );
+
           // === 新增：批量删除所有相关连接线 ===
           try {
             const { useConnectionStore } = await import("./connectionStore");
@@ -415,6 +442,15 @@ export const useNoteStore = create<NoteStore>()(
           await Promise.all(deletePromises);
 
           console.log(`✅ 批量删除便签成功，数量: ${ids.length}`);
+
+          // 记录历史（用于撤销）
+          try {
+            const { HistoryHelper } = await import("../utils/historyHelper");
+            HistoryHelper.recordBatchNotesDeletion(notesToDelete);
+          } catch (historyError) {
+            console.error("记录历史失败:", historyError);
+            // 继续执行，不影响主流程
+          }
         } catch (error) {
           console.error("❌ 批量删除便签失败:", error);
           // 重新加载数据以恢复状态
@@ -429,6 +465,12 @@ export const useNoteStore = create<NoteStore>()(
 
       // 移动便签位置
       moveNote: async (id: string, position: Position) => {
+        // 获取旧位置用于历史记录
+        const note = get().notes.find((n) => n.id === id);
+        if (!note) return;
+
+        const oldPosition = { ...note.position };
+
         // 优化性能：使用函数式更新，只更新目标便签
         set((state) => {
           const noteIndex = state.notes.findIndex((note) => note.id === id);
@@ -445,12 +487,27 @@ export const useNoteStore = create<NoteStore>()(
           return { notes: newNotes };
         });
 
+        // 记录历史（用于撤销）- 会自动合并连续的移动操作
+        try {
+          const { HistoryHelper } = await import("../utils/historyHelper");
+          HistoryHelper.recordNoteMove(id, oldPosition, position);
+        } catch (historyError) {
+          console.error("记录历史失败:", historyError);
+          // 继续执行，不影响主流程
+        }
+
         // 使用防抖保存，避免拖动时频繁更新数据库
         debouncedSaveNote(id, { position });
       },
 
       // 调整便签大小
       resizeNote: async (id: string, size: Size) => {
+        // 获取旧大小用于历史记录
+        const note = get().notes.find((n) => n.id === id);
+        if (!note) return;
+
+        const oldSize = { ...note.size };
+
         // 优化性能：使用函数式更新，只更新目标便签
         set((state) => {
           const noteIndex = state.notes.findIndex((note) => note.id === id);
@@ -466,6 +523,15 @@ export const useNoteStore = create<NoteStore>()(
 
           return { notes: newNotes };
         });
+
+        // 记录历史（用于撤销）- 会自动合并连续的调整大小操作
+        try {
+          const { HistoryHelper } = await import("../utils/historyHelper");
+          HistoryHelper.recordNoteResize(id, oldSize, size);
+        } catch (historyError) {
+          console.error("记录历史失败:", historyError);
+          // 继续执行，不影响主流程
+        }
 
         // 使用防抖保存，避免调整大小时频繁更新数据库
         debouncedSaveNote(id, { size });

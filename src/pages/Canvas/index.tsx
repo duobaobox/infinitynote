@@ -14,6 +14,7 @@ import { ZoomIndicator } from "../../components/ZoomIndicator";
 import { SlotContainer } from "../../components/SlotContainer";
 import { LeaderLineVisualizer } from "../../components/LeaderLineVisualizer";
 import { TestPanel } from "../../components/TestPanel";
+import { HistoryIndicator } from "../../components/HistoryIndicator";
 import { useNoteStore } from "../../store/noteStore";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useConnectionStore } from "../../store/connectionStore";
@@ -822,6 +823,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
 
       {/* 独立的缩放指示器 */}
       <ZoomIndicator />
+
+      {/* 撤销/重做指示器 */}
+      <HistoryIndicator showHistory={true} position="bottom-right" />
 
       {/* 全局编辑状态提醒 */}
       {editAlert.show && (

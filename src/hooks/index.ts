@@ -17,6 +17,7 @@ export {
 } from "./useScrollbarDetection";
 export { useAutoScroll } from "./useAutoScroll";
 export { useSimpleAIAutoScroll } from "./useSimpleAIAutoScroll";
+export { useHistoryShortcuts } from "./useHistoryShortcuts";
 
 export type { KeyboardShortcut } from "./useKeyboardShortcuts";
 export type {
