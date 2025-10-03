@@ -329,3 +329,132 @@
     transform: translateX(-50%) translateY(0);
   }
 }
+
+.debugContainerCenter,
+.debugCanvasOrigin {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1100;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+}
+
+.debugContainerCenter {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid #1677ff;
+  background: rgba(22, 119, 255, 0.25);
+}
+
+.debugContainerCenter::after {
+  content: "Container Center";
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #1677ff;
+  background: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.debugCanvasOrigin {
+  transform: translate(-50%, -50%);
+  border: 2px solid #f5222d;
+  background: rgba(245, 34, 45, 0.25);
+}
+
+.debugCanvasOrigin::before,
+.debugCanvasOrigin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 2px;
+  background: #f5222d;
+  transform: translate(-50%, -50%);
+}
+
+.debugCanvasOrigin::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.debugToggleButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1200;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-secondary, rgba(0, 0, 0, 0.15));
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: var(--box-shadow-secondary, 0 2px 8px rgba(0, 0, 0, 0.15));
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.debugToggleButton:hover {
+  background: rgba(22, 119, 255, 0.15);
+  color: #1677ff;
+  border-color: #1677ff;
+}
+
+.debugToggleButton:active {
+  background: rgba(22, 119, 255, 0.25);
+}
+
+.debugInfoPanel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1200;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.68);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.6;
+  min-width: 210px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.debugInfoTitle {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.debugInfoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.debugInfoRow span:first-child {
+  opacity: 0.75;
+}
+
+.debugInfoRow span:last-child {
+  font-family: "Menlo", "Monaco", "Consolas", monospace;
+}
+
+.debugInfoHint {
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.65;
+}

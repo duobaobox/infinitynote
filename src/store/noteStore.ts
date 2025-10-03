@@ -1281,10 +1281,11 @@ export const useNoteStore = create<NoteStore>()(
           const { useCanvasStore } = await import("./canvasStore");
           const canvasStore = useCanvasStore.getState();
           const viewport = canvasStore.viewport;
-          const windowSize = {
-            width: window.innerWidth,
-            height: window.innerHeight,
-          };
+          const windowSize =
+            canvasStore.viewportSize ??
+            (typeof window !== "undefined"
+              ? { width: window.innerWidth, height: window.innerHeight }
+              : { width: 1920, height: 1080 });
 
           console.log(
             `🔄 开始整理画布 ${canvasId.slice(-8)} 的 ${

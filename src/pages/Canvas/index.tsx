@@ -47,6 +47,11 @@ const logWithDedup = (message: string, ...args: any[]) => {
   }
 };
 
+const DEBUG_MARKERS_ENABLED = false;
+
+const formatNumber = (value: number, fractionDigits = 1) =>
+  Number.isFinite(value) ? value.toFixed(fractionDigits) : "NaN";
+
 interface CanvasProps {
   isDragMode?: boolean;
 }
@@ -70,6 +75,30 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     const settings = loadSettingsFromStorage();
     return settings.display;
   });
+
+  const [showDebugMarkers, setShowDebugMarkers] = useState(() => {
+    if (!DEBUG_MARKERS_ENABLED || typeof window === "undefined") {
+      return false;
+    }
+    return localStorage.getItem("canvasDebugMarkers") === "true";
+  });
+
+  const [debugInfo, setDebugInfo] = useState<{
+    containerCenter: Position;
+    canvasOrigin: Position;
+    delta: Position;
+    distance: number;
+    scale: number;
+    timestamp: number;
+  } | null>(null);
+
+  const [containerSize, setContainerSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const lastLoggedDeltaRef = useRef<Position | null>(null);
+  const lastLoggedScaleRef = useRef<number | null>(null);
 
   // 监听设置变化
   useEffect(() => {
@@ -95,6 +124,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       smoothZoom: displaySettings.smoothZoom,
     });
   }, [displaySettings]);
+
+  useEffect(() => {
+    if (!DEBUG_MARKERS_ENABLED || typeof window === "undefined") return;
+    localStorage.setItem("canvasDebugMarkers", String(showDebugMarkers));
+  }, [showDebugMarkers]);
 
   // 监听便签编辑连接断开事件
   useEffect(() => {
@@ -157,6 +191,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     zoomOut,
     zoomToPoint,
     panCanvas,
+    setOffset,
+    setViewportSize,
+    lastViewportResetAt,
   } = useCanvasStore();
 
   // 连接状态管理
@@ -183,10 +220,72 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   const panningRef = useRef(false);
   const panStartRef = useRef<{ x: number; y: number } | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const lastCanvasSizeRef = useRef<{ width: number; height: number } | null>(
+    null
+  );
+  const hasUserPannedRef = useRef(false);
+  const autoCenterScheduledRef = useRef(false);
 
   // 使用优化的画布平移Hook
   const { localOffset, startPan, updatePan, endPan } =
     useOptimizedCanvasPan(panCanvas);
+
+  const handleResetViewport = useCallback(() => {
+    hasUserPannedRef.current = false;
+    autoCenterScheduledRef.current = false;
+    resetViewport();
+  }, [resetViewport]);
+
+  const toggleDebugMarkers = useCallback(() => {
+    if (!DEBUG_MARKERS_ENABLED) {
+      return;
+    }
+    setShowDebugMarkers((prev) => !prev);
+  }, []);
+
+  // 监听画布容器尺寸变化，保持画布中心与可视区域中心对齐
+  useEffect(() => {
+    const element = canvasRef.current;
+    if (!element || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+
+      const { width, height } = entry.contentRect;
+      const prevSize = lastCanvasSizeRef.current;
+
+      if (!prevSize) {
+        lastCanvasSizeRef.current = { width, height };
+        setContainerSize({ width, height });
+        setViewportSize({ width, height });
+        autoCenterScheduledRef.current = true;
+        hasUserPannedRef.current = false;
+        return;
+      }
+
+      const deltaWidth = width - prevSize.width;
+      const deltaHeight = height - prevSize.height;
+      const needUpdate =
+        Math.abs(deltaWidth) > 0.5 || Math.abs(deltaHeight) > 0.5;
+
+      if (needUpdate) {
+        lastCanvasSizeRef.current = { width, height };
+        setContainerSize({ width, height });
+        setViewportSize({ width, height });
+        autoCenterScheduledRef.current = true;
+        hasUserPannedRef.current = false;
+      }
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [setViewportSize]);
 
   // 获取当前画布的便签（响应式计算）- 优化版本
   const canvasNotes = useMemo(() => {
@@ -401,6 +500,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           e.stopPropagation();
           panningRef.current = true;
           panStartRef.current = { x: e.clientX, y: e.clientY };
+          hasUserPannedRef.current = true;
           setIsPanning(true); // 仅用于UI状态显示
           startPan(); // 开始优化的拖拽
         }
@@ -592,7 +692,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           case "0":
             if (e.ctrlKey || e.metaKey) {
               e.preventDefault();
-              resetViewport();
+              handleResetViewport();
             }
             break;
           case "n":
@@ -652,7 +752,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         handler: (e: KeyboardEvent) => {
           if (e.key === "0" && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
-            resetViewport();
+            handleResetViewport();
             return true;
           }
           return false;
@@ -713,7 +813,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   }, [
     zoomIn,
     zoomOut,
-    resetViewport,
+    handleResetViewport,
     handleCreateNote,
     clearSelection,
     isPanning,
@@ -725,6 +825,133 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       y: viewport.offset.y + (localOffset?.y || 0),
     };
   }, [viewport.offset.x, viewport.offset.y, localOffset]);
+
+  useEffect(() => {
+    if (!containerSize) {
+      return;
+    }
+
+    if (!autoCenterScheduledRef.current) {
+      return;
+    }
+
+    if (hasUserPannedRef.current) {
+      return;
+    }
+
+    const containerCenter = {
+      x: containerSize.width / 2,
+      y: containerSize.height / 2,
+    };
+
+    const desiredOffset = {
+      x: containerCenter.x - (localOffset?.x || 0),
+      y: containerCenter.y - (localOffset?.y || 0),
+    };
+
+    autoCenterScheduledRef.current = false;
+
+    const hasChanged =
+      Math.abs(viewport.offset.x - desiredOffset.x) > 0.5 ||
+      Math.abs(viewport.offset.y - desiredOffset.y) > 0.5;
+
+    if (hasChanged) {
+      setOffset(desiredOffset);
+    }
+  }, [
+    containerSize,
+    localOffset?.x,
+    localOffset?.y,
+    viewport.offset.x,
+    viewport.offset.y,
+    setOffset,
+  ]);
+
+  useEffect(() => {
+    if (!lastViewportResetAt) {
+      return;
+    }
+
+    hasUserPannedRef.current = false;
+    autoCenterScheduledRef.current = false;
+  }, [lastViewportResetAt]);
+
+  useEffect(() => {
+    if (!DEBUG_MARKERS_ENABLED || !showDebugMarkers) {
+      setDebugInfo(null);
+      lastLoggedDeltaRef.current = null;
+      lastLoggedScaleRef.current = null;
+      return;
+    }
+
+    if (!containerSize) {
+      return;
+    }
+
+    const containerCenter: Position = {
+      x: containerSize.width / 2,
+      y: containerSize.height / 2,
+    };
+
+    const canvasOrigin: Position = {
+      x: finalOffset.x,
+      y: finalOffset.y,
+    };
+
+    const delta: Position = {
+      x: canvasOrigin.x - containerCenter.x,
+      y: canvasOrigin.y - containerCenter.y,
+    };
+
+    const distance = Math.hypot(delta.x, delta.y);
+    const nextInfo = {
+      containerCenter,
+      canvasOrigin,
+      delta,
+      distance,
+      scale: viewport.scale,
+      timestamp: Date.now(),
+    };
+
+    setDebugInfo(nextInfo);
+
+    const lastDelta = lastLoggedDeltaRef.current;
+    const lastScale = lastLoggedScaleRef.current;
+    const deltaChanged =
+      !lastDelta ||
+      Math.abs(lastDelta.x - delta.x) > 0.5 ||
+      Math.abs(lastDelta.y - delta.y) > 0.5;
+    const scaleChanged =
+      lastScale === null || Math.abs(lastScale - viewport.scale) > 0.01;
+
+    if (deltaChanged || scaleChanged) {
+      console.groupCollapsed("📐 Canvas Offset Debug");
+      console.log("Container center", {
+        x: containerCenter.x,
+        y: containerCenter.y,
+      });
+      console.log("Canvas origin", {
+        x: canvasOrigin.x,
+        y: canvasOrigin.y,
+      });
+      console.log("Delta", {
+        x: delta.x,
+        y: delta.y,
+        distance,
+      });
+      console.log("Scale", viewport.scale);
+      console.groupEnd();
+
+      lastLoggedDeltaRef.current = delta;
+      lastLoggedScaleRef.current = viewport.scale;
+    }
+  }, [
+    containerSize,
+    finalOffset.x,
+    finalOffset.y,
+    viewport.scale,
+    showDebugMarkers,
+  ]);
 
   return (
     <div
@@ -758,6 +985,68 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
             : displaySettings.canvasColor || "#f0f2f5",
         }}
       >
+        {DEBUG_MARKERS_ENABLED && showDebugMarkers && (
+          <>
+            <div className={styles.debugContainerCenter} title="画布容器中心" />
+            <div
+              className={styles.debugCanvasOrigin}
+              style={{
+                left: `${finalOffset.x}px`,
+                top: `${finalOffset.y}px`,
+              }}
+              title="画布坐标原点 (0,0)"
+            />
+          </>
+        )}
+
+        {DEBUG_MARKERS_ENABLED && (import.meta.env.DEV || showDebugMarkers) && (
+          <button
+            type="button"
+            className={styles.debugToggleButton}
+            onClick={toggleDebugMarkers}
+          >
+            {showDebugMarkers ? "隐藏坐标标记" : "显示坐标标记"}
+          </button>
+        )}
+
+        {DEBUG_MARKERS_ENABLED && showDebugMarkers && debugInfo && (
+          <div className={styles.debugInfoPanel}>
+            <div className={styles.debugInfoTitle}>Canvas Offset Debug</div>
+            <div className={styles.debugInfoRow}>
+              <span>Container</span>
+              <span>
+                ({formatNumber(debugInfo.containerCenter.x)},{" "}
+                {formatNumber(debugInfo.containerCenter.y)})
+              </span>
+            </div>
+            <div className={styles.debugInfoRow}>
+              <span>Canvas</span>
+              <span>
+                ({formatNumber(debugInfo.canvasOrigin.x)},{" "}
+                {formatNumber(debugInfo.canvasOrigin.y)})
+              </span>
+            </div>
+            <div className={styles.debugInfoRow}>
+              <span>Δ Offset</span>
+              <span>
+                ({formatNumber(debugInfo.delta.x)},{" "}
+                {formatNumber(debugInfo.delta.y)})
+              </span>
+            </div>
+            <div className={styles.debugInfoRow}>
+              <span>Distance</span>
+              <span>{formatNumber(debugInfo.distance, 2)}</span>
+            </div>
+            <div className={styles.debugInfoRow}>
+              <span>Scale</span>
+              <span>{formatNumber(debugInfo.scale, 3)}</span>
+            </div>
+            <div className={styles.debugInfoHint}>
+              更新时间 {new Date(debugInfo.timestamp).toLocaleTimeString()}
+            </div>
+          </div>
+        )}
+
         {/* 网格背景层 - 独立渲染，不受内容影响 */}
         {displaySettings.showGrid && (
           <div

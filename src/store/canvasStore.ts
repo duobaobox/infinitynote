@@ -35,6 +35,10 @@ interface CanvasState {
   activeCanvasId: string | null;
   /** 画布视口状态 */
   viewport: CanvasViewport;
+  /** 画布容器的可视尺寸 */
+  viewportSize: { width: number; height: number } | null;
+  /** 最近一次调用 resetViewport 的时间戳 */
+  lastViewportResetAt: number | null;
 }
 
 /**
@@ -58,6 +62,8 @@ interface CanvasActions {
   setScale: (scale: number) => void;
   /** 设置画布偏移 */
   setOffset: (offset: Position) => void;
+  /** 设置画布容器尺寸 */
+  setViewportSize: (size: { width: number; height: number }) => void;
   /** 重置画布视图 */
   resetViewport: () => void;
   /** 缩放到适合 */
@@ -98,7 +104,16 @@ const generateId = (): string => {
  * 获取屏幕中心偏移量
  * 用于将屏幕中心对齐到画布坐标 (0, 0)
  */
-const getDefaultOffset = (): { x: number; y: number } => {
+const getDefaultOffset = (
+  size?: { width: number; height: number } | null
+): { x: number; y: number } => {
+  if (size) {
+    return {
+      x: size.width / 2,
+      y: size.height / 2,
+    };
+  }
+
   if (typeof window === "undefined") {
     // 服务端渲染或初始化时的默认值
     return { x: 960, y: 540 };
@@ -234,6 +249,11 @@ export const useCanvasStore = create<CanvasStore>()(
       canvases: [],
       activeCanvasId: null,
       viewport: { ...DEFAULT_VIEWPORT },
+      viewportSize:
+        typeof window === "undefined"
+          ? null
+          : { width: window.innerWidth, height: window.innerHeight },
+      lastViewportResetAt: null,
 
       // 创建画布
       createCanvas: async (name: string, isDefault = false) => {
@@ -634,12 +654,27 @@ export const useCanvasStore = create<CanvasStore>()(
         });
       },
 
+      setViewportSize: (size: { width: number; height: number }) => {
+        set((state) => {
+          const prev = state.viewportSize;
+          if (
+            prev &&
+            Math.abs(prev.width - size.width) < 0.5 &&
+            Math.abs(prev.height - size.height) < 0.5
+          ) {
+            return {};
+          }
+          return { viewportSize: size };
+        });
+      },
+
       // 重置画布视图
       resetViewport: () => {
         // 重新计算默认偏移量，确保使用当前窗口尺寸
+        const currentViewportSize = get().viewportSize;
         const resetViewport: CanvasViewport = {
           scale: 1,
-          offset: getDefaultOffset(), // 动态计算，确保屏幕中心对齐画布中心
+          offset: getDefaultOffset(currentViewportSize), // 动态计算，确保容器中心对齐画布中心
           minScale: 0.25,
           maxScale: 2,
         };
@@ -658,7 +693,10 @@ export const useCanvasStore = create<CanvasStore>()(
             });
           }
 
-          return { viewport: resetViewport };
+          return {
+            viewport: resetViewport,
+            lastViewportResetAt: Date.now(),
+          };
         });
       },
 
