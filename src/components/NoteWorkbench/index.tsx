@@ -236,7 +236,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
 
       {/* 第二行：画布工具栏 */}
       <div className={styles.canvasToolbarRow}>
-        <Space size={8}>
+        <Space size={8} style={{ justifyContent: "flex-start", width: "100%" }}>
           <Tooltip
             title={isDragMode ? "关闭拖动模式" : "开启拖动模式（空格）"}
             placement="top"
@@ -247,9 +247,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
               icon={<DragOutlined />}
               onClick={() => onToggleDragMode?.(!isDragMode)}
               className={styles.toolbarButton}
-            >
-              {isDragMode ? "拖动中" : "拖动画布"}
-            </Button>
+            />
           </Tooltip>
 
           <Tooltip title="一键整理便签" placement="top">
@@ -259,9 +257,7 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
               icon={<AppstoreOutlined />}
               onClick={onOrganizeNotes}
               className={styles.toolbarButton}
-            >
-              整理便签
-            </Button>
+            />
           </Tooltip>
         </Space>
       </div>

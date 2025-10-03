@@ -33,17 +33,21 @@
 /* 第二行：画布工具栏 */
 .canvasToolbarRow {
   display: flex;
-  justify-content: center;
-  padding-top: 4px;
-  border-top: 1px solid var(--color-border-secondary);
+  justify-content: flex-start;
+  width: 100%;
 }
 
 /* 工具栏按钮样式 */
 .toolbarButton {
   height: 28px !important;
-  padding: 0 12px !important;
-  font-size: 13px !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  font-size: 16px !important;
   border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
 }
 
