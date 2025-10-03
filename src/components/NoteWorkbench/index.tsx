@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Input, Button, Space, Tooltip } from "antd";
+import { Input, Button, Tooltip } from "antd";
 import {
   PlusOutlined,
   RobotOutlined,
@@ -236,30 +236,32 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
 
       {/* 第二行：画布工具栏 */}
       <div className={styles.canvasToolbarRow}>
-        <Space size={8} style={{ justifyContent: "flex-start", width: "100%" }}>
+        <div className={styles.toolbarGroup}>
           <Tooltip
             title={isDragMode ? "关闭拖动模式" : "开启拖动模式（空格）"}
             placement="top"
           >
             <Button
-              type={isDragMode ? "primary" : "default"}
+              type="text"
               size="small"
               icon={<DragOutlined />}
               onClick={() => onToggleDragMode?.(!isDragMode)}
-              className={styles.toolbarButton}
+              className={`${styles.iconButton} ${
+                isDragMode ? styles.iconButtonActive : ""
+              }`}
             />
           </Tooltip>
 
           <Tooltip title="一键整理便签" placement="top">
             <Button
-              type="default"
+              type="text"
               size="small"
               icon={<AppstoreOutlined />}
               onClick={onOrganizeNotes}
-              className={styles.toolbarButton}
+              className={styles.iconButton}
             />
           </Tooltip>
-        </Space>
+        </div>
       </div>
     </div>
   );
