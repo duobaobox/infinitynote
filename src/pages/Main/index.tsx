@@ -80,8 +80,10 @@ const logWithDedup = (message: string, ...args: any[]) => {
 const Main: React.FC = () => {
   // 控制侧边栏折叠状态
   // 初始化时从 localStorage 读取侧边栏折叠状态
-  const [collapsed, setCollapsed] = useState(
-    () => localStorage.getItem("sidebarCollapsed") === "true"
+  const [collapsed, setCollapsed] = useState(() =>
+    localStorage.getItem("sidebarCollapsed") === null
+      ? true
+      : localStorage.getItem("sidebarCollapsed") === "true"
   );
 
   // 包装 setCollapsed，持久化到 localStorage
