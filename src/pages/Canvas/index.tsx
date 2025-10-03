@@ -155,6 +155,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     resetViewport,
     zoomIn,
     zoomOut,
+    zoomToPoint,
     panCanvas,
   } = useCanvasStore();
 
@@ -338,19 +339,47 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     [moveNote, endDrag, viewport.scale]
   );
 
-  // 鼠标滚轮缩放（严格档位：每次滚轮触发一档）
+  // 鼠标滚轮缩放（围绕鼠标位置缩放）
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        if (e.deltaY > 0) {
-          zoomOut();
-        } else if (e.deltaY < 0) {
-          zoomIn();
+
+        // 获取鼠标在屏幕上的位置
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+
+        // 获取当前缩放级别和档位
+        const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+        const currentScale = viewport.scale;
+
+        // 找到最接近的档位
+        let nearestIndex = 0;
+        let minDiff = Math.abs(currentScale - ZOOM_LEVELS[0]);
+        for (let i = 1; i < ZOOM_LEVELS.length; i++) {
+          const diff = Math.abs(currentScale - ZOOM_LEVELS[i]);
+          if (diff < minDiff) {
+            minDiff = diff;
+            nearestIndex = i;
+          }
         }
+
+        // 计算新的缩放级别
+        let newScale: number;
+        if (e.deltaY > 0) {
+          // 缩小：向下一档
+          newScale = ZOOM_LEVELS[Math.max(nearestIndex - 1, 0)];
+        } else {
+          // 放大：向上一档
+          newScale =
+            ZOOM_LEVELS[Math.min(nearestIndex + 1, ZOOM_LEVELS.length - 1)];
+        }
+
+        // 围绕鼠标位置缩放
+        zoomToPoint(newScale, mouseX, mouseY);
       }
     },
-    [zoomIn, zoomOut]
+    [viewport.scale, zoomToPoint]
   );
 
   // 鼠标拖拽平移

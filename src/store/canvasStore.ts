@@ -66,6 +66,8 @@ interface CanvasActions {
   zoomIn: () => void;
   /** 缩小 */
   zoomOut: () => void;
+  /** 围绕指定点缩放 */
+  zoomToPoint: (newScale: number, mouseX: number, mouseY: number) => void;
   /** 平移画布 */
   panCanvas: (delta: Position) => void;
   /** 聚焦到指定便签 */
@@ -679,6 +681,58 @@ export const useCanvasStore = create<CanvasStore>()(
         const { viewport } = get();
         const newScale = getPrevZoomLevel(viewport.scale);
         get().setScale(newScale);
+      },
+
+      // 围绕指定点缩放
+      zoomToPoint: (newScale: number, mouseX: number, mouseY: number) => {
+        const { viewport } = get();
+        const oldScale = viewport.scale;
+
+        // 限制缩放范围
+        const clampedScale = Math.max(
+          viewport.minScale,
+          Math.min(viewport.maxScale, newScale)
+        );
+
+        // 参考 Excalidraw 的实现
+        // 将鼠标位置转换为相对于画布偏移的位置
+        const appLayerX = mouseX;
+        const appLayerY = mouseY;
+
+        // 计算基准滚动位置（去除当前缩放的影响）
+        const baseScrollX =
+          viewport.offset.x + (appLayerX - appLayerX / oldScale);
+        const baseScrollY =
+          viewport.offset.y + (appLayerY - appLayerY / oldScale);
+
+        // 计算新缩放级别下的滚动偏移
+        const zoomOffsetScrollX = -(appLayerX - appLayerX / clampedScale);
+        const zoomOffsetScrollY = -(appLayerY - appLayerY / clampedScale);
+
+        // 计算新的偏移量
+        const newOffset = {
+          x: baseScrollX + zoomOffsetScrollX,
+          y: baseScrollY + zoomOffsetScrollY,
+        };
+
+        // 同时更新缩放和偏移
+        set((state) => {
+          const newViewport = {
+            ...state.viewport,
+            scale: clampedScale,
+            offset: newOffset,
+          };
+
+          // 使用防抖保存到数据库
+          if (state.activeCanvasId) {
+            debouncedSaveCanvas(state.activeCanvasId, {
+              scale: clampedScale,
+              offset: newOffset,
+            });
+          }
+
+          return { viewport: newViewport };
+        });
       },
 
       // 平移画布
