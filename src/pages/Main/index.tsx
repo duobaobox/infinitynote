@@ -951,7 +951,10 @@ const Main: React.FC = () => {
                         "画布"}
                     </div>
                     {/* 徽标数字 - 显示便签数量 */}
-                    <Badge count={currentCanvasNotes.length} />
+                    <Badge
+                      count={currentCanvasNotes.length}
+                      style={{ backgroundColor: "var(--color-primary)" }}
+                    />
                   </div>
 
                   {/* 搜索输入框 */}

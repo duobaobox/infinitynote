@@ -87,18 +87,15 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
                 displayedContent.length > 50 ? "..." : ""
               }`;
             })()}
+            onClick={() => onRemoveConnection(note.id)}
           >
-            {/* 圆形插槽 */}
-            <div className={styles.slotCircle}>
-              <span className={styles.slotIndex}>{index + 1}</span>
-            </div>
-            {/* 删除按钮 - 使用Ant Design图标 */}
             <div
-              className={styles.slotRemove}
-              onClick={() => onRemoveConnection(note.id)}
-              title="移除连接"
+              className={styles.slotCircle + " " + styles.slotCircleDeletable}
             >
-              <CloseOutlined />
+              <span className={styles.slotIndex}>{index + 1}</span>
+              <span className={styles.slotDeleteIcon}>
+                <CloseOutlined />
+              </span>
             </div>
           </div>
         ))}

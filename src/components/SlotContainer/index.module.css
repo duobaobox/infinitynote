@@ -5,7 +5,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-bg-elevated);
-  border: 1px solid #52c41a; /* 绿色边框 */
+  border: 1px solid #d9d9d9; /* 绿色边框 */
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(82, 196, 26, 0.15); /* 绿色阴影 */
   padding: 8px 12px;
@@ -37,6 +37,7 @@
 }
 
 /* 修长型插槽 - 完全匹配设计稿 */
+
 .slotCircle {
   width: 18px;
   height: 18px;
@@ -48,6 +49,32 @@
   justify-content: center;
   transition: all 0.2s ease;
   position: relative;
+  cursor: pointer;
+}
+
+.slotCircleDeletable {
+  transition: background 0.2s, border 0.2s;
+}
+.noteSlot:hover .slotCircleDeletable {
+  background: #ff4d4f;
+  border: 1px solid #ff7875;
+}
+.noteSlot:hover .slotIndex {
+  opacity: 0;
+}
+.slotDeleteIcon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #e01e1e;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.noteSlot:hover .slotDeleteIcon {
+  opacity: 1;
 }
 
 .noteSlot.connected .slotCircle {
@@ -66,37 +93,6 @@
 }
 
 /* 移除按钮 - 小巧精致 */
-.slotRemove {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #ff4d4f; /* 红色删除按钮 */
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 10;
-  border: 2px solid var(--color-bg-elevated);
-  box-shadow: 0 1px 4px rgba(255, 77, 79, 0.3);
-  opacity: 0;
-}
-
-.noteSlot:hover .slotRemove {
-  opacity: 1;
-}
-
-.slotRemove:hover {
-  background: #f5222d; /* 更深的红色 */
-  transform: scale(1.1);
-  box-shadow: 0 2px 6px rgba(255, 77, 79, 0.4);
-}
 
 /* 插槽列表容器 */
 .slotsList {

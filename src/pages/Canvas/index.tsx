@@ -196,6 +196,12 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     lastViewportResetAt,
   } = useCanvasStore();
 
+  // 切换画布时清空连接状态
+  useEffect(() => {
+    const { clearAllConnections } = useConnectionStore.getState();
+    clearAllConnections();
+  }, [activeCanvasId]);
+
   // 连接状态管理
   const {
     connectedNotes,
