@@ -50,15 +50,27 @@
   color: var(--text-primary);
   font-size: 18px;
   transition: all 0.2s ease;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .historyButton:hover:not(:disabled) {
   background: var(--bg-hover);
   transform: scale(1.05);
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .historyButton:active:not(:disabled) {
   transform: scale(0.95);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.historyButton:focus,
+.historyButton:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .historyButton:disabled {
@@ -106,11 +118,22 @@
   font-size: 20px;
   line-height: 1;
   transition: all 0.2s ease;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .closeButton:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.closeButton:focus,
+.closeButton:focus-visible,
+.closeButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .historyListContent {

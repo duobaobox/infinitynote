@@ -52,16 +52,28 @@
   position: relative;
   padding: 0;
   color: var(--color-text-secondary, #666);
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .toolbarButton:hover {
   background: var(--color-fill-secondary, #f0f0f0);
   color: var(--color-primary, #1677ff);
   transform: scale(1.1);
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .toolbarButton:active {
   transform: scale(0.95);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.toolbarButton:focus,
+.toolbarButton:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .toolbarButton.danger {

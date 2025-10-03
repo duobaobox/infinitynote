@@ -82,11 +82,21 @@
   border-radius: 6px;
   font-size: 14px;
   transition: all 0.2s ease;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .addExternalButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px var(--color-primary-bg-hover);
+  box-shadow: 0 2px 8px var(--color-primary-bg-hover) !important;
+  outline: none !important;
+}
+
+.addExternalButton:focus,
+.addExternalButton:focus-visible,
+.addExternalButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* 响应式设计 - 简化 */

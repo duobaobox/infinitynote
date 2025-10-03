@@ -38,10 +38,21 @@
   line-height: 20px;
   padding: 0 8px;
   font-size: 11px;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .controlButton:hover {
   background: rgba(255, 255, 255, 0.2);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.controlButton:focus,
+.controlButton:focus-visible,
+.controlButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .progressBar {

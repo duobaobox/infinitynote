@@ -67,6 +67,27 @@
   border-bottom: 1px solid var(--color-border-secondary);
 }
 
+/* 侧边栏头部所有按钮 */
+.sidebarHeader :global(.ant-btn),
+.sidebarHeader button {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.sidebarHeader :global(.ant-btn:hover),
+.sidebarHeader :global(.ant-btn:focus),
+.sidebarHeader :global(.ant-btn:focus-visible),
+.sidebarHeader :global(.ant-btn:active),
+.sidebarHeader button:hover,
+.sidebarHeader button:focus,
+.sidebarHeader button:focus-visible,
+.sidebarHeader button:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
 /* 设置按钮样式 */
 .settingsButton {
   margin-right: 8px;
@@ -74,16 +95,48 @@
   border-color: var(--border-color);
   color: var(--text-color);
   transition: all 0.2s ease;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .settingsButton:hover {
   background-color: var(--hover-bg-color);
   border-color: var(--primary-color);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.settingsButton:focus,
+.settingsButton:focus-visible,
+.settingsButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* 操作按钮组样式 */
 .actionButtons {
   gap: 4px;
+}
+
+/* 操作按钮组中的所有按钮 */
+.actionButtons :global(.ant-btn),
+.actionButtons button {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.actionButtons :global(.ant-btn:hover),
+.actionButtons :global(.ant-btn:focus),
+.actionButtons :global(.ant-btn:focus-visible),
+.actionButtons :global(.ant-btn:active),
+.actionButtons button:hover,
+.actionButtons button:focus,
+.actionButtons button:focus-visible,
+.actionButtons button:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 /* 分段控制器包装器样式 */
@@ -115,6 +168,16 @@
 .addButton {
   width: 100%;
   margin-bottom: 0;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.addButton:hover,
+.addButton:focus,
+.addButton:focus-visible,
+.addButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* 画布项样式 */
@@ -222,6 +285,8 @@
   opacity: 0; /* 默认隐藏 */
   transition: opacity 0.2s ease;
   pointer-events: none; /* 隐藏时不响应事件 */
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* 画布项悬浮时显示删除按钮 */
@@ -235,6 +300,15 @@
 .deleteButton:hover {
   opacity: 1 !important;
   color: var(--color-error) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.deleteButton:focus,
+.deleteButton:focus-visible,
+.deleteButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .deleteButton .anticon {
@@ -419,4 +493,13 @@
   border: 1px solid var(--color-border-secondary);
   border-radius: 4px;
   box-shadow: var(--box-shadow);
+  outline: none !important;
+}
+
+.floatingCollapseButton:hover,
+.floatingCollapseButton:focus,
+.floatingCollapseButton:focus-visible,
+.floatingCollapseButton:active {
+  outline: none !important;
+  box-shadow: var(--box-shadow) !important;
 }

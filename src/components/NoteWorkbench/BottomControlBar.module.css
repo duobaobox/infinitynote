@@ -18,9 +18,20 @@
   font-size: 14px;
   height: 28px;
   padding: 0 8px;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .actionButton:hover {
   background: rgba(82, 196, 26, 0.1);
   color: #52c41a;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.actionButton:focus,
+.actionButton:focus-visible,
+.actionButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }

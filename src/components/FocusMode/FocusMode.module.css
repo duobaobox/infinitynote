@@ -90,11 +90,22 @@
   cursor: pointer;
   transition: all 0.2s ease;
   margin: 0 2px;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .toolbarButton:hover {
   background-color: var(--color-hover);
   color: var(--color-text-primary);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.toolbarButton:focus,
+.toolbarButton:focus-visible,
+.toolbarButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .mainContent {
@@ -149,11 +160,22 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .sidebarButton:hover {
   background-color: var(--color-hover);
   color: var(--color-text-primary);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.sidebarButton:focus,
+.sidebarButton:focus-visible,
+.sidebarButton:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* 主编辑器区域 */

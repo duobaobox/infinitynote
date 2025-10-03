@@ -93,8 +93,90 @@ body {
 
 /* 焦点样式 */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: none !important;
+}
+
+/* 统一移除所有按钮的 outline 和 focus 边框 */
+button,
+button:focus,
+button:focus-visible,
+button:active,
+.ant-btn,
+.ant-btn:focus,
+.ant-btn:focus-visible,
+.ant-btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 移除 Ant Design 按钮的默认阴影 */
+.ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover,
+.ant-btn-default:not(:disabled):not(.ant-btn-disabled):focus,
+.ant-btn-default:not(:disabled):not(.ant-btn-disabled):active {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover,
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):focus,
+.ant-btn-primary:not(:disabled):not(.ant-btn-disabled):active {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.ant-btn-dangerous:not(:disabled):not(.ant-btn-disabled):hover,
+.ant-btn-dangerous:not(:disabled):not(.ant-btn-disabled):focus,
+.ant-btn-dangerous:not(:disabled):not(.ant-btn-disabled):active {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* 移除 Ant Design 按钮文本类型的边框 */
+.ant-btn-text,
+.ant-btn-text:hover,
+.ant-btn-text:focus,
+.ant-btn-text:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* 移除 Ant Design 链接按钮的边框 */
+.ant-btn-link,
+.ant-btn-link:hover,
+.ant-btn-link:focus,
+.ant-btn-link:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* 移除所有 Ant Design Space 中按钮的边框 */
+.ant-space .ant-btn,
+.ant-space .ant-btn:hover,
+.ant-space .ant-btn:focus,
+.ant-space .ant-btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 强制移除所有按钮图标按钮的边框 */
+.ant-btn-icon-only,
+.ant-btn-icon-only:hover,
+.ant-btn-icon-only:focus,
+.ant-btn-icon-only:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* 移除 small size 按钮的边框 */
+.ant-btn-sm,
+.ant-btn-sm:hover,
+.ant-btn-sm:focus,
+.ant-btn-sm:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* 画布点状背景（保持原有样式，但支持主题） */

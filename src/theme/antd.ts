@@ -69,6 +69,10 @@ export const lightTheme: ThemeConfig = {
       borderRadius: 6,
       controlHeight: 32,
       paddingContentHorizontal: 15,
+      // 移除焦点边框
+      defaultShadow: "none",
+      primaryShadow: "none",
+      dangerShadow: "none",
     },
 
     // 输入框组件主题
@@ -151,6 +155,14 @@ export const darkTheme: ThemeConfig = {
   components: {
     // 继承明亮主题的组件配置
     ...lightTheme.components,
+    // 按钮组件主题（覆盖继承的配置）
+    Button: {
+      ...lightTheme.components?.Button,
+      // 移除焦点边框
+      defaultShadow: "none",
+      primaryShadow: "none",
+      dangerShadow: "none",
+    },
     // 暗黑主题下 Tooltip 使用浅色背景
     Tooltip: {
       borderRadius: 6,
@@ -180,6 +192,10 @@ export const compactTheme: ThemeConfig = {
       borderRadius: 4,
       controlHeight: 28,
       paddingContentHorizontal: 12,
+      // 移除焦点边框
+      defaultShadow: "none",
+      primaryShadow: "none",
+      dangerShadow: "none",
     },
     Input: {
       borderRadius: 4,

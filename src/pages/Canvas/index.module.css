@@ -400,16 +400,32 @@
   cursor: pointer;
   box-shadow: var(--box-shadow-secondary, 0 2px 8px rgba(0, 0, 0, 0.15));
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  outline: none !important;
 }
 
 .debugToggleButton:hover {
   background: rgba(22, 119, 255, 0.15);
   color: #1677ff;
   border-color: #1677ff;
+  outline: none !important;
+  box-shadow: var(
+    --box-shadow-secondary,
+    0 2px 8px rgba(0, 0, 0, 0.15)
+  ) !important;
 }
 
 .debugToggleButton:active {
   background: rgba(22, 119, 255, 0.25);
+  outline: none !important;
+}
+
+.debugToggleButton:focus,
+.debugToggleButton:focus-visible {
+  outline: none !important;
+  box-shadow: var(
+    --box-shadow-secondary,
+    0 2px 8px rgba(0, 0, 0, 0.15)
+  ) !important;
 }
 
 .debugInfoPanel {
