@@ -45,28 +45,8 @@ export const BASE_TOOLBAR_BUTTONS: ToolbarButton[] = [
   },
 ];
 
-// AI相关按钮配置
-export const AI_TOOLBAR_BUTTONS: ToolbarButton[] = [
-  {
-    id: "ai-generate",
-    label: "AI生成",
-    icon: "RobotOutlined",
-    tooltip: "使用AI生成内容",
-  },
-  {
-    id: "ai-config",
-    label: "AI设置",
-    icon: "SettingOutlined",
-    tooltip: "AI功能设置",
-    separator: true, // 在AI设置前添加分隔符
-  },
-];
-
-// 工具栏按钮配置 - 兼容性保持
-export const TOOLBAR_BUTTONS: ToolbarButton[] = [
-  ...AI_TOOLBAR_BUTTONS,
-  ...BASE_TOOLBAR_BUTTONS,
-];
+// 工具栏按钮配置 - 移除 AI 相关按钮
+export const TOOLBAR_BUTTONS: ToolbarButton[] = [...BASE_TOOLBAR_BUTTONS];
 
 /**
  * 颜色选项配置

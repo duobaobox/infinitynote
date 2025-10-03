@@ -10,8 +10,6 @@ import { TiptapEditor } from "../TiptapEditor";
 import { ThinkingChainDisplay } from "../TiptapEditor/ThinkingChainDisplay";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
 import type { ToolbarAction } from "../NoteToolbar/types";
-import { PromptTemplateSelector } from "../PromptTemplateSelector";
-import type { PromptTemplate } from "../../config/promptTemplates";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
 import { ConnectionPoint } from "../ConnectionPoint";
 import { useConnectionStore } from "../../store/connectionStore";
@@ -50,7 +48,6 @@ export const NoteCard = memo<NoteCardProps>(
       deleteNote,
       moveNote,
       resizeNote,
-      startAIGeneration,
       aiGenerating,
       aiStreamingData,
     } = useNoteStore();
@@ -90,8 +87,6 @@ export const NoteCard = memo<NoteCardProps>(
         setIsHovered(false);
       }
     }, [isEditing]);
-    // 提示词模板选择器状态
-    const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
     // AI 数据提取
     const aiData = note.customProperties?.ai as
@@ -337,71 +332,6 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [isEditing]);
 
-    // 处理AI生成
-    const handleAIGenerate = useCallback(async () => {
-      try {
-        // 打开提示词模板选择器
-        setShowTemplateSelector(true);
-        setShowToolbar(false); // 关闭工具栏
-      } catch (error) {
-        console.error("AI生成失败:", error);
-        // 可以在这里显示错误提示
-      }
-    }, []);
-
-    // 处理模板选择
-    const handleTemplateSelect = useCallback(
-      async (template: PromptTemplate) => {
-        try {
-          let finalPrompt = template.prompt;
-
-          // 处理模板中的变量替换
-          if (template.prompt.includes("{{")) {
-            // 提取模板变量
-            const variables = template.prompt.match(/\{\{(\w+)\}\}/g);
-            if (variables) {
-              const variableValues: Record<string, string> = {};
-
-              // 为每个变量请求用户输入
-              for (const variable of variables) {
-                const varName = variable.replace(/[{}]/g, "");
-                const value = window.prompt(`请输入 ${varName}:`);
-                if (value === null) return; // 用户取消
-                variableValues[varName] = value || "";
-              }
-
-              // 替换模板中的变量
-              finalPrompt = template.prompt.replace(
-                /\{\{(\w+)\}\}/g,
-                (match, varName) => {
-                  return variableValues[varName] || match;
-                }
-              );
-            }
-          }
-
-          console.log(
-            `🤖 使用模板"${template.name}"为便签 ${note.id.slice(
-              -8
-            )} 生成AI内容`
-          );
-          await startAIGeneration(note.id, finalPrompt);
-        } catch (error) {
-          console.error("AI生成失败:", error);
-          // 可以在这里显示错误提示
-        }
-      },
-      [note.id, startAIGeneration]
-    );
-
-    // 处理AI配置
-    const handleAIConfig = useCallback(() => {
-      console.log("🔧 打开AI设置");
-      // TODO: 打开设置模态框的AI标签页
-      // 这里可以通过事件总线或上下文来打开设置
-      setShowToolbar(false); // 关闭工具栏
-    }, []);
-
     // 处理连接点点击
     const handleConnectionClick = useCallback(
       (noteId: string) => {
@@ -424,7 +354,9 @@ export const NoteCard = memo<NoteCardProps>(
         }
       },
       [note, isNoteConnected, canAddConnection, addConnection]
-    ); // 处理工具栏操作
+    );
+
+    // 处理工具栏操作
     const handleToolbarAction = useCallback(
       (action: ToolbarAction, data?: any) => {
         switch (action) {
@@ -450,25 +382,12 @@ export const NoteCard = memo<NoteCardProps>(
             openFocusMode(note.id);
             setShowToolbar(false);
             break;
-          case "ai-generate":
-            handleAIGenerate();
-            break;
-          case "ai-config":
-            handleAIConfig();
-            break;
 
           default:
             console.log("Unhandled action:", action);
         }
       },
-      [
-        note.id,
-        updateNote,
-        deleteNote,
-        openFocusMode,
-        handleAIGenerate,
-        handleAIConfig,
-      ]
+      [note.id, updateNote, deleteNote, openFocusMode]
     ); // 关闭工具栏
     const handleCloseToolbar = useCallback(() => {
       setShowToolbar(false);
@@ -1089,18 +1008,10 @@ export const NoteCard = memo<NoteCardProps>(
                 color={note.color}
                 onAction={handleToolbarAction}
                 onClose={handleCloseToolbar}
-                hasAIContent={!!aiData?.generated}
-                isAIGenerating={!!aiGenerating[note.id]}
               />
             </div>
           )}
         </div>
-        {/* 提示词模板选择器 */}
-        <PromptTemplateSelector
-          visible={showTemplateSelector}
-          onClose={() => setShowTemplateSelector(false)}
-          onSelect={handleTemplateSelect}
-        />
       </>
     );
   }

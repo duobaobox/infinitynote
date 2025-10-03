@@ -6,21 +6,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 50px;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
+  min-width: unset;
+  transition: none;
+  backdrop-filter: none;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .zoomIndicator:hover {
-  background: var(--color-bg-container);
-  transform: scale(1.05);
+  background: none;
+  transform: none;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .zoomIndicator {
     font-size: 11px;
-    padding: 6px 10px;
-    min-width: 45px;
+    padding: 0;
+    min-width: unset;
   }
 }

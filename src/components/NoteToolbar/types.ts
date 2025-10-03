@@ -4,10 +4,7 @@ export type ToolbarAction =
   | "duplicate"
   | "pin"
   | "delete"
-  | "focus-mode"
-  | "ai-generate"
-  | "ai-config"
-  | "ai-content-generated";
+  | "focus-mode";
 
 // 工具栏事件数据
 export interface ToolbarActionData {
@@ -22,9 +19,6 @@ export interface NoteToolbarProps {
   color: string; // 当前便签颜色
   onAction?: (action: ToolbarAction, data?: any) => void;
   onClose?: () => void;
-  // AI相关状态
-  hasAIContent?: boolean; // 是否有AI生成的内容
-  isAIGenerating?: boolean; // 是否正在AI生成
 }
 export interface ToolbarButton {
   id: ToolbarAction;

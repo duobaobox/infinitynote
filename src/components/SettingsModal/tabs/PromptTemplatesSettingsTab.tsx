@@ -284,7 +284,7 @@ export const PromptTemplatesSettingsTab: React.FC<
             }}
           >
             <Text strong style={{ fontSize: 16 }}>
-              提示词模板管理
+              提示词模板管理（开发中）
             </Text>
             <Button
               type="primary"

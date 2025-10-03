@@ -4,17 +4,10 @@ import {
   CopyOutlined,
   PushpinOutlined,
   DeleteOutlined,
-  RobotOutlined,
-  SettingOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
 import type { NoteToolbarProps, ToolbarAction } from "./types";
-import {
-  BASE_TOOLBAR_BUTTONS,
-  AI_TOOLBAR_BUTTONS,
-  COLOR_OPTIONS,
-} from "./constants";
-// import { AIGenerationControl } from "../AIGenerationControl";
+import { BASE_TOOLBAR_BUTTONS, COLOR_OPTIONS } from "./constants";
 import styles from "./index.module.css";
 
 // 图标映射组件
@@ -23,8 +16,6 @@ const IconMap: Record<string, React.ComponentType<any>> = {
   CopyOutlined,
   PushpinOutlined,
   DeleteOutlined,
-  RobotOutlined,
-  SettingOutlined,
   EyeOutlined,
 };
 
@@ -44,55 +35,17 @@ const renderIcon = (iconName: string) => {
  * - 动画效果和交互反馈
  */
 export const NoteToolbar = memo<NoteToolbarProps>(
-  ({
-    noteId,
-    visible,
-    onAction,
-    onClose,
-    color,
-    hasAIContent = false,
-    isAIGenerating = false,
-  }) => {
+  ({ noteId, visible, onAction, onClose, color }) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
-    // const [showAIGeneration, setShowAIGeneration] = useState(false);
-    const [currentNoteColor, setCurrentNoteColor] = useState(color); // 用 props.color 初始化
+    const [currentNoteColor, setCurrentNoteColor] = useState(color);
     const toolbarRef = useRef<HTMLDivElement>(null);
     const colorPickerRef = useRef<HTMLDivElement>(null);
 
-    // 动态生成按钮列表
-    const getVisibleButtons = useCallback(() => {
-      const buttons = [];
-
-      // AI相关按钮
-      if (isAIGenerating) {
-        // 正在生成时，只显示AI设置
-        buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
-      } else if (hasAIContent) {
-        // 有AI内容时，只显示AI设置
-        buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
-      } else {
-        // 没有AI内容时
-        buttons.push(
-          AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-generate")!
-        );
-        buttons.push(AI_TOOLBAR_BUTTONS.find((btn) => btn.id === "ai-config")!);
-      }
-
-      // 基础功能按钮
-      buttons.push(...BASE_TOOLBAR_BUTTONS);
-
-      return buttons.filter(Boolean);
-    }, [hasAIContent, isAIGenerating]); // 处理按钮点击
+    // 处理按钮点击
     const handleButtonClick = useCallback(
       (action: ToolbarAction) => {
         if (action === "color") {
           setShowColorPicker(!showColorPicker);
-          return;
-        }
-
-        if (action === "ai-config") {
-          // 触发AI配置，这里可以打开设置模态框的AI标签页
-          onAction?.("ai-config", { noteId });
           return;
         }
 
@@ -177,7 +130,7 @@ export const NoteToolbar = memo<NoteToolbarProps>(
         onClick={(e) => e.stopPropagation()}
         data-note-toolbar
       >
-        {getVisibleButtons().map((button, index) => (
+        {BASE_TOOLBAR_BUTTONS.map((button, index) => (
           <React.Fragment key={button.id}>
             {button.separator && index > 0 && (
               <div className={styles.separator} />

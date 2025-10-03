@@ -13,11 +13,6 @@ export const ZoomIndicator: React.FC = () => {
   // 固定样式 - 右下角位置
   const indicatorStyle = {
     position: "fixed" as const,
-    background: "var(--color-bg-elevated)",
-    border: "1px solid var(--color-border)",
-    borderRadius: "6px",
-    padding: "8px 12px",
-    boxShadow: "var(--box-shadow-secondary)",
     zIndex: 999,
     fontSize: "12px",
     fontWeight: 600,

@@ -35,7 +35,7 @@ import {
   RobotOutlined,
   EyeOutlined,
   DatabaseOutlined,
-  KeyOutlined,
+  // KeyOutlined, // 暂时不用
   CloudOutlined,
   InfoCircleOutlined,
   FileTextOutlined,
@@ -59,7 +59,7 @@ export const MENU_ITEMS: SettingMenuItem[] = [
     icon: React.createElement(DatabaseOutlined),
     label: "数据设置",
   },
-  { key: "shortcuts", icon: React.createElement(KeyOutlined), label: "快捷键" },
+  // { key: "shortcuts", icon: React.createElement(KeyOutlined), label: "快捷键" }, // 暂时屏蔽
   {
     key: "prompt-templates",
     icon: React.createElement(FileTextOutlined),
