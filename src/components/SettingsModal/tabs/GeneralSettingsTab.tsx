@@ -26,7 +26,7 @@
  */
 
 import React from "react";
-import { Switch, Select, Typography, Card } from "antd";
+import { Switch, Select, Typography, Card, message } from "antd";
 import type { GeneralSettings } from "../types";
 import { LANGUAGE_OPTIONS } from "../constants";
 import styles from "../index.module.css";
@@ -43,91 +43,99 @@ export interface GeneralSettingsTabProps {
 
 const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
   settings,
-  onSettingChange,
 }) => {
+  const [messageApi, contextHolder] = message.useMessage();
+  const handleSoon = () => {
+    messageApi.info("该功能即将上线");
+  };
   return (
-    <div className={styles.contentSection}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        {/* 应用行为 */}
-        <Card size="small" title="应用行为" style={{ flex: "0 0 auto" }}>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-          >
+    <>
+      {contextHolder}
+      <div className={styles.contentSection}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* 应用行为 */}
+          <Card size="small" title="应用行为" style={{ flex: "0 0 auto" }}>
             <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
+              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
             >
-              <div>
-                <Text strong>恢复会话</Text>
-                <div
-                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
-                >
-                  启动时恢复上次的笔记状态
-                </div>
-              </div>
-              <Switch
-                checked={settings.restoreSession}
-                onChange={(checked) =>
-                  onSettingChange("restoreSession", checked)
-                }
-              />
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <Text strong>系统通知</Text>
-                <div
-                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
-                >
-                  接收系统提醒和通知
-                </div>
-              </div>
-              <Switch
-                checked={settings.systemNotifications}
-                onChange={(checked) =>
-                  onSettingChange("systemNotifications", checked)
-                }
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* 语言与地区 */}
-        <Card size="small" title="语言与地区" style={{ flex: "0 0 auto" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <Text strong>界面语言</Text>
               <div
-                style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                选择应用界面显示语言
+                <div>
+                  <Text strong>恢复会话</Text>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      marginTop: "2px",
+                    }}
+                  >
+                    启动时恢复上次的笔记状态
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.restoreSession}
+                  onChange={handleSoon}
+                />
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <Text strong>系统通知</Text>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      marginTop: "2px",
+                    }}
+                  >
+                    接收系统提醒和通知
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.systemNotifications}
+                  onChange={handleSoon}
+                />
               </div>
             </div>
-            <Select
-              style={{ width: 180 }}
-              value={settings.language}
-              onChange={(value) => onSettingChange("language", value)}
-              options={[...LANGUAGE_OPTIONS]}
-            />
-          </div>
-        </Card>
+          </Card>
+          {/* 语言与地区 */}
+          <Card size="small" title="语言与地区" style={{ flex: "0 0 auto" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <Text strong>界面语言</Text>
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  选择应用界面显示语言
+                </div>
+              </div>
+              <Select
+                style={{ width: 180 }}
+                value={settings.language}
+                onChange={handleSoon}
+                options={[...LANGUAGE_OPTIONS]}
+              />
+            </div>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
