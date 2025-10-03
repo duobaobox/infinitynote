@@ -193,8 +193,20 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
     return "创建空白便签";
   };
 
+  // 获取容器实际高度，设置CSS变量
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.style.setProperty(
+        "--console-container-height",
+        `${containerRef.current.offsetHeight}px`
+      );
+    }
+  });
+
   return (
     <div
+      ref={containerRef}
       className={styles.consoleContainer}
       data-loading={loading || status === "loading"}
       data-connected={isConnectedMode}
