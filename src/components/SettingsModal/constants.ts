@@ -38,6 +38,7 @@ import {
   KeyOutlined,
   CloudOutlined,
   InfoCircleOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 
 // ==================== 菜单配置 ====================
@@ -59,6 +60,11 @@ export const MENU_ITEMS: SettingMenuItem[] = [
     label: "数据设置",
   },
   { key: "shortcuts", icon: React.createElement(KeyOutlined), label: "快捷键" },
+  {
+    key: "prompt-templates",
+    icon: React.createElement(FileTextOutlined),
+    label: "提示词模板",
+  },
   { key: "cloud", icon: React.createElement(CloudOutlined), label: "云同步" },
   {
     key: "about",

@@ -29,6 +29,7 @@ export { default as GeneralSettingsTab } from "./GeneralSettingsTab";
 export { default as DisplaySettingsTab } from "./DisplaySettingsTab";
 export { default as DataSettingsTab } from "./DataSettingsTab";
 export { default as ShortcutsSettingsTab } from "./ShortcutsSettingsTab";
+export { default as PromptTemplatesSettingsTab } from "./PromptTemplatesSettingsTab";
 export { default as CloudSettingsTab } from "./CloudSettingsTab";
 export { default as AboutSettingsTab } from "./AboutSettingsTab";
 

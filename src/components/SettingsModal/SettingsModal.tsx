@@ -59,6 +59,7 @@ import {
   DisplaySettingsTab,
   DataSettingsTab,
   ShortcutsSettingsTab,
+  PromptTemplatesSettingsTab,
   CloudSettingsTab,
   AboutSettingsTab,
 } from "./tabs";
@@ -327,6 +328,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
             viewShortcuts={viewShortcuts}
           />
         );
+      case "prompt-templates":
+        return <PromptTemplatesSettingsTab />;
       case "cloud":
         return <CloudSettingsTab settings={settings.cloud} />;
       case "about":

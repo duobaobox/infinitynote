@@ -61,6 +61,7 @@ export type SettingTabKey =
   | "display" // 显示设置
   | "data" // 数据设置
   | "shortcuts" // 快捷键
+  | "prompt-templates" // AI提示词模板
   | "cloud" // 云同步
   | "about"; // 关于我们
 
