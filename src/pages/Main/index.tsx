@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 // 引入图标注册表
 import { iconRegistry } from "../../utils/iconRegistry";
 import type { IconType } from "../../utils/iconRegistry";
@@ -40,7 +40,9 @@ import {
   Space, // 用于操作按钮组的间距控制
   Splitter, // 用于分隔画布列表和便签列表区域
   App, // 用于提供Context
+  message, // 用于消息提示
 } from "antd";
+import type { InputRef } from "antd";
 // 引入CSS模块样式
 import styles from "./index.module.css";
 
@@ -144,6 +146,7 @@ const Main: React.FC = () => {
     setActiveCanvas,
     createCanvas,
     deleteCanvas,
+    updateCanvas,
     focusToNote,
   } = useCanvasStore();
 
@@ -373,6 +376,67 @@ const Main: React.FC = () => {
     setIsDragMode(enabled);
   }, []);
 
+  // 画布名称编辑状态
+  const [editingCanvasId, setEditingCanvasId] = useState<string | null>(null);
+  const [editingCanvasName, setEditingCanvasName] = useState<string>("");
+  const canvasNameInputRef = useRef<InputRef>(null);
+
+  // 开始编辑画布名称
+  const handleCanvasNameDoubleClick = useCallback(
+    (e: React.MouseEvent, canvas: (typeof canvases)[0]) => {
+      e.stopPropagation(); // 阻止触发画布切换
+      setEditingCanvasId(canvas.id);
+      setEditingCanvasName(canvas.name);
+      // 延迟聚焦，确保 input 已渲染
+      setTimeout(() => {
+        canvasNameInputRef.current?.focus();
+        canvasNameInputRef.current?.select();
+      }, 0);
+    },
+    []
+  );
+
+  // 保存画布名称
+  const handleCanvasNameSave = useCallback(
+    async (canvasId: string) => {
+      const newName = editingCanvasName.trim();
+      if (!newName) {
+        message.warning("画布名称不能为空");
+        return;
+      }
+
+      try {
+        await updateCanvas(canvasId, { name: newName });
+        message.success("画布名称已更新");
+        setEditingCanvasId(null);
+      } catch (error) {
+        console.error("❌ 更新画布名称失败:", error);
+        message.error("更新失败，请重试");
+      }
+    },
+    [editingCanvasName, updateCanvas]
+  );
+
+  // 取消编辑
+  const handleCanvasNameCancel = useCallback(() => {
+    setEditingCanvasId(null);
+    setEditingCanvasName("");
+  }, []);
+
+  // 处理编辑输入框的键盘事件
+  const handleCanvasNameKeyDown = useCallback(
+    (e: React.KeyboardEvent, canvasId: string) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleCanvasNameSave(canvasId);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        handleCanvasNameCancel();
+      }
+    },
+    [handleCanvasNameSave, handleCanvasNameCancel]
+  );
+
   // 处理便签点击 - 聚焦到画布中的便签并置顶
   const handleNoteClick = useCallback(
     async (note: Note) => {
@@ -547,7 +611,33 @@ const Main: React.FC = () => {
         <div className={styles.canvasItemContent}>
           {/* 标题行 */}
           <div className={styles.canvasItemTitleRow}>
-            <div className={styles.canvasTitle}>{canvas.name}</div>
+            {editingCanvasId === canvas.id ? (
+              // 编辑模式：显示输入框
+              <Input
+                ref={canvasNameInputRef}
+                value={editingCanvasName}
+                onChange={(e) => setEditingCanvasName(e.target.value)}
+                onBlur={() => handleCanvasNameSave(canvas.id)}
+                onKeyDown={(e) => handleCanvasNameKeyDown(e, canvas.id)}
+                size="small"
+                style={{
+                  flex: 1,
+                  fontSize: "14px",
+                  lineHeight: "22px",
+                  padding: "0 4px",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              // 显示模式：双击编辑
+              <div
+                className={styles.canvasTitle}
+                onDoubleClick={(e) => handleCanvasNameDoubleClick(e, canvas)}
+                title="双击编辑画布名称"
+              >
+                {canvas.name}
+              </div>
+            )}
             {/* 删除按钮或星标图标 */}
             {canvas.isDefault ? (
               // 默认画布显示星标（不可删除）
