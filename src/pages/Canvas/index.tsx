@@ -795,78 +795,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
             data-smooth-zoom={displaySettings.smoothZoom}
             data-dragging={isPanning}
           >
-            {/* 🎯 临时：画布中心标记（测试用） */}
-            <div
-              style={{
-                position: "absolute",
-                left: "-25px",
-                top: "-25px",
-                width: "50px",
-                height: "50px",
-                pointerEvents: "none",
-                zIndex: 9999,
-              }}
-            >
-              {/* X 标记 */}
-              <svg width="50" height="50" style={{ overflow: "visible" }}>
-                {/* 红色 X */}
-                <line
-                  x1="10"
-                  y1="10"
-                  x2="40"
-                  y2="40"
-                  stroke="red"
-                  strokeWidth="3"
-                />
-                <line
-                  x1="40"
-                  y1="10"
-                  x2="10"
-                  y2="40"
-                  stroke="red"
-                  strokeWidth="3"
-                />
-                {/* 白色外框，增强可见性 */}
-                <line
-                  x1="10"
-                  y1="10"
-                  x2="40"
-                  y2="40"
-                  stroke="white"
-                  strokeWidth="5"
-                  opacity="0.5"
-                />
-                <line
-                  x1="40"
-                  y1="10"
-                  x2="10"
-                  y2="40"
-                  stroke="white"
-                  strokeWidth="5"
-                  opacity="0.5"
-                />
-                {/* 中心圆点 */}
-                <circle
-                  cx="25"
-                  cy="25"
-                  r="3"
-                  fill="red"
-                  stroke="white"
-                  strokeWidth="1"
-                />
-                {/* 坐标文字 */}
-                <text
-                  x="25"
-                  y="60"
-                  textAnchor="middle"
-                  fill="red"
-                  fontSize="12"
-                  fontWeight="bold"
-                >
-                  (0, 0)
-                </text>
-              </svg>
-            </div>
+            {/* 便签列表 */}
 
             {/* 便签列表 */}
             <VirtualizedNoteContainer

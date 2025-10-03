@@ -76,7 +76,16 @@ const logWithDedup = (message: string, ...args: any[]) => {
  */
 const Main: React.FC = () => {
   // 控制侧边栏折叠状态
-  const [collapsed, setCollapsed] = useState(false);
+  // 初始化时从 localStorage 读取侧边栏折叠状态
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem("sidebarCollapsed") === "true"
+  );
+
+  // 包装 setCollapsed，持久化到 localStorage
+  const handleSetCollapsed = (nextValue: boolean) => {
+    setCollapsed(nextValue);
+    localStorage.setItem("sidebarCollapsed", String(nextValue));
+  };
   // 控制设置弹窗状态
   const [settingsOpen, setSettingsOpen] = useState(false);
   // 控制初始化状态，防止重复初始化
@@ -861,7 +870,7 @@ const Main: React.FC = () => {
                 type="text"
                 size="small"
                 icon={<DynamicIcon type="MenuFoldOutlined" />}
-                onClick={() => setCollapsed(true)}
+                onClick={() => handleSetCollapsed(true)}
               ></Button>
               <Button
                 type="text"
@@ -951,7 +960,7 @@ const Main: React.FC = () => {
         <Button
           type="text"
           icon={<DynamicIcon type="MenuUnfoldOutlined" />}
-          onClick={() => setCollapsed(false)}
+          onClick={() => handleSetCollapsed(false)}
           className={styles.floatingCollapseButton}
         />
       )}
