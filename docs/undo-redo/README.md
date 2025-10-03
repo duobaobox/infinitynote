@@ -17,7 +17,7 @@
 
 ### UI 按钮
 
-撤销/重做按钮位于画布右下角，点击即可执行相应操作。
+撤销/重做按钮位于**左侧边栏顶部**，刷新按钮右边，点击即可执行相应操作。按钮状态会根据历史记录自动启用/禁用。
 
 ## ✨ 核心特性
 
@@ -74,18 +74,18 @@ src/
 │   └── canvasCommands.ts        # 画布相关命令
 ├── utils/
 │   └── historyHelper.ts         # 便捷工具类
-├── hooks/
-│   └── useHistoryShortcuts.ts   # 全局快捷键Hook
-└── components/
-    └── HistoryIndicator/        # UI指示器组件
+└── hooks/
+    └── useHistoryShortcuts.ts   # 全局快捷键Hook
 ```
+
+## 🔧 集成状态
 
 ## 🔧 集成状态
 
 ### ✅ 已集成
 
 - [x] App.tsx - 全局快捷键
-- [x] Canvas 页面 - UI 组件
+- [x] Main 页面 - 侧边栏撤销/重做按钮
 - [x] noteStore.createNote() - 创建便签
 - [x] noteStore.deleteNote() - 删除便签
 - [x] noteStore.moveNote() - 移动便签

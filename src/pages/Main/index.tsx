@@ -10,6 +10,9 @@ import {
 } from "../../store/canvasStore";
 import { useConnectionStore } from "../../store/connectionStore";
 import { useFocusModeStore } from "../../store/focusModeStore";
+import { useHistoryStore } from "../../store/historyStore";
+// 引入历史工具
+import { HistoryHelper } from "../../utils/historyHelper";
 // 引入主题
 import { useTheme } from "../../theme";
 import type { Position, Note } from "../../types";
@@ -139,6 +142,9 @@ const Main: React.FC = () => {
     deleteCanvas,
     focusToNote,
   } = useCanvasStore();
+
+  // 历史记录状态
+  const { canUndo, canRedo } = useHistoryStore();
 
   // 连接状态管理
   const { connectedNotes } = useConnectionStore();
@@ -864,7 +870,7 @@ const Main: React.FC = () => {
             {/* 弹性间距，将两侧元素分开 */}
             <div style={{ flex: 1 }}></div>
 
-            {/* 操作按钮组（折叠、刷新、撤销、撤回） */}
+            {/* 操作按钮组（折叠、刷新、撤销、重做） */}
             <Space size={4} className={styles.actionButtons}>
               <Button
                 type="text"
@@ -883,11 +889,17 @@ const Main: React.FC = () => {
                 type="text"
                 size="small"
                 icon={<DynamicIcon type="LeftOutlined" />}
+                onClick={() => HistoryHelper.undo().catch(console.error)}
+                disabled={!canUndo}
+                title="撤销 (Ctrl+Z / ⌘Z)"
               ></Button>
               <Button
                 type="text"
                 size="small"
                 icon={<DynamicIcon type="RightOutlined" />}
+                onClick={() => HistoryHelper.redo().catch(console.error)}
+                disabled={!canRedo}
+                title="重做 (Ctrl+Y / ⌘⇧Z)"
               ></Button>
             </Space>
           </div>

@@ -28,31 +28,34 @@
 
 ## 📊 代码质量评估结果
 
-### 核心代码文件（9 个）
+### 核心代码文件（8 个）
 
-| 文件                                               | 作用         | 状态    | 评分       |
-| -------------------------------------------------- | ------------ | ------- | ---------- |
-| `src/store/historyStore.ts`                        | 历史管理核心 | ✅ 优秀 | ⭐⭐⭐⭐⭐ |
-| `src/types/history.ts`                             | 类型定义     | ✅ 完整 | ⭐⭐⭐⭐⭐ |
-| `src/commands/noteCommands.ts`                     | 便签命令     | ✅ 完整 | ⭐⭐⭐⭐⭐ |
-| `src/commands/canvasCommands.ts`                   | 画布命令     | ✅ 完整 | ⭐⭐⭐⭐⭐ |
-| `src/commands/index.ts`                            | 命令导出     | ✅ 简洁 | ⭐⭐⭐⭐⭐ |
-| `src/utils/historyHelper.ts`                       | 工具类       | ✅ 优秀 | ⭐⭐⭐⭐⭐ |
-| `src/hooks/useHistoryShortcuts.ts`                 | 快捷键 Hook  | ✅ 完整 | ⭐⭐⭐⭐⭐ |
-| `src/components/HistoryIndicator/index.tsx`        | UI 组件      | ✅ 完整 | ⭐⭐⭐⭐⭐ |
-| `src/components/HistoryIndicator/index.module.css` | 组件样式     | ✅ 完整 | ⭐⭐⭐⭐⭐ |
+| 文件                               | 作用         | 状态    | 评分       |
+| ---------------------------------- | ------------ | ------- | ---------- |
+| `src/store/historyStore.ts`        | 历史管理核心 | ✅ 优秀 | ⭐⭐⭐⭐⭐ |
+| `src/types/history.ts`             | 类型定义     | ✅ 完整 | ⭐⭐⭐⭐⭐ |
+| `src/commands/noteCommands.ts`     | 便签命令     | ✅ 完整 | ⭐⭐⭐⭐⭐ |
+| `src/commands/canvasCommands.ts`   | 画布命令     | ✅ 完整 | ⭐⭐⭐⭐⭐ |
+| `src/commands/index.ts`            | 命令导出     | ✅ 简洁 | ⭐⭐⭐⭐⭐ |
+| `src/utils/historyHelper.ts`       | 工具类       | ✅ 优秀 | ⭐⭐⭐⭐⭐ |
+| `src/hooks/useHistoryShortcuts.ts` | 快捷键 Hook  | ✅ 完整 | ⭐⭐⭐⭐⭐ |
+| `src/hooks/index.ts`               | Hook 导出    | ✅ 更新 | ⭐⭐⭐⭐⭐ |
 
 **总评**: 所有核心文件质量优秀，无需修改
 
+**说明**: HistoryIndicator 组件已移除，撤销/重做按钮集成到侧边栏
+
 ### 集成文件（3 个）
 
-| 文件                         | 修改内容             | 状态    | 评分       |
-| ---------------------------- | -------------------- | ------- | ---------- |
-| `src/App.tsx`                | 启用全局快捷键       | ✅ 完成 | ⭐⭐⭐⭐⭐ |
-| `src/pages/Canvas/index.tsx` | 集成 UI 组件         | ✅ 完成 | ⭐⭐⭐⭐⭐ |
-| `src/store/noteStore.ts`     | 5 个方法集成历史记录 | ✅ 完成 | ⭐⭐⭐⭐⭐ |
+| 文件                       | 修改内容                | 状态    | 评分       |
+| -------------------------- | ----------------------- | ------- | ---------- |
+| `src/App.tsx`              | 启用全局快捷键          | ✅ 完成 | ⭐⭐⭐⭐⭐ |
+| `src/pages/Main/index.tsx` | 侧边栏集成撤销/重做按钮 | ✅ 完成 | ⭐⭐⭐⭐⭐ |
+| `src/store/noteStore.ts`   | 5 个方法集成历史记录    | ✅ 完成 | ⭐⭐⭐⭐⭐ |
 
 **总评**: 所有集成正确完成，无错误
+
+**UI 集成**: 撤销/重做按钮位于左侧边栏顶部工具栏，刷新按钮右侧
 
 ### 文档文件（5 个）
 
