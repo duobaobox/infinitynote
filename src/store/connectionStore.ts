@@ -61,11 +61,13 @@ export const useConnectionStore = create<ConnectionState & ConnectionActions>()(
 
         // 检查是否已连接
         if (state.isNoteConnected(note.id)) {
+          console.log("⚠️ 便签已连接，跳过:", note.title || note.id);
           return false;
         }
 
         // 检查是否超过最大连接数
         if (!state.canAddConnection()) {
+          console.log("⚠️ 已达到最大连接数:", state.maxConnections);
           return false;
         }
 
@@ -79,6 +81,13 @@ export const useConnectionStore = create<ConnectionState & ConnectionActions>()(
           connectionIndex: newIndex,
         };
 
+        console.log("✅ 添加便签连接:", {
+          title: note.title || "无标题",
+          id: note.id,
+          index: newIndex,
+          totalConnections: newIndex,
+        });
+
         set({
           connectedNotes: [...state.connectedNotes, updatedNote],
           isVisible: true, // 有连接时显示插槽容器
@@ -90,6 +99,12 @@ export const useConnectionStore = create<ConnectionState & ConnectionActions>()(
       removeConnection: (noteId: string) => {
         const state = get();
 
+        const removedNote = state.connectedNotes.find((n) => n.id === noteId);
+        console.log("🗑️ 移除便签连接:", {
+          title: removedNote?.title || "无标题",
+          id: noteId,
+        });
+
         const updatedNotes = state.connectedNotes.filter(
           (note) => note.id !== noteId
         );
@@ -100,6 +115,8 @@ export const useConnectionStore = create<ConnectionState & ConnectionActions>()(
           connectionIndex: index + 1,
         }));
 
+        console.log("  📊 剩余连接数:", reindexedNotes.length);
+
         set({
           connectedNotes: reindexedNotes,
           isVisible: reindexedNotes.length > 0, // 没有连接时隐藏插槽容器
@@ -107,6 +124,9 @@ export const useConnectionStore = create<ConnectionState & ConnectionActions>()(
       },
 
       clearAllConnections: () => {
+        const state = get();
+        console.log("🧹 清空所有连接，共", state.connectedNotes.length, "个");
+
         set({
           connectedNotes: [],
           isVisible: false,
@@ -115,6 +135,10 @@ export const useConnectionStore = create<ConnectionState & ConnectionActions>()(
 
       // 模式管理
       setConnectionMode: (mode: ConnectionModeType) => {
+        console.log(
+          "🔄 切换连接模式:",
+          mode === ConnectionMode.SUMMARY ? "汇总模式" : "替换模式"
+        );
         set({ connectionMode: mode });
       },
 

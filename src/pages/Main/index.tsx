@@ -763,22 +763,48 @@ const Main: React.FC = () => {
 
   // 处理AI生成的函数，支持连接模式和普通模式
   const handleAddNote = useCallback(
-    async (prompt?: string, isConnectedMode: boolean = false) => {
+    async (prompt?: string, _isConnectedMode: boolean = false) => {
+      // 注意：_isConnectedMode 参数保留用于API兼容性，实际使用 latestConnectedNotes.length 判断
       if (!activeCanvasId) {
         console.error("❌ 没有活动画布");
         return;
       }
 
       try {
-        if (isConnectedMode && connectedNotes.length > 0) {
-          // 连接模式：汇总连接的便签内容
-          console.log("🤖 连接模式 - 汇总便签内容，提示:", prompt);
+        // 【健壮性增强1】从 store 直接获取最新的连接便签状态
+        const latestConnectedNotes =
+          useConnectionStore.getState().connectedNotes;
+        const actualIsConnectedMode = latestConnectedNotes.length > 0;
 
-          // 检查AI配置是否完整（包括API密钥和模型配置）
+        console.log("📋 准备发送AI请求:", {
+          prompt: prompt || "(空)",
+          isConnectedMode: actualIsConnectedMode,
+          connectedNotesCount: latestConnectedNotes.length,
+        });
+
+        if (actualIsConnectedMode && latestConnectedNotes.length > 0) {
+          // 连接模式：汇总连接的便签内容
+          console.log("🤖 连接模式 - 汇总便签内容");
+          console.log("  📌 提示词:", prompt || "(空)");
+          console.log("  📌 连接的便签数量:", latestConnectedNotes.length);
+          console.log(
+            "  📌 便签标题:",
+            latestConnectedNotes.map((n) => n.title || "无标题").join(", ")
+          );
+
+          // 【健壮性增强2】在发送请求前重新获取最新的AI配置
           console.log("🔍 开始检查AI配置完整性...");
           const { aiService } = await import("../../services/aiService");
+
+          // 强制重新加载配置，确保获取最新的模型设置
+          const currentConfig = aiService.getActiveConfig();
+          console.log("  🔧 当前使用的模型:", {
+            provider: currentConfig.provider,
+            model: currentConfig.model,
+          });
+
           const configStatus = await aiService.isCurrentConfigurationReady();
-          console.log("🔍 AI配置检查结果:", configStatus);
+          console.log("  ✅ AI配置检查结果:", configStatus);
 
           if (configStatus.status !== "ready") {
             console.log("❌ AI配置不完整，显示错误提醒...");
@@ -825,8 +851,9 @@ const Main: React.FC = () => {
             return; // 阻止便签创建
           }
 
-          // 构建AI提示词，包含所有连接便签的内容
-          const connectedNotesContent = connectedNotes
+          // 【健壮性增强3】构建AI提示词，使用最新的连接便签内容
+          console.log("📝 构建AI提示词...");
+          const connectedNotesContent = latestConnectedNotes
             .map(
               (note, index) =>
                 `便签${index + 1}: ${note.title || "无标题"}\n内容: ${
@@ -838,6 +865,9 @@ const Main: React.FC = () => {
           const aiPrompt = `请根据以下便签内容进行处理（指令：${
             prompt || "汇总"
           }）：\n\n${connectedNotesContent}`;
+
+          console.log("  📌 最终AI提示词长度:", aiPrompt.length);
+          console.log("  📌 提示词预览:", aiPrompt.substring(0, 200) + "...");
 
           // 获取智能位置
           const { generateSmartPosition } = await import(
@@ -854,6 +884,8 @@ const Main: React.FC = () => {
             currentCanvasNotes
           );
 
+          console.log("🎯 创建AI便签占位符，位置:", position);
+
           // 创建AI便签占位符
           const noteId = await createAINoteFromPrompt(
             activeCanvasId,
@@ -863,6 +895,14 @@ const Main: React.FC = () => {
 
           // 记录当前生成的便签ID
           setCurrentGeneratingNoteId(noteId);
+
+          console.log("🚀 开始AI生成，便签ID:", noteId);
+          console.log(
+            "  📌 使用模型:",
+            currentConfig.provider,
+            "/",
+            currentConfig.model
+          );
 
           // 开始AI生成
           await startAIGeneration(noteId, aiPrompt);
@@ -875,13 +915,22 @@ const Main: React.FC = () => {
           // 普通模式：根据提示词创建便签或创建空白便签
           if (prompt && prompt.trim()) {
             // 有提示词：使用AI生成便签
-            console.log("🤖 AI生成便签，提示:", prompt);
+            console.log("🤖 普通模式 - AI生成便签");
+            console.log("  📌 提示词:", prompt);
 
-            // 检查AI配置是否完整（包括API密钥和模型配置）
+            // 【健壮性增强4】在发送请求前重新获取最新的AI配置
             console.log("🔍 开始检查AI配置完整性...");
             const { aiService } = await import("../../services/aiService");
+
+            // 强制重新加载配置，确保获取最新的模型设置
+            const currentConfig = aiService.getActiveConfig();
+            console.log("  🔧 当前使用的模型:", {
+              provider: currentConfig.provider,
+              model: currentConfig.model,
+            });
+
             const configStatus = await aiService.isCurrentConfigurationReady();
-            console.log("🔍 AI配置检查结果:", configStatus);
+            console.log("  ✅ AI配置检查结果:", configStatus);
 
             if (configStatus.status !== "ready") {
               console.log("❌ AI配置不完整，显示错误提醒...");
@@ -943,6 +992,8 @@ const Main: React.FC = () => {
               currentCanvasNotes
             );
 
+            console.log("🎯 创建AI便签占位符，位置:", position);
+
             // 创建AI便签占位符
             const noteId = await createAINoteFromPrompt(
               activeCanvasId,
@@ -952,6 +1003,14 @@ const Main: React.FC = () => {
 
             // 记录当前生成的便签ID
             setCurrentGeneratingNoteId(noteId);
+
+            console.log("🚀 开始AI生成，便签ID:", noteId);
+            console.log(
+              "  📌 使用模型:",
+              currentConfig.provider,
+              "/",
+              currentConfig.model
+            );
 
             // 开始AI生成
             await startAIGeneration(noteId, prompt);
@@ -984,7 +1043,6 @@ const Main: React.FC = () => {
     },
     [
       activeCanvasId,
-      connectedNotes,
       createAINoteFromPrompt,
       startAIGeneration,
       viewport,

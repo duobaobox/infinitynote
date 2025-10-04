@@ -102,6 +102,11 @@ export const CanvasToolbar: React.FC = () => {
     try {
       setIsChangingModel(true);
 
+      console.log("🔄 开始切换模型:", {
+        from: `${currentProvider}/${currentModel}`,
+        to: `${providerId}/${modelName}`,
+      });
+
       // 调用 AI 服务应用新配置
       await aiService.applyConfiguration(providerId, modelName);
 
@@ -113,6 +118,9 @@ export const CanvasToolbar: React.FC = () => {
 
       // 触发全局设置变化事件，通知其他组件
       window.dispatchEvent(new Event("settingsChanged"));
+
+      // 显示成功提示（轻量级）
+      console.log("💡 提示: 新模型将在下次AI请求时生效");
     } catch (error) {
       console.error("❌ 切换模型失败:", error);
 
