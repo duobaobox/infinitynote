@@ -80,16 +80,19 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
   return (
     <div className={styles.zoomIndicator}>
       <Space
-        size={8}
+        direction="vertical"
+        size={6}
         align="center"
-        split={<Divider type="vertical" style={{ margin: 0 }} />}
+        split={
+          <Divider type="horizontal" style={{ margin: 0, width: "100%" }} />
+        }
       >
         {/* 画布操作区 */}
-        <Space size={8} align="center">
+        <Space direction="vertical" size={4} align="center">
           {/* 拖动画布按钮 */}
           <Tooltip
             title={isDragMode ? "关闭拖动模式" : "开启拖动模式（快捷键：空格）"}
-            placement="top"
+            placement="left"
           >
             <Button
               type={isDragMode ? "primary" : "text"}
@@ -103,7 +106,7 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
           </Tooltip>
 
           {/* 整理便签按钮 */}
-          <Tooltip title="一键整理便签" placement="top">
+          <Tooltip title="一键整理便签" placement="left">
             <Button
               type="text"
               size="small"
@@ -117,9 +120,9 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
         </Space>
 
         {/* 缩放控制区 */}
-        <Space size={8} align="center">
+        <Space direction="vertical" size={4} align="center">
           {/* 缩小按钮 */}
-          <Tooltip title="缩小画布" placement="top">
+          <Tooltip title="缩小画布" placement="left">
             <Button
               type="text"
               size="small"
@@ -131,11 +134,14 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
 
           {/* 百分比显示 */}
           <div className={styles.zoomPercentage}>
-            {Math.round(viewport.scale * 100)}%
+            <div className={styles.zoomNumber}>
+              {Math.round(viewport.scale * 100)}
+            </div>
+            <div className={styles.zoomPercent}>%</div>
           </div>
 
           {/* 放大按钮 */}
-          <Tooltip title="放大画布" placement="top">
+          <Tooltip title="放大画布" placement="left">
             <Button
               type="text"
               size="small"
@@ -146,7 +152,7 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
           </Tooltip>
 
           {/* 重置按钮 */}
-          <Tooltip title="重置视图" placement="top">
+          <Tooltip title="重置视图" placement="left">
             <Button
               type="text"
               size="small"

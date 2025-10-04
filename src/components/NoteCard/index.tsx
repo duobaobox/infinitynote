@@ -760,11 +760,13 @@ export const NoteCard = memo<NoteCardProps>(
 
     // 监听设置变化事件
     useEffect(() => {
-      const handleSettingsChange = (e: CustomEvent) => {
-        if (e.detail.section === "note") {
+      const handleSettingsChange = (e: Event) => {
+        // 安全检查：只处理包含 detail 的 CustomEvent
+        const customEvent = e as CustomEvent;
+        if (customEvent.detail && customEvent.detail.section === "note") {
           setNoteSettings((prev) => ({
             ...prev,
-            [e.detail.key]: e.detail.value,
+            [customEvent.detail.key]: customEvent.detail.value,
           }));
         }
       };
