@@ -248,7 +248,7 @@ class AIService {
    */
   private static readonly THINKING_SUPPORTED_MODELS = {
     deepseek: ["reasoner"], // DeepSeek 的推理模型支持思维链
-    zhipu: ["think"], // 智谱AI的思维模式模型支持思维链
+    zhipu: ["4.5", "4.6", "plus", "thinking", "alltools"], // 智谱AI的 GLM-4.5+ 系列和特殊模型支持思维链
     // 未来可以添加其他提供商的支持：
     // openai: ["o1-preview", "o1-mini"], // OpenAI 的推理模型
     // anthropic: ["claude-3-reasoning"], // Anthropic 的推理模型

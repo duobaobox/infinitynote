@@ -63,13 +63,20 @@ const PROVIDER_REGISTRY: Record<ProviderId, ProviderMetadata> = {
     description: "国产AI模型，支持思维链",
     website: "https://open.bigmodel.cn",
     supportedModels: [
-      "glm-4.5",
-      "glm-4.5-x",
-      "glm-4.5-air",
-      "glm-4.5v",
+      // GLM-4.6（最新）
+      "glm-4.6",
+      // GLM-4.5 系列
       "glm-4.5-flash",
+      "glm-4.5-air",
+      "glm-4.5-x",
+      "glm-4.5v",
+      "glm-4.5",
+      // GLM-4 系列
+      "glm-4-plus",
+      "glm-4-alltools",
+      "glm-4",
     ] as const,
-    defaultModel: "glm-4.5-flash",
+    defaultModel: "glm-4.6",
     supportsStreaming: true,
     supportsThinking: true,
     apiKeyPattern: /^[a-zA-Z0-9._-]{32,}$/,
