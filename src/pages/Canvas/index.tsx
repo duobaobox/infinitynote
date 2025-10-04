@@ -1116,7 +1116,18 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       </div>
 
       {/* 独立的缩放指示器 */}
-      <ZoomIndicator />
+      <ZoomIndicator
+        isDragMode={isDragMode}
+        onToggleDragMode={(enabled) => {
+          // 通过 Canvas props 传递给父组件
+          if (enabled !== isDragMode) {
+            // 触发自定义事件通知父组件
+            window.dispatchEvent(
+              new CustomEvent("toggleDragMode", { detail: { enabled } })
+            );
+          }
+        }}
+      />
 
       {/* 全局编辑状态提醒 */}
       {editAlert.show && (

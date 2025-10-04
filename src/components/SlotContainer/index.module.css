@@ -1,7 +1,7 @@
 /* 插槽容器 - 小巧精致，完美匹配设计稿 */
 .slotContainer {
   position: fixed;
-  bottom: calc(var(--console-container-height, 64px) + 36px);
+  bottom: calc(var(--console-container-height, 64px) + 44px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-bg-elevated);

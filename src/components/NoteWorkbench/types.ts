@@ -31,12 +31,6 @@ export interface NoteWorkbenchProps {
   currentGeneratingNoteId?: string;
   /** 连接的便签列表，用于确定是否处于连接模式 */
   connectedNotes?: ConnectedNote[];
-  /** 画布拖动模式 */
-  isDragMode?: boolean;
-  /** 拖动模式切换回调 */
-  onToggleDragMode?: (enabled: boolean) => void;
-  /** 整理便签回调 */
-  onOrganizeNotes?: () => void;
 }
 
 /**

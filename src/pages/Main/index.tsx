@@ -136,7 +136,6 @@ const Main: React.FC = () => {
     startAIGeneration,
     cancelAIGeneration,
     aiGenerating,
-    organizeCurrentCanvasNotes,
   } = useNoteStore();
   const {
     activeCanvasId,
@@ -375,37 +374,66 @@ const Main: React.FC = () => {
     setIsDragMode(enabled);
   }, []);
 
-  // 处理整理便签
-  const handleOrganizeNotes = useCallback(async () => {
-    if (!activeCanvasId) {
-      message.warning("没有活动画布");
-      return;
-    }
+  // 监听 ZoomIndicator 的拖动模式切换事件
+  useEffect(() => {
+    const handleToggleDragModeEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ enabled: boolean }>;
+      handleToggleDragMode(customEvent.detail.enabled);
+    };
 
-    const canvasNotes = getNotesByCanvas(activeCanvasId);
+    window.addEventListener("toggleDragMode", handleToggleDragModeEvent);
 
-    if (canvasNotes.length === 0) {
-      message.info("当前画布没有便签");
-      return;
-    }
+    return () => {
+      window.removeEventListener("toggleDragMode", handleToggleDragModeEvent);
+    };
+  }, [handleToggleDragMode]);
 
-    if (canvasNotes.length === 1) {
-      message.info("只有一个便签，无需整理");
-      return;
-    }
+  // 监听打开设置页面事件
+  useEffect(() => {
+    const handleOpenSettingsEvent = () => {
+      setSettingsOpen(true);
+      // CanvasToolbar 触发时会指定打开 model tab
+      // SettingsModal 会处理这个逻辑
+    };
 
-    try {
-      const hideLoading = message.loading("正在整理便签...", 0);
-      await organizeCurrentCanvasNotes(activeCanvasId);
-      hideLoading();
-      message.success(`✅ 已整理 ${canvasNotes.length} 个便签`);
-    } catch (error) {
-      console.error("整理便签失败:", error);
-      message.error(
-        `整理失败: ${error instanceof Error ? error.message : "未知错误"}`
-      );
-    }
-  }, [activeCanvasId, getNotesByCanvas, organizeCurrentCanvasNotes]);
+    window.addEventListener("openSettings", handleOpenSettingsEvent);
+
+    return () => {
+      window.removeEventListener("openSettings", handleOpenSettingsEvent);
+    };
+  }, []);
+
+  // 处理整理便签（已移至 ZoomIndicator，但保留函数以防需要）
+  // const handleOrganizeNotes = useCallback(async () => {
+  //   if (!activeCanvasId) {
+  //     message.warning("没有活动画布");
+  //     return;
+  //   }
+  //
+  //   const canvasNotes = getNotesByCanvas(activeCanvasId);
+  //
+  //   if (canvasNotes.length === 0) {
+  //     message.info("当前画布没有便签");
+  //     return;
+  //   }
+  //
+  //   if (canvasNotes.length === 1) {
+  //     message.info("只有一个便签，无需整理");
+  //     return;
+  //   }
+  //
+  //   try {
+  //     const hideLoading = message.loading("正在整理便签...", 0);
+  //     await organizeCurrentCanvasNotes(activeCanvasId);
+  //     hideLoading();
+  //     message.success(`✅ 已整理 ${canvasNotes.length} 个便签`);
+  //   } catch (error) {
+  //     console.error("整理便签失败:", error);
+  //     message.error(
+  //       `整理失败: ${error instanceof Error ? error.message : "未知错误"}`
+  //     );
+  //   }
+  // }, [activeCanvasId, getNotesByCanvas, organizeCurrentCanvasNotes]);
 
   // 画布名称编辑状态
   const [editingCanvasId, setEditingCanvasId] = useState<string | null>(null);
@@ -1126,9 +1154,6 @@ const Main: React.FC = () => {
             }
           }}
           onAddNote={handleAddNote}
-          isDragMode={isDragMode}
-          onToggleDragMode={handleToggleDragMode}
-          onOrganizeNotes={handleOrganizeNotes}
         />
       </Content>
 

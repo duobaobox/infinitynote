@@ -1,14 +1,13 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Input, Button, Tooltip } from "antd";
+import { Input, Button } from "antd";
 import {
   PlusOutlined,
   RobotOutlined,
   MergeOutlined,
   LoadingOutlined,
   CloseOutlined,
-  DragOutlined,
-  AppstoreOutlined,
 } from "@ant-design/icons";
+import { CanvasToolbar } from "../CanvasToolbar";
 import type { NoteWorkbenchProps, WorkbenchStatus } from "./types";
 import styles from "./index.module.css";
 
@@ -40,9 +39,6 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
   placeholder = "输入文本AI生成便签，留空创建空白便签...",
   aiGenerating = {},
   connectedNotes = [],
-  isDragMode = false,
-  onToggleDragMode,
-  onOrganizeNotes,
 }) => {
   // 内部状态管理
   const [inputValue, setInputValue] = useState(value);
@@ -128,6 +124,9 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
 
   // 检测是否有输入内容来决定按钮状态
   const hasPrompt = inputValue.trim().length > 0;
+
+  // 判断是否应该显示工具栏（有文本输入或有连接插槽时显示）
+  const shouldShowToolbar = hasPrompt || isConnectedMode;
 
   // 计算按钮状态
   const isButtonDisabled =
@@ -246,35 +245,12 @@ export const NoteWorkbench: React.FC<NoteWorkbenchProps> = ({
         </div>
       </div>
 
-      {/* 第二行：画布工具栏 */}
-      <div className={styles.canvasToolbarRow}>
-        <div className={styles.toolbarGroup}>
-          <Tooltip
-            title={isDragMode ? "关闭拖动模式" : "开启拖动模式（空格）"}
-            placement="top"
-          >
-            <Button
-              type="text"
-              size="small"
-              icon={<DragOutlined />}
-              onClick={() => onToggleDragMode?.(!isDragMode)}
-              className={`${styles.iconButton} ${
-                isDragMode ? styles.iconButtonActive : ""
-              }`}
-            />
-          </Tooltip>
-
-          <Tooltip title="一键整理便签" placement="top">
-            <Button
-              type="text"
-              size="small"
-              icon={<AppstoreOutlined />}
-              onClick={onOrganizeNotes}
-              className={styles.iconButton}
-            />
-          </Tooltip>
+      {/* 第二行：模型切换工具栏 - 仅在有输入文本或有连接插槽时显示 */}
+      {shouldShowToolbar && (
+        <div className={styles.canvasToolbarRow}>
+          <CanvasToolbar />
         </div>
-      </div>
+      )}
     </div>
   );
 };

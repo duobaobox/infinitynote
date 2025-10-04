@@ -30,11 +30,33 @@
   gap: 12px;
 }
 
-/* 第二行：画布工具栏 */
+/* 第二行：模型选择器 */
 .canvasToolbarRow {
   display: flex;
   justify-content: flex-start;
   width: 100%;
+  margin-top: 4px;
+  /* 添加过渡动画 */
+  opacity: 1;
+  max-height: 50px;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.2s ease, margin-top 0.2s ease;
+}
+
+/* 工具栏进入动画 */
+@keyframes toolbarSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.canvasToolbarRow {
+  animation: toolbarSlideIn 0.2s ease;
 }
 
 /* 工具栏按钮样式 */
