@@ -8,7 +8,8 @@ import { Button, Space, message } from "antd";
 import { useTestPanelStore } from "../../store/testPanelStore";
 
 export const TestPanelDemo: React.FC = () => {
-  const { addRequest, addResponse, addGeneration, toggleVisibility } = useTestPanelStore();
+  const { addRequest, addResponse, addGeneration, toggleVisibility } =
+    useTestPanelStore();
 
   const handleTestRequest = () => {
     const mockRequest = {
@@ -18,12 +19,19 @@ export const TestPanelDemo: React.FC = () => {
       model: "glm-4",
       endpoint: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer ***" },
-      body: JSON.stringify({
-        model: "glm-4",
-        messages: [{ role: "user", content: "写一首关于春天的诗" }],
-        stream: true
-      }, null, 2),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer ***",
+      },
+      body: JSON.stringify(
+        {
+          model: "glm-4",
+          messages: [{ role: "user", content: "写一首关于春天的诗" }],
+          stream: true,
+        },
+        null,
+        2
+      ),
       prompt: "写一首关于春天的诗",
       noteId: "test_note_12345678",
       requestSize: 256,
@@ -42,7 +50,7 @@ export const TestPanelDemo: React.FC = () => {
         status: 200,
         statusText: "OK",
         headers: { "content-type": "text/event-stream" },
-        body: "data: {\"choices\":[{\"delta\":{\"content\":\"春风轻拂\"}}]}\n\ndata: [DONE]",
+        body: 'data: {"choices":[{"delta":{"content":"春风轻拂"}}]}\n\ndata: [DONE]',
         duration: 1250,
         success: true,
         responseSize: 1024,
@@ -61,8 +69,8 @@ export const TestPanelDemo: React.FC = () => {
           requestId: mockRequest.id,
           noteId: mockRequest.noteId,
           timestamp: Date.now(),
-          finalContent: "<p>春风轻拂柳絮飞，<br>桃花满树笑微微。<br>鸟儿枝头唱新曲，<br>万物复苏展生机。</p>",
-          originalMarkdown: "春风轻拂柳絮飞，\n桃花满树笑微微。\n鸟儿枝头唱新曲，\n万物复苏展生机。",
+          finalContent:
+            "<p>春风轻拂柳絮飞，<br>桃花满树笑微微。<br>鸟儿枝头唱新曲，<br>万物复苏展生机。</p>",
           hasThinkingChain: false,
           aiData: {
             provider: "zhipu",
@@ -98,9 +106,7 @@ export const TestPanelDemo: React.FC = () => {
         <Button type="primary" onClick={toggleVisibility}>
           打开/关闭测试面板
         </Button>
-        <Button onClick={handleTestRequest}>
-          模拟AI生成
-        </Button>
+        <Button onClick={handleTestRequest}>模拟AI生成</Button>
       </Space>
     </div>
   );

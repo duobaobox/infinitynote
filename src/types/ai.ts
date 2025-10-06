@@ -45,7 +45,6 @@ export interface AICustomProperties {
 
     // 流式生成状态
     isStreaming?: boolean; // 是否正在流式生成
-    originalMarkdown?: string; // 原始Markdown内容（用于调试）
 
     // AI生成阶段状态 - 用于区分思维链生成和最终答案生成
     generationPhase?: AIGenerationPhase; // 当前生成阶段

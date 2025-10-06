@@ -436,7 +436,6 @@ export abstract class BaseAIProvider implements AIProvider {
             // 构建实时AI数据，包含当前的思维链信息
             const currentAIData = this.buildStreamingAIData(
               options,
-              fullMarkdown,
               thinkingChain
             );
             options.onStream?.(html, currentAIData);
@@ -478,7 +477,6 @@ export abstract class BaseAIProvider implements AIProvider {
             const html = md.render(fullMarkdown);
             const currentAIData = this.buildStreamingAIData(
               options,
-              fullMarkdown,
               thinkingChain
             );
             options.onStream?.(html, currentAIData);
@@ -537,7 +535,6 @@ export abstract class BaseAIProvider implements AIProvider {
             noteId: options.noteId,
             timestamp: Date.now(),
             finalContent: finalHtml, // 保存HTML格式的最终内容
-            originalMarkdown: fullMarkdown,
             hasThinkingChain: !!aiData?.thinkingChain,
             thinkingChain: aiData?.thinkingChain,
             aiData: {
@@ -608,7 +605,6 @@ export abstract class BaseAIProvider implements AIProvider {
       requestId: `req_${Date.now()}`,
       thinkingCollapsed: true,
       isStreaming: false,
-      originalMarkdown: cleanContent, // 使用清理后的内容
     };
 
     // 如果检测到思维链，添加思维链数据
@@ -631,7 +627,6 @@ export abstract class BaseAIProvider implements AIProvider {
    */
   protected buildStreamingAIData(
     options: AIGenerationOptions,
-    fullMarkdown: string,
     thinkingChain: any[]
   ): AICustomProperties["ai"] {
     const aiData: AICustomProperties["ai"] = {
@@ -643,7 +638,6 @@ export abstract class BaseAIProvider implements AIProvider {
       requestId: `req_${Date.now()}`,
       thinkingCollapsed: false, // 生成过程中默认展开
       isStreaming: true, // 正在流式生成
-      originalMarkdown: fullMarkdown,
     };
 
     // 如果有思维链数据，添加思维链结构

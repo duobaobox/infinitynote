@@ -15,7 +15,7 @@ import {
   MessageOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useTestPanelStore } from "../../store/testPanelStore";
 import styles from "./index.module.css";
@@ -29,14 +29,8 @@ interface TestPanelProps {
 }
 
 export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
-  const {
-    requests,
-    responses,
-    generations,
-    clearData,
-    exportData,
-    copyData,
-  } = useTestPanelStore();
+  const { requests, responses, generations, clearData, exportData, copyData } =
+    useTestPanelStore();
 
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [copyLoading, setCopyLoading] = useState(false);
@@ -120,12 +114,16 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
               {latestGeneration ? (
                 <>
                   <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                  <Text strong style={{ color: "#52c41a" }}>生成完成</Text>
+                  <Text strong style={{ color: "#52c41a" }}>
+                    生成完成
+                  </Text>
                 </>
               ) : (
                 <>
                   <ExclamationCircleOutlined style={{ color: "#faad14" }} />
-                  <Text strong style={{ color: "#faad14" }}>生成中或异常</Text>
+                  <Text strong style={{ color: "#faad14" }}>
+                    生成中或异常
+                  </Text>
                 </>
               )}
               {latestRequest && (
@@ -139,35 +137,61 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
           {/* 生成摘要 */}
           {latestGeneration && (
             <Card size="small" title="生成摘要">
-              <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <Space
+                direction="vertical"
+                size="middle"
+                style={{ width: "100%" }}
+              >
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <Text>总耗时:</Text>
                   <Text strong>{latestGeneration.totalGenerationTime}ms</Text>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <Text>内容长度:</Text>
                   <Text strong>{latestGeneration.contentLength}字符</Text>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <Text>单词数:</Text>
                   <Text strong>{latestGeneration.wordCount}词</Text>
                 </div>
                 {latestGeneration.performance && (
                   <>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <Text>首字节时间:</Text>
                       <Text strong>{latestGeneration.performance.ttfb}ms</Text>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <Text>生成速度:</Text>
-                      <Text strong>{latestGeneration.performance.streamingRate}字符/秒</Text>
+                      <Text strong>
+                        {latestGeneration.performance.streamingRate}字符/秒
+                      </Text>
                     </div>
                   </>
                 )}
                 {latestGeneration.hasThinkingChain && (
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
                     <Text>思维链步骤:</Text>
-                    <Text strong>{latestGeneration.thinkingChain?.totalSteps}步</Text>
+                    <Text strong>
+                      {latestGeneration.thinkingChain?.totalSteps}步
+                    </Text>
                   </div>
                 )}
               </Space>
@@ -177,33 +201,67 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
           {/* API信息 */}
           {latestRequest && (
             <Card size="small" title="API信息">
-              <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <Space
+                direction="vertical"
+                size="middle"
+                style={{ width: "100%" }}
+              >
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <Text>提供商:</Text>
                   <Text strong>{latestRequest.provider}</Text>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <Text>模型:</Text>
                   <Text strong>{latestRequest.model}</Text>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <Text>请求大小:</Text>
-                  <Text strong>{formatFileSize(latestRequest.requestSize)}</Text>
+                  <Text strong>
+                    {formatFileSize(latestRequest.requestSize)}
+                  </Text>
                 </div>
                 {latestResponse && (
                   <>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <Text>响应状态:</Text>
-                      <Text strong style={{ color: latestResponse.success ? "#52c41a" : "#ff4d4f" }}>
+                      <Text
+                        strong
+                        style={{
+                          color: latestResponse.success ? "#52c41a" : "#ff4d4f",
+                        }}
+                      >
                         {latestResponse.status} {latestResponse.statusText}
                       </Text>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
                       <Text>响应大小:</Text>
-                      <Text strong>{formatFileSize(latestResponse.responseSize)}</Text>
+                      <Text strong>
+                        {formatFileSize(latestResponse.responseSize)}
+                      </Text>
                     </div>
                     {latestResponse.totalTokens && (
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <Text>Token使用:</Text>
                         <Text strong>{latestResponse.totalTokens}个</Text>
                       </div>
@@ -232,7 +290,9 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
                   <Badge color="blue" />
                   <Text strong>{request.provider}</Text>
                   <Text type="secondary">{request.model}</Text>
-                  <Text type="secondary">{formatTimestamp(request.timestamp)}</Text>
+                  <Text type="secondary">
+                    {formatTimestamp(request.timestamp)}
+                  </Text>
                 </Space>
               </div>
 
@@ -248,7 +308,9 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
 
               <div>
                 <Text strong>会话ID: </Text>
-                <Text code style={{ fontSize: 11 }}>{request.sessionId}</Text>
+                <Text code style={{ fontSize: 11 }}>
+                  {request.sessionId}
+                </Text>
               </div>
 
               <div>
@@ -294,8 +356,12 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
               <div className={styles.logHeader}>
                 <Space>
                   <Badge color={response.success ? "green" : "red"} />
-                  <Text strong>状态: {response.status} {response.statusText}</Text>
-                  <Text type="secondary">{formatTimestamp(response.timestamp)}</Text>
+                  <Text strong>
+                    状态: {response.status} {response.statusText}
+                  </Text>
+                  <Text type="secondary">
+                    {formatTimestamp(response.timestamp)}
+                  </Text>
                   <Text type="secondary">耗时: {response.duration}ms</Text>
                 </Space>
               </div>
@@ -313,7 +379,10 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
               {response.totalTokens && (
                 <div>
                   <Text strong>Token使用: </Text>
-                  <Text>总计{response.totalTokens} (提示{response.promptTokens} + 生成{response.completionTokens})</Text>
+                  <Text>
+                    总计{response.totalTokens} (提示{response.promptTokens} +
+                    生成{response.completionTokens})
+                  </Text>
                 </div>
               )}
 
@@ -326,7 +395,9 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
 
               {response.error && (
                 <div>
-                  <Text strong style={{ color: "#ff4d4f" }}>错误: </Text>
+                  <Text strong style={{ color: "#ff4d4f" }}>
+                    错误:{" "}
+                  </Text>
                   <Text type="danger">{response.error}</Text>
                 </div>
               )}
@@ -361,9 +432,14 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
                   <Badge color="purple" />
                   <Text strong>{generation.aiData.provider}</Text>
                   <Text type="secondary">{generation.aiData.model}</Text>
-                  <Text type="secondary">{formatTimestamp(generation.timestamp)}</Text>
+                  <Text type="secondary">
+                    {formatTimestamp(generation.timestamp)}
+                  </Text>
                   {generation.hasThinkingChain && (
-                    <Badge count="思维链" style={{ backgroundColor: "#52c41a" }} />
+                    <Badge
+                      count="思维链"
+                      style={{ backgroundColor: "#52c41a" }}
+                    />
                   )}
                 </Space>
               </div>
@@ -382,15 +458,22 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
                 <Text strong>生成性能: </Text>
                 <Text>
                   耗时{generation.totalGenerationTime}ms,
-                  {generation.performance && ` 速度${generation.performance.streamingRate}字符/秒`},
-                  {generation.streamingSteps && ` ${generation.streamingSteps}步`}
-                  {generation.errorCount && generation.errorCount > 0 && `, ${generation.errorCount}个错误`}
+                  {generation.performance &&
+                    ` 速度${generation.performance.streamingRate}字符/秒`}
+                  ,
+                  {generation.streamingSteps &&
+                    ` ${generation.streamingSteps}步`}
+                  {generation.errorCount &&
+                    generation.errorCount > 0 &&
+                    `, ${generation.errorCount}个错误`}
                 </Text>
               </div>
 
               <div>
                 <Text strong>内容统计: </Text>
-                <Text>{generation.contentLength}字符, {generation.wordCount}词</Text>
+                <Text>
+                  {generation.contentLength}字符, {generation.wordCount}词
+                </Text>
               </div>
 
               <div>
@@ -409,7 +492,9 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
                   <Text>{generation.thinkingChain.totalSteps}步</Text>
                   <Paragraph
                     ellipsis={{ rows: 3, expandable: true }}
-                    copyable={{ text: JSON.stringify(generation.thinkingChain, null, 2) }}
+                    copyable={{
+                      text: JSON.stringify(generation.thinkingChain, null, 2),
+                    }}
                   >
                     <pre>{formatJSON(generation.thinkingChain, 300)}</pre>
                   </Paragraph>
@@ -417,22 +502,16 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
               )}
 
               <div>
-                <Text strong>原始Markdown: </Text>
-                <Paragraph
-                  ellipsis={{ rows: 3, expandable: true }}
-                  copyable={{ text: generation.originalMarkdown }}
-                >
-                  {generation.originalMarkdown}
-                </Paragraph>
-              </div>
-
-              <div>
                 <Text strong>最终HTML: </Text>
                 <Paragraph
                   ellipsis={{ rows: 3, expandable: true }}
                   copyable={{ text: generation.finalContent }}
                 >
-                  <div dangerouslySetInnerHTML={{ __html: generation.finalContent }} />
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: generation.finalContent,
+                    }}
+                  />
                 </Paragraph>
               </div>
             </Space>
@@ -453,7 +532,9 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
           <Space>
             <BugOutlined />
             <span>AI调试面板</span>
-            <Badge count={requests.length + responses.length + generations.length} />
+            <Badge
+              count={requests.length + responses.length + generations.length}
+            />
           </Space>
         }
         extra={
@@ -473,29 +554,17 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
             >
               导出数据
             </Button>
-            <Button
-              size="small"
-              icon={<ClearOutlined />}
-              onClick={clearData}
-            >
+            <Button size="small" icon={<ClearOutlined />} onClick={clearData}>
               清空
             </Button>
-            <Button
-              size="small"
-              icon={<CloseOutlined />}
-              onClick={onClose}
-            >
+            <Button size="small" icon={<CloseOutlined />} onClick={onClose}>
               关闭
             </Button>
           </Space>
         }
         className={styles.panelCard}
       >
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          size="small"
-        >
+        <Tabs activeKey={activeTab} onChange={setActiveTab} size="small">
           <TabPane
             tab={
               <Space>
@@ -505,9 +574,7 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
             }
             key="overview"
           >
-            <div className={styles.tabContent}>
-              {renderOverview()}
-            </div>
+            <div className={styles.tabContent}>{renderOverview()}</div>
           </TabPane>
 
           <TabPane

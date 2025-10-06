@@ -113,16 +113,8 @@ export function htmlToMarkdownBatch(htmlList: string[]): string[] {
  */
 export function convertNoteContentToMarkdown(note: {
   content: string;
-  customProperties?: { ai?: { originalMarkdown?: string } };
 }): string {
-  // 优先使用 AI 原始 Markdown（如果存在且是 AI 生成的便签）
-  // 注意：originalMarkdown 将来会被移除，这是临时兼容方案
-  if (note.customProperties?.ai?.originalMarkdown) {
-    console.log("  📋 使用 AI 原始 Markdown（兼容模式）");
-    return note.customProperties.ai.originalMarkdown;
-  }
-
-  // 标准方案：转换 HTML 为 Markdown
+  // 转换 HTML 为 Markdown
   return htmlToMarkdown(note.content);
 }
 

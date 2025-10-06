@@ -46,7 +46,6 @@ export interface NoteGeneration {
   noteId: string;
   timestamp: number;
   finalContent: string;
-  originalMarkdown: string;
   hasThinkingChain: boolean;
   thinkingChain?: {
     steps: Array<{
