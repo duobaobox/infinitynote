@@ -853,13 +853,31 @@ const Main: React.FC = () => {
 
           // 【健壮性增强3】构建AI提示词，使用最新的连接便签内容
           console.log("📝 构建AI提示词...");
+
+          // 导入 HTML→Markdown 转换工具
+          const { htmlToMarkdown } = await import("../../utils/htmlToMarkdown");
+
           const connectedNotesContent = latestConnectedNotes
-            .map(
-              (note, index) =>
-                `便签${index + 1}: ${note.title || "无标题"}\n内容: ${
-                  note.content || "无内容"
-                }\n---`
-            )
+            .map((note, index) => {
+              // 调试日志
+              console.log(`  📄 处理便签 ${index + 1}:`, {
+                title: note.title,
+                contentLength: note.content?.length || 0,
+                contentPreview: note.content?.substring(0, 100) || "无内容",
+              });
+
+              // 转换 HTML 为干净的 Markdown
+              const cleanContent = htmlToMarkdown(note.content || "");
+
+              console.log(`  ✅ 转换结果:`, {
+                markdownLength: cleanContent.length,
+                markdownPreview: cleanContent.substring(0, 100),
+              });
+
+              return `便签${index + 1}: ${
+                note.title || "无标题"
+              }\n${cleanContent}\n---`;
+            })
             .join("\n");
 
           const aiPrompt = `请根据以下便签内容进行处理（指令：${

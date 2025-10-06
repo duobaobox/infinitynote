@@ -177,6 +177,10 @@ export const useConnectionStore = create<ConnectionState & ConnectionActions>()(
 
 // 工具函数：获取便签显示内容
 export const connectionUtils = {
+  /**
+   * 获取便签的显示内容（用于 UI 显示，纯文本）
+   * @deprecated 建议使用 getCleanMarkdownContent 用于 AI prompt
+   */
   getDisplayedNoteContent: (note: Note): string => {
     if (!note.content) return "无内容";
     // 简单的文本提取，移除HTML标签
@@ -184,21 +188,37 @@ export const connectionUtils = {
     return textContent || "无内容";
   },
 
-  generateAIPromptWithConnections: (
+  /**
+   * 获取便签的干净 Markdown 内容（用于 AI prompt）
+   * 使用 turndown 转换 HTML，保留结构
+   */
+  getCleanMarkdownContent: async (note: Note): Promise<string> => {
+    if (!note.content) return "";
+
+    // 动态导入 htmlToMarkdown 工具
+    const { htmlToMarkdown } = await import("../utils/htmlToMarkdown");
+    return htmlToMarkdown(note.content);
+  },
+
+  /**
+   * 生成包含连接便签内容的 AI 提示词（异步版本，使用 Markdown）
+   */
+  generateAIPromptWithConnections: async (
     prompt: string,
     connectedNotes: Note[]
-  ): { prompt: string } => {
+  ): Promise<{ prompt: string }> => {
     if (connectedNotes.length === 0) {
       return { prompt };
     }
 
-    // 构建包含连接便签内容的提示
-    const notesContent = connectedNotes
-      .map((note, index) => {
-        const content = connectionUtils.getDisplayedNoteContent(note);
-        return `便签${index + 1}（${note.title || "无标题"}）：\n${content}`;
-      })
-      .join("\n\n");
+    // 构建包含连接便签内容的提示（使用 Markdown）
+    const notesContentPromises = connectedNotes.map(async (note, index) => {
+      const content = await connectionUtils.getCleanMarkdownContent(note);
+      return `便签${index + 1}（${note.title || "无标题"}）：\n${content}`;
+    });
+
+    const notesContentArray = await Promise.all(notesContentPromises);
+    const notesContent = notesContentArray.join("\n\n");
 
     const finalPrompt = `基于以下便签内容：\n\n${notesContent}\n\n${prompt}`;
     return { prompt: finalPrompt };

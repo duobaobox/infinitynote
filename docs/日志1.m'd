@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-10-04T14:05:08.207Z",
+  "session_summary": {
+    "total_requests": 1,
+    "total_responses": 1,
+    "total_generations": 1,
+    "session_status": "completed"
+  },
+  "requests": [
+    {
+      "id": "req_1759586646819_8bmaiaufn",
+      "timestamp": 1759586646819,
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "endpoint": "https://api.deepseek.com/v1/chat/completions",
+      "method": "POST",
+      "headers": {
+        "Authorization": "Bearer ***",
+        "Content-Type": "application/json"
+      },
+      "body": "{\n  \"model\": \"deepseek-chat\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"请根据以下便签内容进行处理（指令：总结）：\\n\\n便签1: 什么是羊群效应\\nnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnull\\n---\"\n    }\n  ],\n  \"stream\": true,\n  \"temperature\": 0.7,\n  \"max_tokens\": 5000\n}",
+      "prompt": "请根据以下便签内容进行处理（指令：总结）：\n\n便签1: 什么是羊群效应\nnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnull\n---",
+      "noteId": "note_mgccghp63v3qfw9p9dm",
+      "requestSize": 347,
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+      "sessionId": "session_note_mgccghp63v3qfw9p9dm_1759586646819"
+    }
+  ],
+  "responses": [
+    {
+      "id": "res_1759586647032_hwt0dibh8",
+      "requestId": "req_1759586646819_8bmaiaufn",
+      "timestamp": 1759586647032,
+      "status": 200,
+      "statusText": "OK",
+      "headers": {
+        "cache-control": "no-cache",
+        "content-type": "text/event-stream; charset=utf-8"
+      },
+      "body": "流式响应 - Content-Type: text/event-stream; charset=utf-8",
+      "duration": 213,
+      "success": true,
+      "responseSize": 61,
+      "firstByteTime": 213
+    }
+  ],
+  "generations": [
+    {
+      "id": "gen_1759586655381_ynzlwsk88",
+      "requestId": "req_1759586655381",
+      "noteId": "note_mgccghp63v3qfw9p9dm",
+      "timestamp": 1759586655381,
+      "finalContent": "<p>好的，根据您提供的便签内容，总结如下：</p>\n<p><strong>羊群效应</strong></p>\n<p><strong>定义：</strong><br>\n羊群效应是一个比喻，指代一种从众心理。它描述了在信息不充分或环境不确定的情况下，个体在决策时会受到周围多数人的影响，并模仿他人的行为，就像羊群盲目跟随头羊行动一样。</p>\n<p><strong>核心特征：</strong></p>\n<ul>\n<li><strong>盲目性：</strong> 个体往往不经过独立思考，就追随大众的选择。</li>\n<li><strong>模仿性：</strong> 行为的主要驱动力是观察和复制他人。</li>\n<li><strong>信息不对称：</strong> 通常发生在个体缺乏足够信息来做判断时，认为“多数人的选择”就是正确的。</li>\n</ul>\n<p>这个现象在经济学、投资学、社会学和市场营销等领域都非常常见。</p>\n",
+      "originalMarkdown": "好的，根据您提供的便签内容，总结如下：\n\n**羊群效应**\n\n**定义：**\n羊群效应是一个比喻，指代一种从众心理。它描述了在信息不充分或环境不确定的情况下，个体在决策时会受到周围多数人的影响，并模仿他人的行为，就像羊群盲目跟随头羊行动一样。\n\n**核心特征：**\n*   **盲目性：** 个体往往不经过独立思考，就追随大众的选择。\n*   **模仿性：** 行为的主要驱动力是观察和复制他人。\n*   **信息不对称：** 通常发生在个体缺乏足够信息来做判断时，认为“多数人的选择”就是正确的。\n\n这个现象在经济学、投资学、社会学和市场营销等领域都非常常见。",
+      "hasThinkingChain": false,
+      "aiData": {
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "generated": true,
+        "generatedAt": "2025-10-04T14:04:15.381Z",
+        "prompt": "请根据以下便签内容进行处理（指令：总结）：\n\n便签1: 什么是羊群效应\nnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnullnull\n---"
+      },
+      "totalGenerationTime": 8337,
+      "contentLength": 281,
+      "wordCount": 15,
+      "streamingSteps": 85,
+      "errorCount": 0,
+      "retryCount": 0,
+      "performance": {
+        "ttfb": 1900,
+        "streamingRate": 33.71,
+        "avgChunkSize": 510.15
+      }
+    }
+  ]
+}
