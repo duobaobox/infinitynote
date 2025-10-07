@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("path");
 
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
@@ -40,6 +40,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // 隐藏默认菜单栏（File、Edit、Window、Help等），兼容 macOS
+  Menu.setApplicationMenu(Menu.buildFromTemplate([]));
+
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
