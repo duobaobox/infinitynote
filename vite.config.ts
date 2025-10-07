@@ -32,11 +32,8 @@ export default defineConfig({
           // 工具库
           "utils-vendor": ["zustand", "dexie"],
 
-          // 路由
-          "router-vendor": ["react-router-dom"],
-
           // 拖拽库
-          "dnd-vendor": ["@dnd-kit/core", "@dnd-kit/sortable"],
+          "dnd-vendor": ["@dnd-kit/core"],
 
           // Markdown处理（动态导入的会自动分割）
           // 'markdown-vendor': ['markdown-it'] // 已通过动态导入分割
@@ -141,7 +138,6 @@ export default defineConfig({
       "@ant-design/icons",
       "zustand",
       "dexie",
-      "react-router-dom",
     ],
 
     // 排除不需要预构建的依赖

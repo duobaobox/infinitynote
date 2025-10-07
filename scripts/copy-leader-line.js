@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const sourceFile = path.join(__dirname, '../node_modules/leader-line/leader-line.min.js');
+const sourceFile = path.join(__dirname, '../public/leader-line.min.js');
 const targetFile = path.join(__dirname, '../dist/leader-line.min.js');
 
 try {
