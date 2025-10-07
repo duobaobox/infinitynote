@@ -42,28 +42,12 @@
   "win": {
     "target": [
       {
-        "target": "nsis",
-        "arch": ["x64", "ia32"]
-      },
-      {
         "target": "portable",
         "arch": ["x64"]
       }
     ],
     "icon": "src/assets/logo.ico",
-    "artifactName": "${productName}-${version}-${arch}.${ext}"
-  },
-  "nsis": {
-    "oneClick": false,
-    "allowToChangeInstallationDirectory": true,
-    "perMachine": false,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true,
-    "shortcutName": "InfinityNote 2",
-    "installerIcon": "src/assets/logo.ico",
-    "uninstallerIcon": "src/assets/logo.ico",
-    "installerHeader": "src/assets/logo.ico",
-    "language": "2052"
+    "artifactName": "${productName}-${version}-win-portable.${ext}"
   },
   "linux": {
     "target": ["AppImage", "deb", "rpm"],
@@ -72,7 +56,10 @@
     "maintainer": "InfinityNote Team"
   },
   "publish": null,
-  "compression": "maximum",
+  "compression": "normal",
   "asar": true,
-  "asarUnpack": ["**/*.node"]
+  "asarUnpack": ["**/*.node"],
+  "electronDownload": {
+    "mirror": "https://npmmirror.com/mirrors/electron/"
+  }
 }
