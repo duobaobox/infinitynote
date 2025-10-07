@@ -37,6 +37,39 @@ function createWindow() {
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
   });
+
+  // 注册编辑快捷键
+  mainWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.type !== "keyDown") return;
+
+    const { control, meta, shift, key } = input;
+    const isMac = process.platform === "darwin";
+    const modifier = isMac ? meta : control;
+
+    if (!modifier) return;
+
+    switch (key.toLowerCase()) {
+      case "c":
+        mainWindow.webContents.copy();
+        break;
+      case "v":
+        mainWindow.webContents.paste();
+        break;
+      case "x":
+        mainWindow.webContents.cut();
+        break;
+      case "a":
+        mainWindow.webContents.selectAll();
+        break;
+      case "z":
+        if (shift) {
+          mainWindow.webContents.redo();
+        } else {
+          mainWindow.webContents.undo();
+        }
+        break;
+    }
+  });
 }
 
 app.whenReady().then(() => {
