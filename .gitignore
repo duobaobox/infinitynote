@@ -23,3 +23,8 @@ docs
 *.njsproj
 *.sln
 *.sw?
+# release文件夹本地构建，禁止git跟踪
+release/
+
+# src-tauri文件夹本地构建，禁止git跟踪
+src-tauri/
