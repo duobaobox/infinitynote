@@ -5,6 +5,9 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
 
+  // Electron 需要使用相对路径
+  base: "./",
+
   // 构建优化配置
   build: {
     // 启用代码分割

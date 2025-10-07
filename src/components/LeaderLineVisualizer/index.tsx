@@ -8,32 +8,32 @@ let loadPromise: Promise<any> | null = null;
 // 异步加载 leader-line
 const loadLeaderLine = async () => {
   if (LeaderLine) return LeaderLine;
-  
+
   // 避免重复加载
   if (loadPromise) return loadPromise;
-  
+
   loadPromise = new Promise((resolve, reject) => {
     try {
       // 创建 script 标签动态加载
-      const script = document.createElement('script');
-      script.src = '/leader-line.min.js';
+      const script = document.createElement("script");
+      script.src = "./leader-line.min.js";
       script.onload = () => {
         LeaderLine = (window as any).LeaderLine;
         if (LeaderLine) {
           resolve(LeaderLine);
         } else {
-          reject(new Error('LeaderLine not found on window object'));
+          reject(new Error("LeaderLine not found on window object"));
         }
       };
       script.onerror = () => {
-        reject(new Error('Failed to load leader-line script'));
+        reject(new Error("Failed to load leader-line script"));
       };
       document.head.appendChild(script);
     } catch (error) {
       reject(error);
     }
   });
-  
+
   return loadPromise;
 };
 
@@ -47,7 +47,6 @@ interface LeaderLineInstance {
 interface LeaderLineVisualizerProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
-
 
 /**
  * Leader-Line 连接线可视化组件

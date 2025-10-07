@@ -63,8 +63,8 @@ export const MODAL_CONFIG: Partial<ModalProps> = {
   transitionName: ANIMATION_MODE === "none" ? "" : "zoom",
   maskTransitionName: ANIMATION_MODE === "none" ? "" : "fade",
 
-  // 关闭时销毁子元素，释放内存
-  destroyOnClose: true,
+  // 关闭时销毁子元素，释放内存（使用新的 API）
+  destroyOnHidden: true,
 
   // 键盘 ESC 关闭
   keyboard: true,
@@ -107,8 +107,8 @@ export const DRAWER_CONFIG = {
   // 动画配置
   rootClassName: ANIMATION_MODE === "none" ? "drawer-no-animation" : "",
 
-  // 关闭时销毁子元素
-  destroyOnClose: true,
+  // 关闭时销毁子元素（使用新的 API）
+  destroyOnHidden: true,
 
   // 键盘 ESC 关闭
   keyboard: true,
@@ -310,7 +310,7 @@ export const createModalConfig = (
   return {
     transitionName: mode === "none" ? "" : "zoom",
     maskTransitionName: mode === "none" ? "" : "fade",
-    destroyOnClose: true,
+    destroyOnHidden: true,
     keyboard: true,
     maskClosable: true,
     styles: {
