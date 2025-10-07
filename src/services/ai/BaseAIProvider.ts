@@ -582,18 +582,17 @@ export abstract class BaseAIProvider implements AIProvider {
 
     // 如果从流式中没有检测到思维链，但在最终内容中检测到了，则使用检测结果
     let finalThinkingChain = thinkingChain;
-    let cleanContent = fullMarkdown;
 
     if (finalDetection.hasThinkingChain && thinkingChain.length === 0) {
       // 从完整内容中检测到了思维链，但流式过程中没有
       finalThinkingChain = finalDetection.thinkingContent?.steps || [];
-      cleanContent = finalDetection.cleanContent;
+      // cleanContent = finalDetection.cleanContent; // 已移除未使用变量
       console.log(
         `🧠 [${this.name}] 从完整响应中检测到思维链，步骤数: ${finalThinkingChain.length}`
       );
     } else if (thinkingChain.length > 0) {
       // 使用流式过程中收集的思维链
-      cleanContent = fullMarkdown; // 对于流式检测，保持原始内容
+      // cleanContent = fullMarkdown; // 已移除未使用变量
     }
 
     const aiData: AICustomProperties["ai"] = {
