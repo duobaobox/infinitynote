@@ -1,0 +1,78 @@
+{
+  "appId": "com.infinitynote.app",
+  "productName": "InfinityNote 2",
+  "copyright": "Copyright © 2025 InfinityNote Team",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": ["dist/**/*", "electron/**/*.cjs", "package.json"],
+  "mac": {
+    "category": "public.app-category.productivity",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "zip",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "icon": "src/assets/logo.icns",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false
+  },
+  "dmg": {
+    "contents": [
+      {
+        "x": 130,
+        "y": 220
+      },
+      {
+        "x": 410,
+        "y": 220,
+        "type": "link",
+        "path": "/Applications"
+      }
+    ],
+    "title": "InfinityNote 2 安装器",
+    "backgroundColor": "#ffffff"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64", "ia32"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "src/assets/logo.ico",
+    "artifactName": "${productName}-${version}-${arch}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "perMachine": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "InfinityNote 2",
+    "installerIcon": "src/assets/logo.ico",
+    "uninstallerIcon": "src/assets/logo.ico",
+    "installerHeader": "src/assets/logo.ico",
+    "language": "2052"
+  },
+  "linux": {
+    "target": ["AppImage", "deb", "rpm"],
+    "category": "Office",
+    "icon": "src/assets/logo.png",
+    "maintainer": "InfinityNote Team"
+  },
+  "publish": null,
+  "compression": "maximum",
+  "asar": true,
+  "asarUnpack": ["**/*.node"]
+}
