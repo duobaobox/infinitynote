@@ -42,9 +42,19 @@ function createWindow() {
   mainWindow.webContents.on("before-input-event", (event, input) => {
     if (input.type !== "keyDown") return;
 
-    const { control, meta, shift, key } = input;
+    const { control, meta, shift, alt, key } = input;
     const isMac = process.platform === "darwin";
     const modifier = isMac ? meta : control;
+
+    // 开发者工具快捷键：Cmd+Option+I (macOS) 或 Ctrl+Shift+I (Windows/Linux)
+    if (isMac && meta && alt && key.toLowerCase() === "i") {
+      mainWindow.webContents.toggleDevTools();
+      return;
+    }
+    if (!isMac && control && shift && key.toLowerCase() === "i") {
+      mainWindow.webContents.toggleDevTools();
+      return;
+    }
 
     if (!modifier) return;
 
