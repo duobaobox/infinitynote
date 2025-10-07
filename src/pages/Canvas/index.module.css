@@ -82,15 +82,12 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  transform-origin: 0 0;
+  /* 移除 transform-origin，因为现在使用 position + zoom */
 }
 
 /* 网格背景 - 无限重复 */
 .grid {
-  position: absolute; /* 绝对定位在画布容器内 */
   /* 使用巨大的尺寸确保覆盖所有可能的拖动范围 */
-  top: -50000px;
-  left: -50000px;
   width: 100000px;
   height: 100000px;
   opacity: 0.5;
@@ -101,11 +98,8 @@
   );
   background-size: var(--grid-size, 20px) var(--grid-size, 20px);
   pointer-events: none;
-  /* 网格会随画布内容一起缩放和移动 */
-  transform-origin: 0 0;
-  /* 优化渲染性能 */
-  will-change: transform;
-  backface-visibility: hidden;
+  /* 优化渲染性能 - position + zoom 模式 */
+  will-change: auto; /* 默认不启用，由内联样式控制 */
 }
 
 /* 网格在不同缩放级别下的显示 */

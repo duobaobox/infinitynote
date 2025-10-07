@@ -193,6 +193,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     panCanvas,
     setOffset,
     setViewportSize,
+    setScale,
     lastViewportResetAt,
   } = useCanvasStore();
 
@@ -283,6 +284,24 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         setViewportSize({ width, height });
         autoCenterScheduledRef.current = true;
         hasUserPannedRef.current = false;
+
+        // 强制重新渲染以解决 CSS zoom 在 resize 后的模糊问题
+        // 方法：临时重置 zoom 为 1，然后恢复，强制浏览器完全重绘
+        const currentScale = viewport.scale;
+        const canvasContentEl = element.querySelector(
+          ".canvasContent"
+        ) as HTMLElement;
+        const gridEl = element.querySelector(".grid") as HTMLElement;
+
+        if (canvasContentEl || gridEl) {
+          // 方案1: 临时重置 zoom 触发重绘
+          setScale(1);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              setScale(currentScale);
+            });
+          });
+        }
       }
     });
 
@@ -291,7 +310,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     return () => {
       observer.disconnect();
     };
-  }, [setViewportSize]);
+  }, [setViewportSize, viewport.scale, setScale]);
 
   // 获取当前画布的便签（响应式计算）- 优化版本
   const canvasNotes = useMemo(() => {
@@ -1065,10 +1084,15 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
                 // 应用主题颜色
                 backgroundImage: `radial-gradient(circle, ${gridTheme.gridColor} 1px, transparent 1px)`,
                 opacity: gridTheme.gridOpacity,
-                // 网格随画布偏移和缩放 - 使用 CSS zoom 与内容保持一致
-                transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0)`,
+                // 使用 position + zoom 实现偏移和缩放（避免 transform 混用）
+                position: "absolute" as const,
+                left: `${finalOffset.x}px`,
+                top: `${finalOffset.y}px`,
                 zoom: viewport.scale,
                 backgroundSize: `${gridTheme.gridSize}px ${gridTheme.gridSize}px`,
+                // 渲染优化
+                willChange: "zoom, left, top",
+                backfaceVisibility: "hidden" as const,
               } as React.CSSProperties
             }
           />
@@ -1083,9 +1107,15 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           <div
             className={`${styles.canvasContent} canvasContent`}
             style={{
-              transform: `translate3d(${finalOffset.x}px, ${finalOffset.y}px, 0)`,
-              transformOrigin: "0 0",
+              // 使用 position + zoom 实现偏移和缩放（避免 transform 混用）
+              position: "absolute" as const,
+              left: `${finalOffset.x}px`,
+              top: `${finalOffset.y}px`,
               zoom: viewport.scale,
+              // 渲染优化
+              willChange: isPanning ? "zoom, left, top" : "auto",
+              backfaceVisibility: "hidden" as const,
+              imageRendering: "crisp-edges" as const,
             }}
             data-smooth-zoom={displaySettings.smoothZoom}
             data-dragging={isPanning}
