@@ -25,15 +25,16 @@ export const BASE_TOOLBAR_BUTTONS: ToolbarButton[] = [
   },
   {
     id: "duplicate",
-    label: "复制便签",
+    label: "复制文本",
     icon: "CopyOutlined",
-    tooltip: "复制这个便签",
+    tooltip: "复制便签文本",
   },
   {
     id: "pin",
-    label: "置顶",
+    label: "便签悬浮（开发中）",
     icon: "PushpinOutlined",
-    tooltip: "置顶便签",
+    tooltip: "该功能暂未开放",
+    disabled: true,
   },
   {
     id: "delete",

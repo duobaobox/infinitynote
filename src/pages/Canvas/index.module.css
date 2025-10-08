@@ -87,9 +87,9 @@
 
 /* 网格背景 - 无限重复 */
 .grid {
-  /* 使用巨大的尺寸确保覆盖所有可能的拖动范围 */
-  width: 100000px;
-  height: 100000px;
+  /* 覆盖整个画布容器 */
+  width: 100%;
+  height: 100%;
   opacity: 0.5;
   background-image: radial-gradient(
     circle,

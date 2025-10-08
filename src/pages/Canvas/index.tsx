@@ -1086,12 +1086,14 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
                 opacity: gridTheme.gridOpacity,
                 // 使用 position + zoom 实现偏移和缩放（避免 transform 混用）
                 position: "absolute" as const,
-                left: `${finalOffset.x}px`,
-                top: `${finalOffset.y}px`,
+                left: 0,
+                top: 0,
                 zoom: viewport.scale,
                 backgroundSize: `${gridTheme.gridSize}px ${gridTheme.gridSize}px`,
+                // 关键修复：使用 backgroundPosition 来补偿 offset，确保网格在整个画布上对齐
+                backgroundPosition: `${finalOffset.x}px ${finalOffset.y}px`,
                 // 渲染优化
-                willChange: "zoom, left, top",
+                willChange: "zoom, background-position",
                 backfaceVisibility: "hidden" as const,
               } as React.CSSProperties
             }

@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useState, useRef, useEffect } from "react";
 import { useDraggable } from "@dnd-kit/core";
+import { App } from "antd";
 import type { Note, Size } from "../../types";
 import type { AICustomProperties } from "../../types/ai";
 import { NOTE_MIN_SIZE } from "../../types/constants";
@@ -43,6 +44,7 @@ interface NoteCardProps {
 export const NoteCard = memo<NoteCardProps>(
   ({ note, onSelect, isSelected, onResize, scale }) => {
     const { isDark } = useTheme();
+    const { message } = App.useApp();
     const {
       updateNote,
       deleteNote,
@@ -358,7 +360,7 @@ export const NoteCard = memo<NoteCardProps>(
 
     // 处理工具栏操作
     const handleToolbarAction = useCallback(
-      (action: ToolbarAction, data?: any) => {
+      async (action: ToolbarAction, data?: any) => {
         switch (action) {
           case "color":
             if (data?.color) {
@@ -370,12 +372,25 @@ export const NoteCard = memo<NoteCardProps>(
             setShowToolbar(false);
             break;
           case "duplicate":
-            // TODO: 实现复制功能
-            console.log("Duplicate note:", note.id);
+            // 复制便签文本内容到剪贴板
+            try {
+              // 从HTML内容中提取纯文本
+              const tempDiv = document.createElement("div");
+              tempDiv.innerHTML = note.content;
+              const plainText = tempDiv.textContent || tempDiv.innerText || "";
+
+              // 复制到剪贴板
+              await navigator.clipboard.writeText(plainText);
+
+              // 显示成功提示
+              message.success("文本已复制到剪贴板");
+            } catch (error) {
+              console.error("复制文本失败:", error);
+              message.error("复制失败，请重试");
+            }
             break;
           case "pin":
-            // TODO: 实现置顶功能
-            console.log("Pin note:", note.id);
+            message.info("该功能暂未开放");
             break;
           case "focus-mode":
             // 打开专注模式，传入当前便签ID
@@ -387,7 +402,7 @@ export const NoteCard = memo<NoteCardProps>(
             console.log("Unhandled action:", action);
         }
       },
-      [note.id, updateNote, deleteNote, openFocusMode]
+      [note.id, note.content, updateNote, deleteNote, openFocusMode, message]
     ); // 关闭工具栏
     const handleCloseToolbar = useCallback(() => {
       setShowToolbar(false);

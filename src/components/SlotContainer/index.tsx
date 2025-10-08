@@ -41,14 +41,12 @@ export const SlotContainer: React.FC<SlotContainerProps> = ({
       <strong>汇总模式</strong><br/>
       • 保留原始便签<br/>
       • 生成新的汇总便签<br/>
-      • 原始便签会连接到新便签
     </div>`;
 
     const replaceTooltip = `<div style="text-align: left;">
       <strong>替换模式</strong><br/>
       • 删除原始便签<br/>
       • 只保留生成的便签<br/>
-      • 适合合并多个便签内容
     </div>`;
 
     return connectionMode === ConnectionMode.SUMMARY
