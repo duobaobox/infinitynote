@@ -15,9 +15,12 @@ node_modules
 # Build outputs
 dist
 dist-ssr
-build
 out
 *.local
+
+# Build resources (keep tracked)
+# build/ - contains icons and build resources, should be committed
+!build/
 
 # Electron build artifacts
 release/

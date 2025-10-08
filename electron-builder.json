@@ -19,9 +19,16 @@
         "arch": ["x64", "arm64"]
       }
     ],
-    "icon": "src/assets/logo.icns",
+    "icon": "build/icon.icns",
     "hardenedRuntime": true,
-    "gatekeeperAssess": false
+    "gatekeeperAssess": false,
+    "entitlements": null,
+    "entitlementsInherit": null,
+    "extendInfo": {
+      "NSCameraUsageDescription": "此应用需要访问相机以捕获图像。",
+      "NSMicrophoneUsageDescription": "此应用需要访问麦克风以录制音频。",
+      "NSDocumentsFolderUsageDescription": "此应用需要访问文档文件夹以保存和读取文件。"
+    }
   },
   "dmg": {
     "contents": [
@@ -42,18 +49,69 @@
   "win": {
     "target": [
       {
+        "target": "nsis",
+        "arch": ["x64", "ia32"]
+      },
+      {
         "target": "portable",
+        "arch": ["x64"]
+      },
+      {
+        "target": "zip",
         "arch": ["x64"]
       }
     ],
-    "icon": "src/assets/logo.ico",
-    "artifactName": "${productName}-${version}-win-portable.${ext}"
+    "icon": "build/icon.ico",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "publisherName": "无限便签团队",
+    "verifyUpdateCodeSignature": false,
+    "requestedExecutionLevel": "asInvoker",
+    "fileAssociations": [
+      {
+        "ext": "innote",
+        "name": "InfinityNote Document",
+        "description": "无限便签文档",
+        "icon": "build/icon.ico",
+        "role": "Editor"
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowElevation": true,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "installerHeaderIcon": "build/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "无限便签",
+    "include": null,
+    "perMachine": false,
+    "deleteAppDataOnUninstall": false,
+    "runAfterFinish": true,
+    "menuCategory": false,
+    "installerLanguages": ["zh_CN", "en_US"],
+    "language": "2052",
+    "displayLanguageSelector": false,
+    "multiLanguageInstaller": false,
+    "packElevateHelper": true,
+    "warningsAsErrors": false
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-portable.${ext}",
+    "requestExecutionLevel": "user"
   },
   "linux": {
     "target": ["AppImage", "deb", "rpm"],
     "category": "Office",
-    "icon": "src/assets/logo.png",
-    "maintainer": "无限便签团队"
+    "icon": "build/icon.png",
+    "maintainer": "无限便签团队",
+    "desktop": {
+      "Name": "无限便签",
+      "Comment": "无限画布便签应用",
+      "Categories": "Office;Utility;"
+    }
   },
   "publish": null,
   "compression": "normal",
