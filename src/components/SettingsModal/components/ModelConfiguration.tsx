@@ -98,6 +98,15 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
     [onConfigChange]
   );
 
+  // 处理模型输入框清空
+  const handleModelClear = useCallback(() => {
+    onConfigChange({
+      selectedModel: "",
+      connectionStatus: "idle",
+      errorMessage: undefined,
+    });
+  }, [onConfigChange]);
+
   // 处理API密钥变更
   const handleApiKeyChange = useCallback(
     (value: string) => {
@@ -309,6 +318,7 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
                     .includes(inputValue.toLowerCase())
                 }
                 onSelect={(value) => handleModelChange(value)}
+                onClear={handleModelClear}
               />
             </Form.Item>
           </Form>

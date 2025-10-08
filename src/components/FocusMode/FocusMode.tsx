@@ -7,11 +7,8 @@ import { memo, useState, useEffect, useCallback } from "react";
 import {
   CloseOutlined,
   EditOutlined,
-  QuestionCircleOutlined,
   MenuOutlined,
   SearchOutlined,
-  PlusOutlined,
-  FolderAddOutlined,
 } from "@ant-design/icons";
 import { Button, Tooltip } from "antd";
 import { useNoteStore } from "../../store/noteStore";
@@ -33,11 +30,10 @@ const FocusMode = memo<FocusModeProps>(
       useFocusModeStore();
 
     // 从便签store获取便签相关数据和方法
-    const { notes, updateNote, createNote } = useNoteStore();
+    const { notes, updateNote } = useNoteStore();
 
     // 从画布store获取画布相关数据
-    const { canvases, activeCanvasId, setActiveCanvas, createCanvas } =
-      useCanvasStore();
+    const { canvases, activeCanvasId, setActiveCanvas } = useCanvasStore();
 
     // 获取当前编辑的便签
     const currentNote = activeNoteId
@@ -82,24 +78,8 @@ const FocusMode = memo<FocusModeProps>(
     );
 
     // 处理创建新便签
-    const handleCreateNote = useCallback(async () => {
-      if (activeCanvasId) {
-        // 生成一个默认位置，比如在画布的某个位置
-        const newPosition = {
-          x: Math.random() * 200 + 100,
-          y: Math.random() * 200 + 100,
-        };
-        const newNoteId = await createNote(activeCanvasId, newPosition);
-        setActiveNote(newNoteId);
-        onNoteChange(newNoteId);
-      }
-    }, [activeCanvasId, createNote, setActiveNote, onNoteChange]);
 
     // 处理创建新画布
-    const handleCreateCanvas = useCallback(async () => {
-      const newCanvasId = await createCanvas("新画布");
-      setActiveCanvas(newCanvasId);
-    }, [createCanvas, setActiveCanvas]);
 
     // 处理关闭
     const handleClose = useCallback(() => {
@@ -167,30 +147,6 @@ const FocusMode = memo<FocusModeProps>(
           </div>
 
           <div className={styles.toolbarRight}>
-            <Button
-              type="text"
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={async () => await handleCreateNote()}
-              className={styles.toolbarButton}
-              aria-label="创建新便签"
-            />
-            <Button
-              type="text"
-              size="small"
-              icon={<FolderAddOutlined />}
-              onClick={async () => await handleCreateCanvas()}
-              className={styles.toolbarButton}
-              aria-label="创建新画布"
-            />
-            <Button
-              type="text"
-              size="small"
-              icon={<QuestionCircleOutlined />}
-              onClick={() => setShowShortcuts(true)}
-              className={styles.toolbarButton}
-              aria-label="键盘快捷键"
-            />
             <Button
               type="text"
               size="small"
