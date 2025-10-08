@@ -4,12 +4,15 @@
  */
 
 import React from "react";
-import { Button, Space, message } from "antd";
+import { Button, Space, App } from "antd";
 import { useTestPanelStore } from "../../store/testPanelStore";
 
 export const TestPanelDemo: React.FC = () => {
   const { addRequest, addResponse, addGeneration, toggleVisibility } =
     useTestPanelStore();
+
+  // 获取App Context中的message实例
+  const { message: messageApi } = App.useApp();
 
   const handleTestRequest = () => {
     const mockRequest = {
@@ -93,11 +96,11 @@ export const TestPanelDemo: React.FC = () => {
         };
 
         addGeneration(mockGeneration);
-        message.success("模拟AI生成完成");
+        messageApi.success("模拟AI生成完成");
       }, 800);
     }, 400);
 
-    message.info("开始模拟AI生成");
+    messageApi.info("开始模拟AI生成");
   };
 
   return (

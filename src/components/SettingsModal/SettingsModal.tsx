@@ -33,7 +33,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Modal, Menu, message, App } from "antd";
+import { Modal, Menu, App } from "antd";
 import type {
   SettingsModalProps,
   SettingTabKey,
@@ -164,10 +164,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     try {
       // 使用新的完整数据导出功能
       await exportAllData();
-      message.success("所有数据导出成功");
+      messageApi.success("所有数据导出成功");
     } catch (error) {
       console.error("导出失败:", error);
-      message.error("导出失败，请重试");
+      messageApi.error("导出失败，请重试");
     }
   };
 
@@ -186,16 +186,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
         cancelText: "取消",
         okType: "danger",
         onOk: async () => {
-          const loadingMessage = message.loading("正在导入数据，请稍候...", 0);
+          const loadingMessage = messageApi.loading(
+            "正在导入数据，请稍候...",
+            0
+          );
           try {
             await importAllData(file);
             loadingMessage();
-            message.success("数据导入成功，页面即将刷新", 2);
+            messageApi.success("数据导入成功，页面即将刷新", 2);
             // importAllData 函数内部会自动刷新页面
           } catch (error) {
             loadingMessage();
             console.error("导入失败:", error);
-            message.error(
+            messageApi.error(
               error instanceof Error
                 ? error.message
                 : "导入失败，请检查文件格式",
@@ -207,12 +210,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
     } catch (error) {
       if (error instanceof Error && error.message !== "未选择文件") {
         console.error("导入失败:", error);
-        message.error("导入失败，请重试");
+        messageApi.error("导入失败，请重试");
       }
     }
   };
 
-  const { modal } = App.useApp();
+  const { modal, message: messageApi } = App.useApp();
 
   const handleClearData = () => {
     console.log("🔧 handleClearData 被调用");
@@ -227,7 +230,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       okType: "danger",
       onOk: async () => {
         console.log("🔧 用户确认清除数据");
-        const loadingMessage = message.loading(
+        const loadingMessage = messageApi.loading(
           "正在清除所有数据，请稍候...",
           0
         );
@@ -236,12 +239,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
           // 使用新的完整数据清除功能
           await clearAllData();
           loadingMessage();
-          message.success("所有数据清除成功，页面即将刷新", 2);
+          messageApi.success("所有数据清除成功，页面即将刷新", 2);
           // clearAllData 函数内部会自动刷新页面
         } catch (error) {
           loadingMessage();
           console.error("清除失败:", error);
-          message.error(
+          messageApi.error(
             `清除失败: ${error instanceof Error ? error.message : "请重试"}`,
             5
           );
@@ -254,7 +257,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
   };
 
   const handleCheckUpdate = () => {
-    message.info("当前已是最新版本");
+    messageApi.info("当前已是最新版本");
   };
 
   const handleOpenTestPanel = async () => {
@@ -269,10 +272,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
       // 关闭设置模态框
       onClose();
 
-      message.success("测试面板已打开");
+      messageApi.success("测试面板已打开");
     } catch (error) {
       console.error("打开测试面板失败:", error);
-      message.error("打开测试面板失败");
+      messageApi.error("打开测试面板失败");
     }
   };
 

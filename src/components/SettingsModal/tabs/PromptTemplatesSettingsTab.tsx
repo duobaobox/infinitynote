@@ -28,7 +28,7 @@ import {
   Modal,
   Form,
   Select,
-  message,
+  App,
   Tabs,
   Empty,
   Typography,
@@ -94,6 +94,9 @@ export const PromptTemplatesSettingsTab: React.FC<
   );
   const [form] = Form.useForm();
 
+  // 获取App Context中的message实例
+  const { message: messageApi } = App.useApp();
+
   // 这里应该从 localStorage 或其他持久化存储中加载用户自定义的模板
   const [customTemplates, setCustomTemplates] = useState<PromptTemplate[]>([]);
 
@@ -155,7 +158,7 @@ export const PromptTemplatesSettingsTab: React.FC<
           (t) => t.id === editingTemplate.id
         );
         if (isSystemTemplate) {
-          message.warning("系统模板不可编辑，将创建为新的自定义模板");
+          messageApi.warning("系统模板不可编辑，将创建为新的自定义模板");
           // 创建新的自定义模板
           const newTemplate: PromptTemplate = {
             ...values,
@@ -170,7 +173,7 @@ export const PromptTemplatesSettingsTab: React.FC<
             )
           );
         }
-        message.success("模板已更新");
+        messageApi.success("模板已更新");
       } else {
         // 新建模板
         const newTemplate: PromptTemplate = {
@@ -178,7 +181,7 @@ export const PromptTemplatesSettingsTab: React.FC<
           id: `custom_${Date.now()}`,
         };
         setCustomTemplates([...customTemplates, newTemplate]);
-        message.success("模板已添加");
+        messageApi.success("模板已添加");
       }
 
       handleCloseModal();
@@ -191,12 +194,12 @@ export const PromptTemplatesSettingsTab: React.FC<
   const handleDeleteTemplate = (template: PromptTemplate) => {
     const isSystemTemplate = PROMPT_TEMPLATES.find((t) => t.id === template.id);
     if (isSystemTemplate) {
-      message.error("系统模板不可删除");
+      messageApi.error("系统模板不可删除");
       return;
     }
 
     setCustomTemplates(customTemplates.filter((t) => t.id !== template.id));
-    message.success("模板已删除");
+    messageApi.success("模板已删除");
   };
 
   // 渲染模板卡片

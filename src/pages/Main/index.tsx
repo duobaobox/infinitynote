@@ -38,7 +38,6 @@ import {
   Space, // 用于操作按钮组的间距控制
   Splitter, // 用于分隔画布列表和便签列表区域
   App, // 用于提供Context
-  message, // 用于消息提示
 } from "antd";
 import type { InputRef } from "antd";
 // 引入CSS模块样式
@@ -116,7 +115,7 @@ const Main: React.FC = () => {
   } = useFocusModeStore();
 
   // 获取App Context中的modal和notification实例
-  const { modal, notification } = App.useApp();
+  const { modal, notification, message: messageApi } = App.useApp();
 
   // 设置ErrorNotification使用App上下文的notification实例
   useEffect(() => {
@@ -463,20 +462,20 @@ const Main: React.FC = () => {
     async (canvasId: string) => {
       const newName = editingCanvasName.trim();
       if (!newName) {
-        message.warning("画布名称不能为空");
+        messageApi.warning("画布名称不能为空");
         return;
       }
 
       try {
         await updateCanvas(canvasId, { name: newName });
-        message.success("画布名称已更新");
+        messageApi.success("画布名称已更新");
         setEditingCanvasId(null);
       } catch (error) {
         console.error("❌ 更新画布名称失败:", error);
-        message.error("更新失败，请重试");
+        messageApi.error("更新失败，请重试");
       }
     },
-    [editingCanvasName, updateCanvas]
+    [editingCanvasName, updateCanvas, messageApi]
   );
 
   // 取消编辑
@@ -892,7 +891,7 @@ const Main: React.FC = () => {
             })
             .join("\n");
 
-          const aiPrompt = `请根据以下便签内容进行处理（指令：${
+          const aiPrompt = `汇总便签内容进行处理（指令：${
             prompt || "汇总"
           }）：\n\n${connectedNotesContent}`;
 

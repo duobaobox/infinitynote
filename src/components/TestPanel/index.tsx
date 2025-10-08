@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Card, Tabs, Button, Typography, List, Badge, Space } from "antd";
+import { Card, Tabs, Button, Typography, List, Badge, Space, App } from "antd";
 import {
   BugOutlined,
   CloseOutlined,
@@ -35,6 +35,9 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [copyLoading, setCopyLoading] = useState(false);
 
+  // 获取App Context中的message实例
+  const { message: messageApi } = App.useApp();
+
   // 处理复制数据
   const handleCopyData = async () => {
     setCopyLoading(true);
@@ -42,16 +45,13 @@ export const TestPanel: React.FC<TestPanelProps> = ({ visible, onClose }) => {
       const success = await copyData();
       if (success) {
         // 显示成功消息
-        const { message } = await import("antd");
-        message.success("调试数据已复制到剪贴板");
+        messageApi.success("调试数据已复制到剪贴板");
       } else {
-        const { message } = await import("antd");
-        message.error("复制失败，请重试");
+        messageApi.error("复制失败，请重试");
       }
     } catch (error) {
       console.error("复制失败:", error);
-      const { message } = await import("antd");
-      message.error("复制失败，请重试");
+      messageApi.error("复制失败，请重试");
     } finally {
       setCopyLoading(false);
     }

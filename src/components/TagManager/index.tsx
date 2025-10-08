@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Input, Button, List, Tag, Popconfirm, message } from "antd";
+import { Modal, Input, Button, List, Tag, Popconfirm, App } from "antd";
 import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { tagColors } from "../../theme/variables";
 import styles from "./index.module.css";
@@ -26,6 +26,9 @@ export const TagManager: React.FC<TagManagerProps> = ({
   const [newTagName, setNewTagName] = useState("");
   const [editingTag, setEditingTag] = useState<TagItem | null>(null);
   const [editingName, setEditingName] = useState("");
+
+  // 获取App Context中的message实例
+  const { message: messageApi } = App.useApp();
 
   // 模拟从本地存储加载标签
   useEffect(() => {
@@ -61,12 +64,12 @@ export const TagManager: React.FC<TagManagerProps> = ({
   // 添加新标签
   const handleAddTag = () => {
     if (!newTagName.trim()) {
-      message.warning("请输入标签名称");
+      messageApi.warning("请输入标签名称");
       return;
     }
 
     if (tags.some((tag) => tag.name === newTagName.trim())) {
-      message.warning("标签名称已存在");
+      messageApi.warning("标签名称已存在");
       return;
     }
 
@@ -80,14 +83,14 @@ export const TagManager: React.FC<TagManagerProps> = ({
     const updatedTags = [...tags, newTag];
     saveTags(updatedTags);
     setNewTagName("");
-    message.success("标签添加成功");
+    messageApi.success("标签添加成功");
   };
 
   // 删除标签
   const handleDeleteTag = (tagId: string) => {
     const updatedTags = tags.filter((tag) => tag.id !== tagId);
     saveTags(updatedTags);
-    message.success("标签删除成功");
+    messageApi.success("标签删除成功");
   };
 
   // 开始编辑标签
@@ -99,7 +102,7 @@ export const TagManager: React.FC<TagManagerProps> = ({
   // 保存编辑
   const handleSaveEdit = () => {
     if (!editingName.trim()) {
-      message.warning("请输入标签名称");
+      messageApi.warning("请输入标签名称");
       return;
     }
 
@@ -108,7 +111,7 @@ export const TagManager: React.FC<TagManagerProps> = ({
         (tag) => tag.id !== editingTag?.id && tag.name === editingName.trim()
       )
     ) {
-      message.warning("标签名称已存在");
+      messageApi.warning("标签名称已存在");
       return;
     }
 
@@ -118,7 +121,7 @@ export const TagManager: React.FC<TagManagerProps> = ({
     saveTags(updatedTags);
     setEditingTag(null);
     setEditingName("");
-    message.success("标签更新成功");
+    messageApi.success("标签更新成功");
   };
 
   // 取消编辑

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Button, Space, Tooltip, message, Divider } from "antd";
+import { Button, Space, Tooltip, App, Divider } from "antd";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useNoteStore } from "../../store/noteStore";
 import { iconRegistry } from "../../utils/iconRegistry";
@@ -31,6 +31,9 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
     useCanvasStore();
   const { organizeCurrentCanvasNotes, getNotesByCanvas } = useNoteStore();
   const [isOrganizing, setIsOrganizing] = useState(false);
+
+  // 获取App Context中的message实例
+  const { message } = App.useApp();
 
   // 处理拖动模式切换
   const handleToggleDragMode = () => {
@@ -60,13 +63,9 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
     try {
       setIsOrganizing(true);
 
-      // 显示开始整理的提示
-      const hideLoading = message.loading("正在整理便签...", 0);
-
       await organizeCurrentCanvasNotes(activeCanvasId);
 
-      hideLoading();
-      message.success(`✅ 已整理 ${canvasNotes.length} 个便签`);
+      // 整理成功后不显示提示，用户可以直观看到便签在移动
     } catch (error) {
       console.error("整理便签失败:", error);
       message.error(
