@@ -49,6 +49,8 @@ coverage
 
 # Environment variables
 .env
+.claude
+.codebuddyy
 .env.local
 .env.*.local
 *.env
