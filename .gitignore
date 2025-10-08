@@ -7,24 +7,72 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
-docs
+build
+out
 *.local
+
+# Electron build artifacts
+release/
+src-tauri/
+
+# Testing
+coverage
+.nyc_output
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-# release文件夹本地构建，禁止git跟踪
-release/
+.history
 
-# src-tauri文件夹本地构建，禁止git跟踪
-src-tauri/
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# Debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Package manager lock files (可选，根据团队协作需求调整)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
