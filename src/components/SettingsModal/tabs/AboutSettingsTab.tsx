@@ -145,7 +145,7 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
                   >
                     便签软件 InfinityNote
                   </div>
-                  <Text type="secondary">版本 1.1.0</Text>
+                  <Text type="secondary">版本 2.0.0</Text>
                   <Text style={{ display: "block", marginTop: 8 }}>
                     一款支持无限画布、AI智能、便签链接与多种整理方式的现代化便签应用。
                   </Text>
