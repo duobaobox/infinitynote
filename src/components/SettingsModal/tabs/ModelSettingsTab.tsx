@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Card, Form, Slider, InputNumber } from "antd";
 import { useTheme } from "../../../theme";
 import type { ModelSettings } from "../types";
 import { aiService } from "../../../services/aiService";
@@ -58,56 +57,17 @@ const ModelSettingsTab: React.FC<ModelSettingsTabProps> = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        gap: "12px",
         padding: "12px",
+        overflow: "hidden",
       }}
     >
       {/* 新的模型设置容器组件 */}
-      <div style={{ marginBottom: "16px" }}>
-        <ModelSettingsContainer
-          onSettingChange={handleCompatibleSettingChange}
-        />
-      </div>
-
-      {/* 生成参数设置 */}
-      <Card size="small" title="生成参数">
-        <Form layout="vertical" style={{ marginBottom: 0 }}>
-          <div style={{ display: "flex", gap: "16px" }}>
-            <div style={{ flex: 1 }}>
-              <Form.Item label="温度">
-                <Slider
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={aiSettings.temperature}
-                  onChange={(value) =>
-                    handleParameterChange("temperature", value)
-                  }
-                  marks={{ 0: "精确", 1: "创意" }}
-                  tooltip={{
-                    open: undefined, // 让 Slider 自动控制显示/隐藏
-                    formatter: (value) => value?.toFixed(1),
-                    placement: "top",
-                  }}
-                />
-              </Form.Item>
-            </div>
-            <div style={{ flex: 1 }}>
-              <Form.Item label="最大Token">
-                <InputNumber
-                  min={100}
-                  max={32000}
-                  value={aiSettings.maxTokens}
-                  onChange={(value) =>
-                    handleParameterChange("maxTokens", value || 3500)
-                  }
-                  style={{ width: "100%" }}
-                />
-              </Form.Item>
-            </div>
-          </div>
-        </Form>
-      </Card>
+      <ModelSettingsContainer
+        onSettingChange={handleCompatibleSettingChange}
+        temperature={aiSettings.temperature}
+        maxTokens={aiSettings.maxTokens}
+        onParameterChange={handleParameterChange}
+      />
     </div>
   );
 };

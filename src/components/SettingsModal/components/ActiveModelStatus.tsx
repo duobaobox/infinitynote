@@ -86,10 +86,9 @@ export const ActiveModelStatus: React.FC<ActiveModelStatusProps> = ({
         justifyContent: "space-between",
         padding: "12px 16px",
         backgroundColor: providerColor
-          ? hexToRgba(providerColor, 0.12) //活跃模型背景颜色透明度
+          ? hexToRgba(providerColor, 0.12)
           : "var(--bg-secondary)",
         borderRadius: "6px",
-        marginBottom: "16px",
         border: `1px solid ${isDark ? "#303030" : "#f0f0f0"}`,
       }}
     >

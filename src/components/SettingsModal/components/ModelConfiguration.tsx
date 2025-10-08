@@ -153,7 +153,7 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
   }, [providerModelOptions, configState.selectedModel]);
 
   return (
-    <div style={{ display: "flex", gap: "16px", height: "350px" }}>
+    <div style={{ display: "flex", gap: "16px", height: "100%" }}>
       {/* 左侧：提供商选择 */}
       <Card
         size="small"
@@ -166,9 +166,10 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
         }}
         bodyStyle={{
           flex: 1,
-          padding: "8px",
+          padding: "12px",
           display: "flex",
           flexDirection: "column",
+          overflow: "hidden",
         }}
       >
         <div style={{ flex: 1, overflowY: "auto", paddingRight: "4px" }}>
@@ -176,7 +177,7 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
             <div
               key={provider.value}
               style={{
-                padding: "12px",
+                padding: "10px 12px",
                 cursor: "pointer",
                 backgroundColor:
                   configState.selectedProvider === provider.value
@@ -189,7 +190,7 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
                     ? `3px solid ${getProviderColor(provider.value)}`
                     : "3px solid transparent",
                 borderRadius: "4px",
-                marginBottom: "4px",
+                marginBottom: "6px",
               }}
               onClick={() => handleProviderChange(provider.value)}
             >
@@ -221,13 +222,18 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
           flexDirection: "column",
           gap: "16px",
           height: "100%",
+          minWidth: 0,
         }}
       >
         {/* API密钥配置 */}
         <Card
           size="small"
-          style={{ flex: 1, display: "flex", flexDirection: "column" }}
-          bodyStyle={{ flex: 1, display: "flex", flexDirection: "column" }}
+          style={{ display: "flex", flexDirection: "column" }}
+          bodyStyle={{
+            display: "flex",
+            flexDirection: "column",
+            padding: "12px",
+          }}
           title={
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span>API密钥配置</span>
@@ -251,7 +257,7 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
             </Text>
           </div>
 
-          <Space.Compact style={{ width: "100%", marginBottom: "12px" }}>
+          <Space.Compact style={{ width: "100%" }}>
             <Input.Password
               placeholder={`输入 ${selectedProviderInfo?.label} 的 API Key`}
               value={configState.apiKey}
@@ -273,16 +279,19 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
           </Space.Compact>
 
           {configState.errorMessage && (
-            <Text type="danger" style={{ fontSize: "12px" }}>
+            <Text
+              type="danger"
+              style={{ fontSize: "12px", marginTop: "8px", display: "block" }}
+            >
               {configState.errorMessage}
             </Text>
           )}
         </Card>
 
         {/* 模型选择 */}
-        <Card size="small" title="模型选择">
-          <Form layout="vertical">
-            <Form.Item label="选择模型">
+        <Card size="small" title="模型选择" bodyStyle={{ padding: "12px" }}>
+          <Form layout="vertical" style={{ marginBottom: 0 }}>
+            <Form.Item label="选择模型" style={{ marginBottom: 0 }}>
               <AutoComplete
                 value={configState.selectedModel}
                 onChange={handleModelChange}
@@ -308,7 +317,7 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
           <div
             style={{
               marginTop: "12px",
-              padding: "8px",
+              padding: "10px 12px",
               backgroundColor: isDark ? "#1f1f1f" : "#f6f6f6",
               borderRadius: "4px",
             }}

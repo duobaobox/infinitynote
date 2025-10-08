@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { App } from "antd";
+import { App, Card, Form, Slider, InputNumber } from "antd";
 import { ActiveModelStatus } from "./ActiveModelStatus";
 import { ModelConfiguration } from "./ModelConfiguration";
 import { aiService } from "../../../services/aiService";
@@ -19,6 +19,12 @@ import { useTheme } from "../../../theme";
 export interface ModelSettingsContainerProps {
   /** 设置变更回调（用于向后兼容） */
   onSettingChange?: (key: string | number | symbol, value: any) => void;
+  /** 温度参数 */
+  temperature?: number;
+  /** 最大Token数 */
+  maxTokens?: number;
+  /** 参数变更回调 */
+  onParameterChange?: (key: string, value: any) => Promise<void>;
 }
 
 /**
@@ -26,6 +32,9 @@ export interface ModelSettingsContainerProps {
  */
 export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
   onSettingChange,
+  temperature = 0.7,
+  maxTokens = 3500,
+  onParameterChange,
 }) => {
   const { message } = App.useApp();
   const { isDark } = useTheme();
@@ -311,7 +320,14 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
 
   // 检查当前模型是否支持思维链
   return (
-    <div>
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+      }}
+    >
       {/* 头部状态组件 */}
       <ActiveModelStatus
         activeConfig={activeConfig}
@@ -321,13 +337,57 @@ export const ModelSettingsContainer: React.FC<ModelSettingsContainerProps> = ({
         connectionStatus={connectionStatus}
       />
 
-      {/* 配置区域组件 */}
-      <ModelConfiguration
-        configState={configState}
-        onConfigChange={handleConfigChange}
-        onSaveAndTest={handleSaveAndTest}
-        isTesting={isTesting}
-      />
+      {/* 生成参数设置 */}
+      {onParameterChange && (
+        <Card size="small" title="生成参数" bodyStyle={{ padding: "12px" }}>
+          <Form layout="vertical" style={{ marginBottom: 0 }}>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <div style={{ flex: 1 }}>
+                <Form.Item label="温度" style={{ marginBottom: 0 }}>
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    value={temperature}
+                    onChange={(value) =>
+                      onParameterChange("temperature", value)
+                    }
+                    marks={{ 0: "精确", 1: "创意" }}
+                    tooltip={{
+                      open: undefined,
+                      formatter: (value) => value?.toFixed(1),
+                      placement: "top",
+                    }}
+                  />
+                </Form.Item>
+              </div>
+              <div style={{ flex: 1 }}>
+                <Form.Item label="最大Token" style={{ marginBottom: 0 }}>
+                  <InputNumber
+                    min={100}
+                    max={32000}
+                    value={maxTokens}
+                    onChange={(value) =>
+                      onParameterChange("maxTokens", value || 3500)
+                    }
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+              </div>
+            </div>
+          </Form>
+        </Card>
+      )}
+
+      {/* 配置区域组件 - 自动填充剩余空间 */}
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <ModelConfiguration
+          configState={configState}
+          onConfigChange={handleConfigChange}
+          onSaveAndTest={handleSaveAndTest}
+          isTesting={isTesting}
+        />
+      </div>
     </div>
   );
 };
