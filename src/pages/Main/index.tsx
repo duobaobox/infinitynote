@@ -21,6 +21,8 @@ import type { Position, Note } from "../../types";
 import { NOTE_DEFAULT_SIZE } from "../../types/constants";
 // 引入画布组件
 import Canvas from "../Canvas";
+// 引入工作台组件
+import Workspace from "../Workspace";
 // 引入便签工作台组件
 import { NoteWorkbench } from "../../components/NoteWorkbench";
 // 引入设置弹窗组件
@@ -81,6 +83,9 @@ const logWithDedup = (message: string, ...args: any[]) => {
 const Main: React.FC = () => {
   // 侧边栏便签搜索关键字
   const [noteSearchKeyword, setNoteSearchKeyword] = useState("");
+
+  // 视图模式状态：canvas（画布）或 workspace（工作台）
+  const [viewMode, setViewMode] = useState<"canvas" | "workspace">("canvas");
 
   // 控制侧边栏折叠状态
   // 初始化时从 localStorage 读取侧边栏折叠状态
@@ -1162,6 +1167,8 @@ const Main: React.FC = () => {
           <div className={styles.segmentedWrapper}>
             <Segmented
               size="small"
+              value={viewMode}
+              onChange={(value) => setViewMode(value as "canvas" | "workspace")}
               options={[
                 { label: "画布", value: "canvas" },
                 { label: "工作台", value: "workspace" },
@@ -1238,23 +1245,31 @@ const Main: React.FC = () => {
 
       {/* 画布区域 - 自适应宽度 */}
       <Content className={collapsed ? styles.canvasCollapsed : styles.canvas}>
-        {/* 画布内容区域 */}
-        <Canvas isDragMode={isDragMode} />
+        {/* 根据视图模式渲染不同的内容 */}
+        {viewMode === "canvas" ? (
+          <>
+            {/* 画布内容区域 */}
+            <Canvas isDragMode={isDragMode} />
 
-        {/* 便签工作台 - 浮动在画布底部，包含画布工具栏 */}
-        <NoteWorkbench
-          aiGenerating={aiGenerating}
-          currentGeneratingNoteId={currentGeneratingNoteId}
-          connectedNotes={connectedNotes}
-          onStopAI={() => {
-            // 停止AI生成但保留已生成的内容
-            if (currentGeneratingNoteId) {
-              cancelAIGeneration(currentGeneratingNoteId);
-              setCurrentGeneratingNoteId(undefined);
-            }
-          }}
-          onAddNote={handleAddNote}
-        />
+            {/* 便签工作台 - 浮动在画布底部，包含画布工具栏 */}
+            <NoteWorkbench
+              aiGenerating={aiGenerating}
+              currentGeneratingNoteId={currentGeneratingNoteId}
+              connectedNotes={connectedNotes}
+              onStopAI={() => {
+                // 停止AI生成但保留已生成的内容
+                if (currentGeneratingNoteId) {
+                  cancelAIGeneration(currentGeneratingNoteId);
+                  setCurrentGeneratingNoteId(undefined);
+                }
+              }}
+              onAddNote={handleAddNote}
+            />
+          </>
+        ) : (
+          /* 工作台视图 */
+          <Workspace />
+        )}
       </Content>
 
       {/* 设置弹窗 */}
