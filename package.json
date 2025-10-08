@@ -29,7 +29,8 @@
     "electron:build": "npm run build && electron-builder",
     "electron:build:mac": "npm run build && electron-builder --mac",
     "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:linux": "npm run build && electron-builder --linux"
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "electron:build:all": "bash scripts/build-all.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.2",

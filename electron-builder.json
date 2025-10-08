@@ -63,7 +63,6 @@
     ],
     "icon": "build/icon.ico",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
-    "publisherName": "无限便签团队",
     "verifyUpdateCodeSignature": false,
     "requestedExecutionLevel": "asInvoker",
     "fileAssociations": [
@@ -106,12 +105,7 @@
     "target": ["AppImage", "deb", "rpm"],
     "category": "Office",
     "icon": "build/icon.png",
-    "maintainer": "无限便签团队",
-    "desktop": {
-      "Name": "无限便签",
-      "Comment": "无限画布便签应用",
-      "Categories": "Office;Utility;"
-    }
+    "maintainer": "无限便签团队"
   },
   "publish": null,
   "compression": "normal",
