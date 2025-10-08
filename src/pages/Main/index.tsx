@@ -117,16 +117,27 @@ const Main: React.FC = () => {
   // 获取App Context中的modal和notification实例
   const { modal, notification, message: messageApi } = App.useApp();
 
-  // 设置ErrorNotification使用App上下文的notification实例
+  // 初始化通知服务，让非 React 组件也能使用通知功能
   useEffect(() => {
-    const setupErrorNotification = async () => {
+    const setupNotificationService = async () => {
+      // 设置 ErrorNotification
       const { errorNotification } = await import(
         "../../components/ErrorNotification"
       );
       errorNotification.setNotificationApi(notification);
+
+      // 设置全局通知服务（供 Zustand store 使用）
+      const { notificationService } = await import(
+        "../../services/notificationService"
+      );
+      notificationService.initialize({
+        notification,
+        message: messageApi,
+        modal,
+      });
     };
-    setupErrorNotification();
-  }, [notification]);
+    setupNotificationService();
+  }, [notification, messageApi, modal]);
   // 状态管理
   const {
     notes,

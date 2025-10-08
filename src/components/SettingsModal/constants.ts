@@ -128,8 +128,8 @@ export const THEME_OPTIONS = [
  * 画布颜色预设配置
  */
 export const CANVAS_COLOR_PRESETS = [
-  { name: "经典灰", value: "#f0f2f5", description: "默认淡雅灰色" },
-  { name: "纯净白", value: "#ffffff", description: "纯净白色背景" },
+  { name: "经典灰", value: "#f0f2f5", description: "淡雅灰色" },
+  { name: "纯净白", value: "#ffffff", description: "默认纯净白色背景" },
   { name: "温暖米", value: "#faf8f5", description: "温暖米色调" },
   { name: "薄荷绿", value: "#f0f9f4", description: "清新薄荷绿" },
   { name: "天空蓝", value: "#f0f8ff", description: "清澈天空蓝" },
@@ -240,7 +240,7 @@ export const DEFAULT_DISPLAY_SETTINGS = {
   theme: "light" as const,
   showGrid: true,
   smoothZoom: false, // 默认关闭平滑缩放
-  canvasColor: "#f0f2f5", // 默认画布颜色
+  canvasColor: "#FFFFFF", // 默认画布颜色
 };
 
 /**

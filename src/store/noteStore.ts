@@ -1152,6 +1152,71 @@ export const useNoteStore = create<NoteStore>()(
             },
           });
 
+          // ========== 新增：处理连接模式 ==========
+          try {
+            const { useConnectionStore } = await import("./connectionStore");
+            const { ConnectionMode } = await import(
+              "../components/SlotContainer"
+            );
+            const connectionStore = useConnectionStore.getState();
+            const { connectedNotes, connectionMode, clearAllConnections } =
+              connectionStore;
+
+            // 如果有连接的便签，根据模式执行相应操作
+            if (connectedNotes.length > 0) {
+              console.log(
+                `🔄 检测到连接模式: ${
+                  connectionMode === ConnectionMode.REPLACE ? "替换" : "汇总"
+                }`
+              );
+
+              if (connectionMode === ConnectionMode.REPLACE) {
+                // 替换模式：删除所有原始便签
+                console.log(
+                  `🗑️ 替换模式 - 删除 ${connectedNotes.length} 个原始便签`
+                );
+
+                const noteIdsToDelete = connectedNotes.map((note) => note.id);
+                const noteTitles = connectedNotes
+                  .map((n) => n.title || "无标题")
+                  .join(", ");
+
+                console.log("  📌 待删除便签:", noteTitles);
+
+                // 批量删除原始便签
+                await get().deleteNotes(noteIdsToDelete);
+
+                console.log("  ✅ 原始便签已删除");
+
+                // 使用通知服务显示删除提醒（避免静态方法的上下文警告）
+                try {
+                  const { notificationService } = await import(
+                    "../services/notificationService"
+                  );
+                  notificationService.success({
+                    message: "替换成功",
+                    description: `已删除 ${connectedNotes.length} 个原始便签，保留生成的汇总便签`,
+                    duration: 3,
+                  });
+                } catch (notifError) {
+                  console.warn("显示删除提示失败:", notifError);
+                }
+
+                // 替换模式：清空连接状态
+                clearAllConnections();
+                console.log("  🧹 连接状态已清空");
+              } else {
+                // 汇总模式：保留原始便签，不清空连接
+                console.log("📝 汇总模式 - 保留原始便签和连接");
+                // 不执行 clearAllConnections()，保持连接状态
+              }
+            }
+          } catch (connectionError) {
+            console.error("处理连接模式失败（不影响主流程）:", connectionError);
+            // 不抛出错误，继续执行
+          }
+          // ========== 连接模式处理结束 ==========
+
           // 清理临时状态
           set((state) => ({
             aiGenerating: { ...state.aiGenerating, [noteId]: false },

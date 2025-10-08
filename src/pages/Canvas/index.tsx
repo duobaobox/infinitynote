@@ -1002,7 +1002,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       style={{
         backgroundColor: isDark
           ? "#1a1a1a"
-          : displaySettings.canvasColor || "#f0f2f5",
+          : displaySettings.canvasColor || "#FFFFFF",
       }}
     >
       {/* 画布区域 */}
