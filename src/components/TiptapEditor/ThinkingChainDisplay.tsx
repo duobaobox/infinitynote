@@ -38,13 +38,18 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
 
     // 当思维链内容更新时自动滚动到底部
     useEffect(() => {
-      if (isStreaming && !isCollapsed && thinkingData?.steps?.length && contentRef.current) {
+      if (
+        isStreaming &&
+        !isCollapsed &&
+        thinkingData?.steps?.length &&
+        contentRef.current
+      ) {
         const container = contentRef.current;
         // 使用轻微延迟确保内容已渲染
         setTimeout(() => {
           container.scrollTo({
             top: container.scrollHeight,
-            behavior: 'smooth',
+            behavior: "smooth",
           });
         }, 50);
       }
@@ -64,24 +69,33 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
 
     // 根据生成阶段确定头部显示文本
     const getHeaderText = () => {
+      // 如果生成已完成，显示"思考过程"
       if (!isStreaming) {
-        return "思考过程"; // 生成完成后显示
+        return "思考过程";
       }
 
+      // 流式生成过程中，根据阶段判断
       switch (generationPhase) {
         case AIGenerationPhase.THINKING:
-          return "正在思考"; // 思维链生成阶段，不包含省略号
+          // 思维链生成阶段，显示"正在思考"
+          return "正在思考";
         case AIGenerationPhase.ANSWERING:
-          return "正在回复"; // 最终答案生成阶段，不包含省略号
         case AIGenerationPhase.COMPLETED:
-          return "思考过程"; // 生成完成阶段
+          // 答案生成阶段或已完成，显示"思考过程"
+          return "思考过程";
+        case AIGenerationPhase.INITIALIZING:
         default:
-          // 兼容旧版本逻辑
+          // 初始化或未知阶段，根据是否流式判断
           return isStreaming ? "正在思考" : "思考过程";
       }
     };
 
     const headerText = getHeaderText();
+
+    // 判断是否应该显示"正在思考"的动画（三个点）
+    // 只有在 THINKING 阶段才显示动画
+    const shouldShowThinkingAnimation =
+      isStreaming && generationPhase === AIGenerationPhase.THINKING;
 
     return (
       <div className={styles.thinkingChainContainer}>
@@ -106,7 +120,7 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
         >
           <span
             className={`${styles.thinkingTitle} ${
-              isStreaming ? styles.thinking : ""
+              shouldShowThinkingAnimation ? styles.thinking : ""
             }`}
             aria-live="polite"
           >

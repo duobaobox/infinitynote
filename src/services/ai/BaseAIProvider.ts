@@ -14,6 +14,7 @@ import type {
   AIGenerationOptions,
   AICustomProperties,
 } from "../../types/ai";
+import { AIGenerationPhase } from "../../types/ai";
 import { ThinkingChainDetector } from "../../utils/thinkingChainDetector";
 
 /**
@@ -361,6 +362,11 @@ export abstract class BaseAIProvider implements AIProvider {
     let retryCount = 0;
     const maxRetries = 3;
 
+    // 生成阶段追踪
+    let currentPhase: AIGenerationPhase = AIGenerationPhase.INITIALIZING;
+    let thinkingPhaseCompleted = false;
+    let lastThinkingUpdateTime = Date.now();
+
     // 性能监控数据
     const streamStartTime = Date.now();
     let firstChunkTime: number | null = null;
@@ -436,7 +442,8 @@ export abstract class BaseAIProvider implements AIProvider {
             // 构建实时AI数据，包含当前的思维链信息
             const currentAIData = this.buildStreamingAIData(
               options,
-              thinkingChain
+              thinkingChain,
+              currentPhase
             );
             options.onStream?.(html, currentAIData);
           } else {
@@ -451,6 +458,15 @@ export abstract class BaseAIProvider implements AIProvider {
 
           if (streamThinking || legacyThinking) {
             fullThinking += streamThinking || legacyThinking || "";
+
+            // 设置为思维链生成阶段
+            if (currentPhase === AIGenerationPhase.INITIALIZING) {
+              currentPhase = AIGenerationPhase.THINKING;
+              console.log(`🧠 [${this.name}] 进入思维链生成阶段`);
+            }
+
+            // 更新思维链最后更新时间
+            lastThinkingUpdateTime = Date.now();
 
             // 更新或创建思维链步骤 - 使用累积方式而非分段方式
             if (thinkingChain.length === 0) {
@@ -477,9 +493,40 @@ export abstract class BaseAIProvider implements AIProvider {
             const html = md.render(fullMarkdown);
             const currentAIData = this.buildStreamingAIData(
               options,
-              thinkingChain
+              thinkingChain,
+              currentPhase
             );
             options.onStream?.(html, currentAIData);
+          } else {
+            // 如果当前在思维链阶段，但已经超过一定时间没有新的思维链内容
+            // 则判定思维链阶段结束，进入答案生成阶段
+            if (
+              currentPhase === AIGenerationPhase.THINKING &&
+              !thinkingPhaseCompleted &&
+              thinkingChain.length > 0 &&
+              Date.now() - lastThinkingUpdateTime > 500 // 500ms内没有新的思维链内容
+            ) {
+              thinkingPhaseCompleted = true;
+              currentPhase = AIGenerationPhase.ANSWERING;
+              console.log(`✅ [${this.name}] 思维链生成完成，进入答案生成阶段`);
+
+              // 发送一次更新通知，让UI知道思维链阶段已结束
+              const MarkdownItConstructor = await import("markdown-it");
+              const md = new MarkdownItConstructor.default({
+                html: false,
+                breaks: true,
+                linkify: true,
+                typographer: true,
+                quotes: "\"\"''",
+              });
+              const html = md.render(fullMarkdown);
+              const currentAIData = this.buildStreamingAIData(
+                options,
+                thinkingChain,
+                currentPhase
+              );
+              options.onStream?.(html, currentAIData);
+            }
           }
 
           retryCount = 0; // 重置重试计数
@@ -626,7 +673,8 @@ export abstract class BaseAIProvider implements AIProvider {
    */
   protected buildStreamingAIData(
     options: AIGenerationOptions,
-    thinkingChain: any[]
+    thinkingChain: any[],
+    currentPhase: AIGenerationPhase = AIGenerationPhase.INITIALIZING
   ): AICustomProperties["ai"] {
     const aiData: AICustomProperties["ai"] = {
       generated: false, // 还在生成中
@@ -637,6 +685,9 @@ export abstract class BaseAIProvider implements AIProvider {
       requestId: `req_${Date.now()}`,
       thinkingCollapsed: false, // 生成过程中默认展开
       isStreaming: true, // 正在流式生成
+      generationPhase: currentPhase, // 当前生成阶段
+      isThinkingPhase: currentPhase === AIGenerationPhase.THINKING,
+      isAnsweringPhase: currentPhase === AIGenerationPhase.ANSWERING,
     };
 
     // 如果有思维链数据，添加思维链结构
@@ -644,9 +695,9 @@ export abstract class BaseAIProvider implements AIProvider {
       aiData.thinkingChain = {
         steps: thinkingChain,
         summary:
-          thinkingChain.length > 0
+          currentPhase === AIGenerationPhase.THINKING
             ? `正在生成思维链 (${thinkingChain.length}步)`
-            : "正在思考...",
+            : `完成了${thinkingChain.length}步思考过程`,
         totalSteps: thinkingChain.length,
       };
     }
