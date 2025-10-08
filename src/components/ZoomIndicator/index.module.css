@@ -38,7 +38,11 @@
 .zoomNumber {
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-text);
+  color: #4a90e2; /* 柔和蓝色，可根据主题调整 */
+  background: linear-gradient(90deg, #4a90e2 0%, #50e3c2 100%);
+  -webkit-background-clip: text;
+  background-clip: text; /* 添加标准属性以增强兼容性 */
+  -webkit-text-fill-color: transparent;
   margin-bottom: 1px;
 }
 
@@ -56,7 +60,7 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 0 !important;
+  padding: 6px 0 !important; /* 增加按钮上下间距，整体更舒展 */
   border: none !important;
   color: var(--color-text-secondary);
   transition: all 0.2s ease;

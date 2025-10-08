@@ -60,6 +60,22 @@ interface CanvasProps {
  * 画布组件
  */
 export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
+  // 监听ESC键退出拖动模式
+  useEffect(() => {
+    const handleEscToExitDragMode = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isDragMode) {
+        e.preventDefault();
+        // 通知主页面退出拖动模式
+        window.dispatchEvent(
+          new CustomEvent("toggleDragMode", { detail: { enabled: false } })
+        );
+      }
+    };
+    document.addEventListener("keydown", handleEscToExitDragMode);
+    return () => {
+      document.removeEventListener("keydown", handleEscToExitDragMode);
+    };
+  }, [isDragMode]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(
