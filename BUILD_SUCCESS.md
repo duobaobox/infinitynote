@@ -6,6 +6,35 @@
 
 ---
 
+## 🎯 文件太多？快速导航
+
+Release 目录中有很多文件，别慌！这里有清晰的分类：
+
+### 📚 必读文档
+
+- **[FILE_CHECKLIST.md](release/FILE_CHECKLIST.md)** - 📋 完整文件清单和分类
+- **[DOWNLOAD_GUIDE.md](release/DOWNLOAD_GUIDE.md)** - 🎯 用户下载选择指南
+
+### ⚡ 快速结论
+
+**只需上传这 5 个文件到 GitHub Releases：**
+
+1. `无限便签-2.0.0.dmg` (macOS Intel)
+2. `无限便签-2.0.0-arm64.dmg` (macOS Apple Silicon)
+3. `无限便签-2.0.0-win.exe` (Windows 通用版)
+4. `无限便签-2.0.0.AppImage` (Linux)
+5. `SHA256SUMS.txt` (校验文件)
+
+**总大小**: ~599 MB，覆盖 95%+ 用户
+
+其他文件说明：
+
+- ⭕ `.zip`、`portable.exe`、`win-x64.exe` 等 → 可选文件（高级用户）
+- ❌ `.blockmap` 文件 → 自动更新文件（当前不需要）
+- ❌ `*-unpacked/` 目录 → 临时文件（可删除，节省 1.6 GB）
+
+---
+
 ## 📦 生成的安装包
 
 ### macOS (4 个文件)

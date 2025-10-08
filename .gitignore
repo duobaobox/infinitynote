@@ -24,6 +24,23 @@ out
 
 # Electron build artifacts
 release/
+
+# Release 目录中保留必要的文档和清单
+!release/*.md
+!release/SHA256SUMS.txt
+
+# 但排除 release 目录中的临时文件
+release/*.blockmap
+release/*-unpacked/
+release/mac/
+release/mac-arm64/
+release/linux-unpacked/
+release/linux-arm64-unpacked/
+release/win-unpacked/
+release/win-ia32-unpacked/
+release/builder-*.yml
+release/builder-*.yaml
+
 src-tauri/
 
 # Testing
