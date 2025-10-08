@@ -143,7 +143,7 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
                       marginBottom: "4px",
                     }}
                   >
-                    便签软件 InfinityNote
+                    无限便签 InfinityNote
                   </div>
                   <Text type="secondary">版本 2.0.0</Text>
                   <Text style={{ display: "block", marginTop: 8 }}>
