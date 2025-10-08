@@ -80,6 +80,9 @@ const logWithDedup = (message: string, ...args: any[]) => {
  * - 右侧主内容区域（自适应宽度）
  */
 const Main: React.FC = () => {
+  // 侧边栏便签搜索关键字
+  const [noteSearchKeyword, setNoteSearchKeyword] = useState("");
+
   // 控制侧边栏折叠状态
   // 初始化时从 localStorage 读取侧边栏折叠状态
   const [collapsed, setCollapsed] = useState(() =>
@@ -740,8 +743,17 @@ const Main: React.FC = () => {
     ? getNotesByCanvas(activeCanvasId)
     : [];
 
-  // 渲染便签列表（使用真实数据）
-  const noteItems = currentCanvasNotes.map((note) => (
+  // 侧边栏搜索过滤
+  const filteredNotes = noteSearchKeyword.trim()
+    ? currentCanvasNotes.filter(
+        (note) =>
+          note.title?.toLowerCase().includes(noteSearchKeyword.toLowerCase()) ||
+          note.content?.toLowerCase().includes(noteSearchKeyword.toLowerCase())
+      )
+    : currentCanvasNotes;
+
+  // 渲染便签列表（使用过滤后的数据）
+  const noteItems = filteredNotes.map((note) => (
     <Card
       size="small"
       className={styles.noteItem}
@@ -1193,6 +1205,8 @@ const Main: React.FC = () => {
                     prefix={<DynamicIcon type="SearchOutlined" />}
                     size="small"
                     className={styles.notesListSearch}
+                    value={noteSearchKeyword}
+                    onChange={(e) => setNoteSearchKeyword(e.target.value)}
                   />
                 </div>
 
