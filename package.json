@@ -3,8 +3,8 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "description": "无限画布便签应用",
-  "author": "InfinityNote Team",
+  "description": "无限便签 - 无限画布便签应用",
+  "author": "无限便签团队",
   "main": "electron/main.cjs",
   "keywords": [
     "note",

@@ -10,7 +10,7 @@ function createWindow() {
     height: 900,
     minWidth: 1000,
     minHeight: 600,
-    title: "InfinityNote 2",
+    title: "无限便签",
     icon: path.join(__dirname, "../src/assets/logo.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),

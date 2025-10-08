@@ -1,7 +1,7 @@
 {
   "appId": "com.infinitynote.app",
-  "productName": "InfinityNote 2",
-  "copyright": "Copyright © 2025 InfinityNote Team",
+  "productName": "无限便签",
+  "copyright": "Copyright © 2025 无限便签团队",
   "directories": {
     "output": "release",
     "buildResources": "build"
@@ -36,7 +36,7 @@
         "path": "/Applications"
       }
     ],
-    "title": "InfinityNote 2 安装器",
+    "title": "无限便签 安装器",
     "backgroundColor": "#ffffff"
   },
   "win": {
@@ -53,7 +53,7 @@
     "target": ["AppImage", "deb", "rpm"],
     "category": "Office",
     "icon": "src/assets/logo.png",
-    "maintainer": "InfinityNote Team"
+    "maintainer": "无限便签团队"
   },
   "publish": null,
   "compression": "normal",

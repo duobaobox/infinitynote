@@ -1,4 +1,4 @@
-# InfinityNote 2
+# 无限便签 (InfinityNote)
 
 > 🚀 **现代化无限画布便签应用** - 支持 AI 生成、思维链可视化、多主题的智能便签工具
 
@@ -27,7 +27,7 @@
 
 ## 🎯 项目简介
 
-InfinityNote 2 是一款基于 Electron + React 的跨平台无限画布便签应用，专为知识管理和创意思考而设计。它将传统便签的灵活性与现代 AI 技术结合，提供流畅的使用体验和强大的功能。
+无限便签是一款基于 Electron + React 的跨平台无限画布便签应用，专为知识管理和创意思考而设计。它将传统便签的灵活性与现代 AI 技术结合，提供流畅的使用体验和强大的功能。
 
 ## ✨ 核心特性
 
@@ -91,18 +91,18 @@ InfinityNote 2 是一款基于 Electron + React 的跨平台无限画布便签�
 
 **macOS**:
 
-- Apple Silicon (M1/M2/M3): `InfinityNote 2-2.0.0-arm64.dmg`
-- Intel 芯片: `InfinityNote 2-2.0.0.dmg`
+- Apple Silicon (M1/M2/M3): `无限便签-2.0.0-arm64.dmg`
+- Intel 芯片: `无限便签-2.0.0.dmg`
 
 详细安装说明请查看 [INSTALL.md](./INSTALL.md)
 
 **Windows** (即将推出):
 
-- `InfinityNote 2 Setup 2.0.0.exe`
+- `无限便签 Setup 2.0.0.exe`
 
 **Linux** (即将推出):
 
-- `InfinityNote 2-2.0.0.AppImage`
+- `无限便签-2.0.0.AppImage`
 
 ### 🛠️ 从源码构建
 
