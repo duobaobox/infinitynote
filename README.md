@@ -19,11 +19,7 @@
 
 > 💡 **提示**: 建议在 `/docs/screenshots/` 目录下添加应用截图展示核心功能
 
-<!--
-![主界面](./docs/screenshots/main.png)
-![AI 生成](./docs/screenshots/ai-generation.png)
-![思维链展示](./docs/screenshots/thinking-chain.png)
--->
+![主界面](./docs/FIXES/image0.png)
 
 ## 🎯 项目简介
 
@@ -179,15 +175,6 @@ npm run electron:build:linux   # Linux
 - `Ctrl/Cmd + F`: 搜索便签
 - `Esc`: 退出编辑模式
 
-### 详细文档
-
-更多详细文档请查看 [docs](./docs/) 目录：
-
-- [安装指南](./INSTALL.md) - 详细的安装和首次运行说明
-- [画布缩放修复](./docs/CANVAS_ZOOM_FIX.md) - 画布交互优化说明
-- [Electron 菜单](./docs/ELECTRON_MENU_V2.md) - 应用菜单配置
-- [修复记录](./docs/FIXES/) - 已修复的问题和解决方案
-
 ## 📁 项目结构
 
 ```
@@ -279,12 +266,12 @@ npm run type-check
 
 ## 🗺️ 开发路线
 
-- [ ] **v2.1**: 便签模板系统
-- [ ] **v2.2**: 数据导入/导出功能（JSON、Markdown）
-- [ ] **v2.3**: 多工作区支持
-- [ ] **v2.4**: 云同步功能
-- [ ] **v3.0**: 协作编辑功能
-- [ ] **v3.1**: 移动端应用（iOS/Android）
+- [ ] **v2.1**: 客户端增加桌面悬浮便签功能
+- [ ] **v2.2**: 提示词模板功能完善
+- [ ] **v2.3**: 工作台功能开发（待收集的功能，欢迎反馈）
+- [ ] **v2.4**: 云同步功能开发
+- [ ] **v2.5**: 回收站功能开发
+- [ ] **v3.0**: 画布分享功能开发
 
 查看详细的 [Roadmap](https://github.com/duobaobox/infinitynote2/projects) 和 [更新日志](./CHANGELOG.md)
 
