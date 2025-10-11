@@ -9,6 +9,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     close: () => ipcRenderer.invoke("window:close"),
     isMaximized: () => ipcRenderer.invoke("window:isMaximized"),
   },
+  tray: {
+    show: () => ipcRenderer.invoke("tray:show"),
+    hide: () => ipcRenderer.invoke("tray:hide"),
+    updateTooltip: (tooltip) =>
+      ipcRenderer.invoke("tray:updateTooltip", tooltip),
+  },
 });
 
 contextBridge.exposeInMainWorld("isElectron", true);

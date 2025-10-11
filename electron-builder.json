@@ -7,6 +7,24 @@
     "buildResources": "build"
   },
   "files": ["dist/**/*", "electron/**/*.cjs", "package.json"],
+  "extraResources": [
+    {
+      "from": "src/assets/logo.png",
+      "to": "logo.png"
+    },
+    {
+      "from": "src/assets/tray@2x.png",
+      "to": "tray@2x.png"
+    },
+    {
+      "from": "src/assets/logo.ico",
+      "to": "logo.ico"
+    },
+    {
+      "from": "src/assets/logo.icns",
+      "to": "logo.icns"
+    }
+  ],
   "mac": {
     "category": "public.app-category.productivity",
     "target": [
