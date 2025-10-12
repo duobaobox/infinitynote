@@ -27,12 +27,20 @@ const FloatingNoteContent: React.FC = () => {
   const [localContent, setLocalContent] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const floatingWindowRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // 检测垂直滚动条
+  // 用于检测滚动条的 ProseMirror 元素
+  const [proseMirrorElement, setProseMirrorElement] =
+    useState<HTMLElement | null>(null);
+
+  // 检测 TiptapEditor 内容区域是否有垂直滚动条
   const hasVerticalScrollbar = useVerticalScrollbarDetection(
-    contentRef.current
+    proseMirrorElement,
+    {
+      debounceDelay: 16, // 约一个动画帧的时间
+      immediate: false, // 保持防抖，但使用很短的延迟
+    }
   );
 
   // 获取 URL 参数
@@ -205,6 +213,24 @@ const FloatingNoteContent: React.FC = () => {
     };
   }, []);
 
+  // 获取 ProseMirror 元素用于滚动条检测
+  useEffect(() => {
+    if (floatingWindowRef.current && !isLoading) {
+      // 使用 requestAnimationFrame 确保 DOM 已渲染
+      const frameId = requestAnimationFrame(() => {
+        const proseMirror = floatingWindowRef.current?.querySelector(
+          ".ProseMirror"
+        ) as HTMLElement;
+        setProseMirrorElement(proseMirror);
+      });
+
+      return () => cancelAnimationFrame(frameId);
+    } else {
+      // 清除引用
+      setProseMirrorElement(null);
+    }
+  }, [isLoading, localContent]); // 当内容变化时重新检测
+
   if (isLoading || !noteData) {
     return (
       <div className={styles.floatingLoading}>
@@ -226,6 +252,7 @@ const FloatingNoteContent: React.FC = () => {
     <ConfigProvider locale={zhCN}>
       <AntApp>
         <div
+          ref={floatingWindowRef}
           className={styles.floatingWindow}
           style={{
             background: isDark ? colorTheme.dark : colorTheme.light,
@@ -270,7 +297,6 @@ const FloatingNoteContent: React.FC = () => {
 
           {/* 内容区域 */}
           <div
-            ref={contentRef}
             className={`${styles.floatingContent} ${
               hasVerticalScrollbar ? styles.hasScrollbar : styles.noScrollbar
             }`}

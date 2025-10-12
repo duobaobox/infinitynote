@@ -86,7 +86,7 @@
 /* 内容区域 */
 .floatingContent {
   flex: 1;
-  overflow: auto;
+  overflow: hidden; /* ✅ 改为 hidden，让 ProseMirror 处理滚动 */
   padding: 0px 12px 12px 12px; /* 上0，左右12，下12 */
   background: transparent;
   display: flex;
@@ -96,7 +96,7 @@
 
 /* 动态padding - 根据滚动条状态调整右边距 */
 .floatingContent.hasScrollbar {
-  padding-right: 0px; /* 有滚动条时，右边距为0避免内容被滚动条遮挡 */
+  padding-right: 2px; /* 有滚动条时，右边距为2px，留出一点间距 */
 }
 
 .floatingContent.noScrollbar {
@@ -122,22 +122,22 @@
   min-height: 0 !important;
 }
 
-/* 滚动条样式 */
-.floatingContent::-webkit-scrollbar {
+/* 滚动条样式 - 应用在 ProseMirror 元素上 */
+.floatingContent :global(.ProseMirror)::-webkit-scrollbar {
   width: 6px;
 }
 
-.floatingContent::-webkit-scrollbar-track {
+.floatingContent :global(.ProseMirror)::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
   border-radius: 3px;
 }
 
-.floatingContent::-webkit-scrollbar-thumb {
+.floatingContent :global(.ProseMirror)::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
 }
 
-.floatingContent::-webkit-scrollbar-thumb:hover {
+.floatingContent :global(.ProseMirror)::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
 
