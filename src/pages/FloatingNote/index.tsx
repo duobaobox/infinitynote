@@ -29,6 +29,7 @@ const FloatingNoteContent: React.FC = () => {
   const [localTitle, setLocalTitle] = useState("");
   const [localContent, setLocalContent] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // 编辑模式状态
   const titleInputRef = useRef<HTMLInputElement>(null);
   const floatingWindowRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -84,6 +85,25 @@ const FloatingNoteContent: React.FC = () => {
     },
     [debouncedSave]
   );
+
+  // 进入编辑模式
+  const handleEnterEditMode = useCallback(() => {
+    if (!isEditing) {
+      setIsEditing(true);
+    }
+  }, [isEditing]);
+
+  // 编辑器焦点处理 - 自动进入编辑模式
+  const handleEditorFocus = useCallback(() => {
+    if (!isEditing) {
+      setIsEditing(true);
+    }
+  }, [isEditing]);
+
+  // ESC 键退出编辑模式
+  const handleEditorEscape = useCallback(() => {
+    setIsEditing(false);
+  }, []);
 
   // 标题编辑
   const handleTitleClick = useCallback(() => {
@@ -217,6 +237,21 @@ const FloatingNoteContent: React.FC = () => {
     };
   }, []);
 
+  // 监听窗口失焦事件 - 退出编辑模式
+  useEffect(() => {
+    const handleWindowBlur = () => {
+      if (isEditing) {
+        setIsEditing(false);
+      }
+    };
+
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [isEditing]);
+
   // 获取 ProseMirror 元素用于滚动条检测
   useEffect(() => {
     if (floatingWindowRef.current && !isLoading) {
@@ -319,16 +354,21 @@ const FloatingNoteContent: React.FC = () => {
             className={`${styles.floatingContent} ${
               hasVerticalScrollbar ? styles.hasScrollbar : styles.noScrollbar
             }`}
+            onClick={handleEnterEditMode}
           >
             <TiptapEditor
               content={localContent}
               onContentChange={handleContentChange}
-              placeholder="在这里编写便签内容..."
-              readonly={false}
-              autoFocus={false}
+              onFocus={handleEditorFocus}
+              onEscape={handleEditorEscape}
+              placeholder={
+                isEditing ? "在这里编写便签内容..." : "点击开始编辑..."
+              }
+              readonly={!isEditing}
+              autoFocus={isEditing}
               config={{
                 toolbar: {
-                  show: true,
+                  show: isEditing, // 编辑模式时显示工具栏
                   position: "top",
                 },
               }}
