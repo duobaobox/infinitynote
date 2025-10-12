@@ -281,26 +281,12 @@ const FloatingNoteContent: React.FC = () => {
   // 获取便签颜色主题
   const { light, dark } = generateNoteColorThemes();
 
-  // 🔍 将颜色值转换为颜色名称
-  // noteData.color 可能是 "#FFF2CC" 这样的值，需要转换为 "yellow"
   const colorPreset = getNoteColorPreset(noteData.color);
-  const colorName = colorPreset?.name || "yellow"; // 默认黄色
-
-  // 🔍 调试日志
-  console.log("🎨 悬浮便签颜色调试:", {
-    originalColor: noteData.color,
-    colorPreset,
-    colorName,
-    isDark,
-    selectedLight: light[colorName],
-    selectedDark: dark[colorName],
-  });
+  const colorName = colorPreset?.name || "yellow";
 
   const backgroundColor = isDark
     ? dark[colorName] || dark.yellow
     : light[colorName] || light.yellow;
-
-  console.log("🎨 最终背景色:", backgroundColor);
 
   return (
     <ConfigProvider locale={zhCN}>
@@ -330,7 +316,6 @@ const FloatingNoteContent: React.FC = () => {
                 <h3
                   className={styles.title}
                   onClick={handleTitleClick}
-                  title="双击编辑标题"
                 >
                   {localTitle || "无标题便签"}
                 </h3>
@@ -345,7 +330,6 @@ const FloatingNoteContent: React.FC = () => {
               type="text"
               size="small"
               className={styles.closeButton}
-              danger
             />
           </div>
 
