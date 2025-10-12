@@ -8,6 +8,9 @@ const {
 } = require("electron");
 const path = require("path");
 
+// 设置应用名称（确保在所有平台显示正确的名称）
+app.name = "无限便签";
+
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 let mainWindow;
 let tray = null;
@@ -237,8 +240,68 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // 隐藏默认菜单栏（File、Edit、Window、Help等），兼容 macOS
-  Menu.setApplicationMenu(Menu.buildFromTemplate([]));
+  // 设置应用菜单（macOS 保留应用名称菜单，符合系统规范）
+  const isMac = process.platform === "darwin";
+
+  const menuTemplate = [
+    // macOS 应用菜单（显示应用名称）
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              {
+                label: "关于 " + app.name,
+                click: () => {
+                  const { dialog } = require("electron");
+                  dialog.showMessageBox(mainWindow, {
+                    type: "info",
+                    title: "关于无限便签",
+                    message: "无限便签 v" + app.getVersion(),
+                    detail: "无限画布便签应用\n\n© 2025 无限便签团队",
+                    buttons: ["确定"],
+                  });
+                },
+              },
+              { type: "separator" },
+              {
+                label: "偏好设置...",
+                accelerator: "CmdOrCtrl+,",
+                enabled: false, // 可以后续实现设置功能
+              },
+              { type: "separator" },
+              { role: "services" },
+              { type: "separator" },
+              { role: "hide" },
+              { role: "hideOthers" },
+              { role: "unhide" },
+              { type: "separator" },
+              {
+                label: "退出",
+                accelerator: "CmdOrCtrl+Q",
+                click: () => {
+                  app.isQuiting = true;
+                  app.quit();
+                },
+              },
+            ],
+          },
+        ]
+      : []),
+    // 窗口菜单
+    {
+      label: "窗口",
+      submenu: [
+        { role: "minimize", label: "最小化" },
+        { role: "zoom", label: "缩放" },
+        ...(isMac
+          ? [{ type: "separator" }, { role: "front", label: "全部置于顶层" }]
+          : [{ role: "close", label: "关闭" }]),
+      ],
+    },
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
 
   // 创建系统托盘
   createTray();
