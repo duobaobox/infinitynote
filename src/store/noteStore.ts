@@ -334,6 +334,16 @@ export const useNoteStore = create<NoteStore>()(
           if (note) {
             noteStoreEvents.notifyNoteUpdated(id, note.canvasId);
           }
+
+          // 同步到悬浮窗口（如果存在）
+          if (window.electronAPI?.floating?.updateFloatingNote) {
+            // 传递 fromMainWindow=true 参数，避免循环更新
+            window.electronAPI.floating
+              .updateFloatingNote(id, updatesWithTime, true)
+              .catch(() => {
+                // 静默失败，可能悬浮窗口不存在
+              });
+          }
         } catch (error) {
           console.error("❌ 更新便签失败:", error);
           // 可以选择重新加载数据或显示错误提示

@@ -198,19 +198,8 @@ function createFloatingNoteWindow(noteData) {
     floatingWindows.delete(noteId);
   });
 
-  // 监听窗口大小变化，同步到主窗口
-  floatingWindow.on("resize", () => {
-    if (!floatingWindow.isDestroyed()) {
-      const bounds = floatingWindow.getBounds();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send("floating-note-resized", {
-          noteId,
-          width: bounds.width,
-          height: bounds.height,
-        });
-      }
-    }
-  });
+  // 注意：悬浮窗口的大小调整不同步到画布便签
+  // 悬浮窗口和画布便签保持独立的尺寸
 
   // 存储窗口引用
   floatingWindows.set(noteId, floatingWindow);
@@ -484,29 +473,33 @@ ipcMain.handle("close-floating-note", (event, noteId) => {
 });
 
 // 更新悬浮便签 - 双向同步的核心
-ipcMain.handle("update-floating-note", (event, noteId, updates) => {
-  try {
-    const window = floatingWindows.get(noteId);
+ipcMain.handle(
+  "update-floating-note",
+  (event, noteId, updates, fromMainWindow = false) => {
+    try {
+      const window = floatingWindows.get(noteId);
 
-    // 更新悬浮窗口
-    if (window && !window.isDestroyed()) {
-      window.webContents.send("note-data-updated", { noteId, ...updates });
+      // 更新悬浮窗口
+      if (window && !window.isDestroyed()) {
+        window.webContents.send("note-data-updated", { noteId, ...updates });
+      }
+
+      // 只有当更新来自悬浮窗口时，才通知主窗口
+      // 避免循环更新
+      if (!fromMainWindow && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("floating-note-updated", {
+          noteId,
+          updates,
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("更新悬浮便签失败:", error);
+      return { success: false, error: error.message };
     }
-
-    // 同时通知主窗口更新
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send("floating-note-updated", {
-        noteId,
-        updates,
-      });
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("更新悬浮便签失败:", error);
-    return { success: false, error: error.message };
   }
-});
+);
 
 // 获取悬浮便签数据
 ipcMain.handle("get-floating-note-data", (event, noteId) => {

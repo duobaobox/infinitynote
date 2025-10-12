@@ -59,15 +59,7 @@ function App() {
               updateNote(noteId, updates);
             }
           }
-
-          // 处理悬浮窗口大小变化
-          if (eventName === "floating-note-resized" && data?.noteId) {
-            console.log("📐 悬浮便签大小变化:", data);
-            const { noteId, width, height } = data;
-            if (noteId && width && height) {
-              updateNote(noteId, { size: { width, height } });
-            }
-          }
+          // 注意：悬浮窗口大小变化事件已移除，不再同步到画布
         }
       );
 

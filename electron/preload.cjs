@@ -21,8 +21,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ipcRenderer.invoke("create-floating-note", noteData),
     closeFloatingNote: (noteId) =>
       ipcRenderer.invoke("close-floating-note", noteId),
-    updateFloatingNote: (noteId, updates) =>
-      ipcRenderer.invoke("update-floating-note", noteId, updates),
+    updateFloatingNote: (noteId, updates, fromMainWindow) =>
+      ipcRenderer.invoke(
+        "update-floating-note",
+        noteId,
+        updates,
+        fromMainWindow
+      ),
     getFloatingNoteData: (noteId) =>
       ipcRenderer.invoke("get-floating-note-data", noteId),
   },

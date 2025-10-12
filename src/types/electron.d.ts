@@ -31,7 +31,8 @@ export interface ElectronAPI {
     ) => Promise<{ success: boolean; error?: string }>;
     updateFloatingNote: (
       noteId: string,
-      updates: Record<string, any>
+      updates: Record<string, any>,
+      fromMainWindow?: boolean
     ) => Promise<{ success: boolean; error?: string }>;
     getFloatingNoteData: (
       noteId: string
