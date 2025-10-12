@@ -389,6 +389,36 @@ export const NoteCard = memo<NoteCardProps>(
               message.error("复制失败，请重试");
             }
             break;
+          case "floating":
+            // 创建悬浮便签
+            try {
+              if (window.electronAPI?.floating?.createFloatingNote) {
+                const result =
+                  await window.electronAPI.floating.createFloatingNote({
+                    noteId: note.id,
+                    title: note.title,
+                    content: note.content,
+                    color: note.color,
+                    width: note.size.width,
+                    height: note.size.height,
+                  });
+
+                if (result.success) {
+                  message.success("便签已设为悬浮显示");
+                  setShowToolbar(false);
+                } else {
+                  message.error(
+                    "创建悬浮便签失败: " + (result.error || "未知错误")
+                  );
+                }
+              } else {
+                message.warning("悬浮功能仅在桌面应用中可用");
+              }
+            } catch (error) {
+              console.error("创建悬浮便签失败:", error);
+              message.error("创建悬浮便签失败");
+            }
+            break;
           case "pin":
             message.info("该功能暂未开放");
             break;
@@ -402,7 +432,17 @@ export const NoteCard = memo<NoteCardProps>(
             console.log("Unhandled action:", action);
         }
       },
-      [note.id, note.content, updateNote, deleteNote, openFocusMode, message]
+      [
+        note.id,
+        note.content,
+        note.title,
+        note.color,
+        note.size,
+        updateNote,
+        deleteNote,
+        openFocusMode,
+        message,
+      ]
     ); // 关闭工具栏
     const handleCloseToolbar = useCallback(() => {
       setShowToolbar(false);

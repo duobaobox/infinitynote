@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,8 +11,12 @@ export default defineConfig({
 
   // 构建优化配置
   build: {
-    // 启用代码分割
+    // 多入口配置 - 支持悬浮窗口
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        floating: path.resolve(__dirname, "floating.html"),
+      },
       output: {
         // 手动分割代码块，优化加载性能
         manualChunks: {

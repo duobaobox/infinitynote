@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/src/assets/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>悬浮便签 - 无限便签</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+                'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        #root {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* 悬浮窗口专用样式 */
+        .floating-window {
+            height: 100vh;
+            width: 100vw;
+            background: transparent;
+            position: relative;
+        }
+
+        /* 加载状态 */
+        .floating-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root">
+        <div class="floating-loading">加载中...</div>
+    </div>
+    <script type="module" src="/src/pages/FloatingNote/index.tsx"></script>
+</body>
+
+</html>

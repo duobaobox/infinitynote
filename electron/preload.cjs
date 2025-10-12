@@ -15,6 +15,47 @@ contextBridge.exposeInMainWorld("electronAPI", {
     updateTooltip: (tooltip) =>
       ipcRenderer.invoke("tray:updateTooltip", tooltip),
   },
+  // 悬浮便签功能
+  floating: {
+    createFloatingNote: (noteData) =>
+      ipcRenderer.invoke("create-floating-note", noteData),
+    closeFloatingNote: (noteId) =>
+      ipcRenderer.invoke("close-floating-note", noteId),
+    updateFloatingNote: (noteId, updates) =>
+      ipcRenderer.invoke("update-floating-note", noteId, updates),
+    getFloatingNoteData: (noteId) =>
+      ipcRenderer.invoke("get-floating-note-data", noteId),
+  },
+  // 事件监听
+  onMenuAction: (callback) => {
+    const menuEvents = [
+      "note-data", // 悬浮便签数据
+      "note-data-updated", // 便签数据更新
+      "floating-note-updated", // 悬浮便签更新通知主窗口
+      "floating-note-resized", // 悬浮便签大小变化
+    ];
+
+    const handlers = {};
+
+    menuEvents.forEach((event) => {
+      const handler = (electronEvent, data) => {
+        callback(event, data);
+      };
+      handlers[event] = handler;
+      ipcRenderer.on(event, handler);
+    });
+
+    // 返回清理函数
+    return () => {
+      menuEvents.forEach((event) => {
+        if (handlers[event]) {
+          ipcRenderer.removeListener(event, handlers[event]);
+        }
+      });
+    };
+  },
+  platform: process.platform,
+  isDev: process.env.NODE_ENV === "development",
 });
 
 contextBridge.exposeInMainWorld("isElectron", true);

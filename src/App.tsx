@@ -10,6 +10,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { App as AntdApp } from "antd";
 // 引入撤销/重做快捷键
 import { useHistoryShortcuts } from "./hooks";
+// 引入便签状态管理
+import { useNoteStore } from "./store/noteStore";
 
 // 引入全局样式
 import "./App.css";
@@ -36,6 +38,44 @@ import "./theme/global.css";
 function App() {
   // 启用全局撤销/重做快捷键
   useHistoryShortcuts();
+
+  // 获取便签状态更新函数
+  const updateNote = useNoteStore((state) => state.updateNote);
+
+  // 监听悬浮便签的更新事件
+  useEffect(() => {
+    if (window.electronAPI?.onMenuAction) {
+      console.log("📝 注册悬浮便签状态同步监听器");
+
+      const removeListener = window.electronAPI.onMenuAction(
+        (eventName, data) => {
+          // 处理悬浮便签向主窗口的更新
+          if (eventName === "floating-note-updated" && data?.noteId) {
+            console.log("📝 收到悬浮便签更新:", data);
+
+            const { noteId, updates } = data;
+            if (noteId && updates) {
+              // 更新 Zustand store 中的便签数据
+              updateNote(noteId, updates);
+            }
+          }
+
+          // 处理悬浮窗口大小变化
+          if (eventName === "floating-note-resized" && data?.noteId) {
+            console.log("📐 悬浮便签大小变化:", data);
+            const { noteId, width, height } = data;
+            if (noteId && width && height) {
+              updateNote(noteId, { size: { width, height } });
+            }
+          }
+        }
+      );
+
+      return () => {
+        removeListener?.();
+      };
+    }
+  }, [updateNote]);
 
   // 初始化错误处理系统
   useEffect(() => {

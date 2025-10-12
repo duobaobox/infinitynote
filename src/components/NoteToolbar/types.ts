@@ -4,7 +4,8 @@ export type ToolbarAction =
   | "duplicate"
   | "pin"
   | "delete"
-  | "focus-mode";
+  | "focus-mode"
+  | "floating"; // 新增悬浮操作
 
 // 工具栏事件数据
 export interface ToolbarActionData {

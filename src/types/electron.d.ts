@@ -16,6 +16,33 @@ export interface ElectronAPI {
     hide: () => Promise<void>;
     updateTooltip: (tooltip: string) => Promise<void>;
   };
+  // 悬浮便签 API
+  floating: {
+    createFloatingNote: (noteData: {
+      noteId: string;
+      title: string;
+      content: string;
+      color: string;
+      width: number;
+      height: number;
+    }) => Promise<{ success: boolean; error?: string }>;
+    closeFloatingNote: (
+      noteId: string
+    ) => Promise<{ success: boolean; error?: string }>;
+    updateFloatingNote: (
+      noteId: string,
+      updates: Record<string, any>
+    ) => Promise<{ success: boolean; error?: string }>;
+    getFloatingNoteData: (
+      noteId: string
+    ) => Promise<{ success: boolean; error?: string }>;
+  };
+  // 事件监听
+  onMenuAction: (
+    callback: (eventName: string, data: any) => void
+  ) => () => void;
+  platform: string;
+  isDev: boolean;
 }
 
 declare global {

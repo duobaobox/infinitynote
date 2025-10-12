@@ -30,11 +30,11 @@ export const BASE_TOOLBAR_BUTTONS: ToolbarButton[] = [
     tooltip: "复制便签文本",
   },
   {
-    id: "pin",
-    label: "便签悬浮（开发中）",
+    id: "floating",
+    label: "悬浮便签",
     icon: "PushpinOutlined",
-    tooltip: "该功能暂未开放",
-    disabled: true,
+    tooltip: "在桌面上悬浮显示此便签",
+    disabled: false,
   },
   {
     id: "delete",

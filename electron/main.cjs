@@ -15,6 +15,9 @@ const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 let mainWindow;
 let tray = null;
 
+// 悬浮窗口管理 - 使用 Map 管理多个悬浮窗口
+let floatingWindows = new Map(); // key: noteId, value: BrowserWindow
+
 // 获取系统托盘图标路径（所有平台统一使用 tray@2x.png）
 function getTrayIcon() {
   if (isDev) {
@@ -126,6 +129,98 @@ function createTray() {
       }
     });
   }
+}
+
+// 创建悬浮窗口函数
+function createFloatingNoteWindow(noteData) {
+  const { noteId, title, content, color, width, height } = noteData;
+
+  // 检查窗口是否已存在
+  if (floatingWindows.has(noteId)) {
+    const existingWindow = floatingWindows.get(noteId);
+    if (!existingWindow.isDestroyed()) {
+      existingWindow.focus();
+      existingWindow.show();
+      return existingWindow;
+    } else {
+      floatingWindows.delete(noteId);
+    }
+  }
+
+  // 创建新的悬浮窗口
+  const floatingWindow = new BrowserWindow({
+    width: Math.max(width || 400, 300),
+    height: Math.max(height || 300, 200),
+    minWidth: 250,
+    minHeight: 150,
+    frame: false, // 无边框窗口
+    transparent: true, // 透明背景
+    alwaysOnTop: true, // 始终在顶部
+    resizable: true,
+    movable: true,
+    skipTaskbar: false,
+    title: `悬浮便签 - ${title || "无标题"}`,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true,
+      sandbox: false,
+    },
+    show: false, // 延迟显示
+  });
+
+  // 加载悬浮页面
+  const floatingUrl = isDev
+    ? `http://localhost:5173/floating.html?noteId=${encodeURIComponent(noteId)}`
+    : `file://${path.join(
+        __dirname,
+        "../dist/floating.html"
+      )}?noteId=${encodeURIComponent(noteId)}`;
+
+  floatingWindow.loadURL(floatingUrl);
+
+  // 窗口准备显示时的回调
+  floatingWindow.once("ready-to-show", () => {
+    floatingWindow.show();
+    floatingWindow.focus();
+
+    // 发送便签数据到渲染进程
+    setTimeout(() => {
+      if (!floatingWindow.isDestroyed()) {
+        floatingWindow.webContents.send("note-data", noteData);
+      }
+    }, 500);
+  });
+
+  // 窗口关闭时清理
+  floatingWindow.on("closed", () => {
+    floatingWindows.delete(noteId);
+  });
+
+  // 监听窗口大小变化，同步到主窗口
+  floatingWindow.on("resize", () => {
+    if (!floatingWindow.isDestroyed()) {
+      const bounds = floatingWindow.getBounds();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("floating-note-resized", {
+          noteId,
+          width: bounds.width,
+          height: bounds.height,
+        });
+      }
+    }
+  });
+
+  // 存储窗口引用
+  floatingWindows.set(noteId, floatingWindow);
+
+  // 开发环境打开开发者工具
+  if (isDev) {
+    floatingWindow.webContents.openDevTools();
+  }
+
+  return floatingWindow;
 }
 
 function createWindow() {
@@ -359,6 +454,69 @@ ipcMain.handle("window:close", () => {
 ipcMain.handle("window:isMaximized", () =>
   mainWindow ? mainWindow.isMaximized() : false
 );
+
+// ===== 悬浮便签 IPC 处理 =====
+
+// 创建悬浮便签
+ipcMain.handle("create-floating-note", (event, noteData) => {
+  try {
+    createFloatingNoteWindow(noteData);
+    return { success: true };
+  } catch (error) {
+    console.error("创建悬浮便签失败:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 关闭悬浮便签
+ipcMain.handle("close-floating-note", (event, noteId) => {
+  try {
+    const window = floatingWindows.get(noteId);
+    if (window && !window.isDestroyed()) {
+      window.close();
+    }
+    floatingWindows.delete(noteId);
+    return { success: true };
+  } catch (error) {
+    console.error("关闭悬浮便签失败:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 更新悬浮便签 - 双向同步的核心
+ipcMain.handle("update-floating-note", (event, noteId, updates) => {
+  try {
+    const window = floatingWindows.get(noteId);
+
+    // 更新悬浮窗口
+    if (window && !window.isDestroyed()) {
+      window.webContents.send("note-data-updated", { noteId, ...updates });
+    }
+
+    // 同时通知主窗口更新
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("floating-note-updated", {
+        noteId,
+        updates,
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("更新悬浮便签失败:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 获取悬浮便签数据
+ipcMain.handle("get-floating-note-data", (event, noteId) => {
+  try {
+    return { success: true };
+  } catch (error) {
+    console.error("获取悬浮便签数据失败:", error);
+    return { success: false, error: error.message };
+  }
+});
 
 process.on("uncaughtException", (error) =>
   console.error("Uncaught Exception:", error)
