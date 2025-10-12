@@ -6,7 +6,10 @@ import zhCN from "antd/locale/zh_CN";
 import type { Note } from "../../types";
 import { TiptapEditor } from "../../components/TiptapEditor";
 import { ThemeProvider, useTheme } from "../../theme";
-import { generateNoteColorThemes } from "../../config/noteColors";
+import {
+  generateNoteColorThemes,
+  getNoteColorPreset,
+} from "../../config/noteColors";
 import { useVerticalScrollbarDetection } from "../../hooks/useScrollbarDetection";
 import styles from "./index.module.css";
 
@@ -128,6 +131,7 @@ const FloatingNoteContent: React.FC = () => {
   useEffect(() => {
     const handleNoteData = (_event: any, data: FloatingNoteData) => {
       console.log("🎯 悬浮窗口接收到便签数据:", data);
+      console.log("🎨 接收到的颜色值:", data.color);
 
       const note: Note = {
         id: data.noteId,
@@ -239,14 +243,29 @@ const FloatingNoteContent: React.FC = () => {
     );
   }
 
-  const noteColorThemes = generateNoteColorThemes();
-  const defaultColor = Object.values(noteColorThemes)[0] || {
-    light: {},
-    dark: {},
-  };
-  const colorTheme =
-    noteColorThemes[noteData.color as keyof typeof noteColorThemes] ||
-    defaultColor;
+  // 获取便签颜色主题
+  const { light, dark } = generateNoteColorThemes();
+
+  // 🔍 将颜色值转换为颜色名称
+  // noteData.color 可能是 "#FFF2CC" 这样的值，需要转换为 "yellow"
+  const colorPreset = getNoteColorPreset(noteData.color);
+  const colorName = colorPreset?.name || "yellow"; // 默认黄色
+
+  // 🔍 调试日志
+  console.log("🎨 悬浮便签颜色调试:", {
+    originalColor: noteData.color,
+    colorPreset,
+    colorName,
+    isDark,
+    selectedLight: light[colorName],
+    selectedDark: dark[colorName],
+  });
+
+  const backgroundColor = isDark
+    ? dark[colorName] || dark.yellow
+    : light[colorName] || light.yellow;
+
+  console.log("🎨 最终背景色:", backgroundColor);
 
   return (
     <ConfigProvider locale={zhCN}>
@@ -255,7 +274,7 @@ const FloatingNoteContent: React.FC = () => {
           ref={floatingWindowRef}
           className={styles.floatingWindow}
           style={{
-            background: isDark ? colorTheme.dark : colorTheme.light,
+            background: backgroundColor,
           }}
         >
           {/* 标题栏 - 可拖拽 */}

@@ -18,11 +18,17 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: none; /* 去除边框 */
   flex-shrink: 0;
   user-select: none;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
+  background: transparent; /* 改为透明，与便签颜色联动 */
+  transition: background 0.2s ease;
+}
+
+/* 悬停时显示拖拽提示 */
+.floatingHeader:hover {
+  background: rgba(22, 119, 255, 0.08);
+  cursor: grab;
 }
 
 /* 拖拽区域 */
@@ -40,7 +46,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.85);
+  color: inherit; /* 继承便签的文字颜色 */
   cursor: text;
   padding: 4px 8px;
   border-radius: 4px;
@@ -62,12 +68,12 @@
   font-size: 14px;
   font-weight: 600;
   outline: none;
-  color: rgba(0, 0, 0, 0.85);
+  color: inherit; /* 继承便签的文字颜色 */
   -webkit-app-region: no-drag; /* 禁用拖拽 */
 }
 
 .titleInput:focus {
-  background: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
 
@@ -128,7 +134,7 @@
 }
 
 .floatingContent :global(.ProseMirror)::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
+  background: transparent; /* 背景透明 */
   border-radius: 3px;
 }
 
@@ -171,13 +177,8 @@
 
 /* 暗黑模式适配 */
 @media (prefers-color-scheme: dark) {
-  .floatingHeader {
-    background: rgba(0, 0, 0, 0.3);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .title {
-    color: rgba(255, 255, 255, 0.85);
+  .floatingHeader:hover {
+    background: rgba(22, 119, 255, 0.1);
   }
 
   .title:hover {
@@ -186,7 +187,6 @@
 
   .titleInput {
     background: rgba(0, 0, 0, 0.3);
-    color: rgba(255, 255, 255, 0.85);
   }
 
   .titleInput:focus {
