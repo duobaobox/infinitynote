@@ -87,8 +87,39 @@
 .floatingContent {
   flex: 1;
   overflow: auto;
-  padding: 12px;
+  padding: 0px 12px 12px 12px; /* 上0，左右12，下12 */
   background: transparent;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* 允许flex收缩 */
+}
+
+/* 动态padding - 根据滚动条状态调整右边距 */
+.floatingContent.hasScrollbar {
+  padding-right: 0px; /* 有滚动条时，右边距为0避免内容被滚动条遮挡 */
+}
+
+.floatingContent.noScrollbar {
+  padding-right: 12px; /* 无滚动条时，保持默认的右边距 */
+}
+
+/* 覆盖TiptapEditor的默认padding，确保编辑器内容不会有额外padding */
+.floatingContent :global(.tiptap-editor-content) {
+  padding: 0 !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  font-family: inherit !important;
+  flex: 1 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.floatingContent :global(.tiptap-editor-content .ProseMirror) {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  min-height: 0 !important;
 }
 
 /* 滚动条样式 */

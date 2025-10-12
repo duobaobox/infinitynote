@@ -7,6 +7,7 @@ import type { Note } from "../../types";
 import { TiptapEditor } from "../../components/TiptapEditor";
 import { ThemeProvider, useTheme } from "../../theme";
 import { generateNoteColorThemes } from "../../config/noteColors";
+import { useVerticalScrollbarDetection } from "../../hooks/useScrollbarDetection";
 import styles from "./index.module.css";
 
 interface FloatingNoteData {
@@ -26,7 +27,13 @@ const FloatingNoteContent: React.FC = () => {
   const [localContent, setLocalContent] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // 检测垂直滚动条
+  const hasVerticalScrollbar = useVerticalScrollbarDetection(
+    contentRef.current
+  );
 
   // 获取 URL 参数
   const urlParams = new URLSearchParams(window.location.search);
@@ -262,7 +269,12 @@ const FloatingNoteContent: React.FC = () => {
           </div>
 
           {/* 内容区域 */}
-          <div className={styles.floatingContent}>
+          <div
+            ref={contentRef}
+            className={`${styles.floatingContent} ${
+              hasVerticalScrollbar ? styles.hasScrollbar : styles.noScrollbar
+            }`}
+          >
             <TiptapEditor
               content={localContent}
               onContentChange={handleContentChange}
