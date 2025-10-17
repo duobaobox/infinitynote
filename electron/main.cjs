@@ -106,29 +106,8 @@ function createTray() {
   // 设置托盘菜单
   tray.setContextMenu(contextMenu);
 
-  // 双击托盘图标显示窗口（Windows 和 Linux）
-  tray.on("double-click", () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) {
-        mainWindow.restore();
-      }
-      mainWindow.show();
-      mainWindow.focus();
-    }
-  });
-
-  // macOS 单击也显示窗口
-  if (process.platform === "darwin") {
-    tray.on("click", () => {
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) {
-          mainWindow.restore();
-        }
-        mainWindow.show();
-        mainWindow.focus();
-      }
-    });
-  }
+  // 移除托盘图标点击事件 - 托盘图标不应唤出主窗口
+  // 用户应该通过托盘菜单或程序坞图标来显示主窗口
 }
 
 // 创建悬浮窗口函数
@@ -391,8 +370,19 @@ app.whenReady().then(() => {
   createTray();
 
   createWindow();
+
+  // macOS 点击程序坞图标时激活应用
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    } else if (mainWindow) {
+      // 如果主窗口存在但被隐藏，显示并聚焦
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.show();
+      mainWindow.focus();
+    }
   });
 });
 
