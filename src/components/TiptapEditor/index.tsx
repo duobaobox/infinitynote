@@ -4,6 +4,7 @@
 
 export { TiptapEditor } from "./TiptapEditor";
 export { ThinkingChainDisplay } from "./ThinkingChainDisplay";
+export { AntdStepsThinkingChain } from "./AntdStepsThinkingChain";
 export type {
   TiptapEditorProps,
   ToolbarButton,

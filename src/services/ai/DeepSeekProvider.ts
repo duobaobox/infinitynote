@@ -39,17 +39,17 @@ class DeepSeekRequestBuilder implements RequestBodyBuilder {
       ],
       stream: options.stream ?? true, // 默认启用流式输出
     };
-    
+
     // 只有明确指定了temperature才设置，否则使用API默认值
     if (options.temperature !== undefined) {
       requestBody.temperature = options.temperature;
     }
-    
+
     // 只有明确指定了maxTokens才设置，否则使用API默认值
     if (options.maxTokens) {
       requestBody.max_tokens = options.maxTokens;
     }
-    
+
     return requestBody;
   }
 }
@@ -91,18 +91,24 @@ class DeepSeekResponseParser implements ResponseParser {
     try {
       const lines = chunk
         .split("\n")
-        .filter((line) => line.startsWith("data: "));
+        .filter((line) => line.trim().startsWith("data: "));
 
       for (const line of lines) {
-        const data = line.slice(6);
-        if (data === "[DONE]") continue;
+        const data = line.trim().slice(6).trim();
+        if (data === "[DONE]" || data === "") continue;
 
         try {
           const parsed = JSON.parse(data);
           // DeepSeek reasoning模型使用reasoning_content字段
           const reasoningContent =
             parsed.choices?.[0]?.delta?.reasoning_content;
-          if (reasoningContent) {
+
+          // 验证内容完整性和有效性
+          if (
+            reasoningContent &&
+            typeof reasoningContent === "string" &&
+            reasoningContent.length > 0
+          ) {
             console.log(
               "🧠 DeepSeek思维链内容:",
               reasoningContent.substring(0, 100) + "..."
@@ -113,11 +119,17 @@ class DeepSeekResponseParser implements ResponseParser {
           // 调试：检查是否有其他可能的思维链字段
           if (parsed.choices?.[0]?.delta) {
             const delta = parsed.choices[0].delta;
-            if (Object.keys(delta).length > 0 && !delta.content) {
+            if (
+              Object.keys(delta).length > 0 &&
+              !delta.content &&
+              !reasoningContent
+            ) {
               console.log("🔍 DeepSeek响应结构:", Object.keys(delta));
             }
           }
         } catch (parseError) {
+          // 记录但不中断，继续处理下一行
+          console.debug("DeepSeek单条数据解析失败:", parseError);
           continue;
         }
       }

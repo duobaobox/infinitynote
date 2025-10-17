@@ -16,6 +16,7 @@ import type {
 } from "../../types/ai";
 import { AIGenerationPhase } from "../../types/ai";
 import { ThinkingChainDetector } from "../../utils/thinkingChainDetector";
+import { ThinkingChainSegmenter } from "../../utils/thinkingChainSegmenter";
 
 /**
  * AI提供商配置接口
@@ -468,18 +469,17 @@ export abstract class BaseAIProvider implements AIProvider {
             // 更新思维链最后更新时间
             lastThinkingUpdateTime = Date.now();
 
-            // 更新或创建思维链步骤 - 使用累积方式而非分段方式
-            if (thinkingChain.length === 0) {
-              // 创建第一个思维步骤
-              thinkingChain.push({
-                id: `thinking_step_1`,
-                content: fullThinking,
-                timestamp: Date.now(),
-              });
-            } else {
-              // 更新现有的思维步骤内容
-              thinkingChain[0].content = fullThinking;
-            }
+            // 使用智能分段器处理思维链内容
+            const segments = ThinkingChainSegmenter.segment(fullThinking);
+
+            // 更新思维链数组
+            thinkingChain.length = 0; // 清空
+            thinkingChain.push(...segments);
+
+            console.log(
+              `🧠 [${this.name}] 思维链已分段: ${segments.length}步`,
+              segments.map((s) => `${s.type}(${s.content.length}字)`).join(", ")
+            );
 
             // 思维链数据更新时也要通知
             const MarkdownItConstructor = await import("markdown-it");

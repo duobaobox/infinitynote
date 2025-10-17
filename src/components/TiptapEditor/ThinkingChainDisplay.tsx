@@ -1,11 +1,41 @@
 /**
- * 思考过程显示组件 - 精简版
+ * 思考过程显示组件 - 优化版
  */
 
 import { memo, useEffect, useRef } from "react";
 import type { AICustomProperties } from "../../types/ai";
 import { AIGenerationPhase } from "../../types/ai";
 import styles from "./ThinkingChainDisplay.module.css";
+
+interface ThinkingChainDisplayProps {
+  /** 思考链数据 */
+  thinkingData: NonNullable<AICustomProperties["ai"]>["thinkingChain"];
+  /** 是否折叠 */
+  isCollapsed: boolean;
+  /** 切换折叠状态回调 */
+  onToggle: () => void;
+  /** AI状态信息 */
+  aiStatus?: {
+    isStreaming?: boolean;
+    generated?: boolean;
+    generationPhase?: AIGenerationPhase; // 当前生成阶段
+    isThinkingPhase?: boolean; // 是否正在思维链生成阶段
+    isAnsweringPhase?: boolean; // 是否正在最终答案生成阶段
+  };
+}
+
+/**
+ * 获取步骤类型标签
+ */
+function getStepTypeLabel(type?: string): string {
+  const labels: Record<string, string> = {
+    thinking: "💭 思考",
+    analysis: "🔍 分析",
+    reasoning: "🧠 推理",
+    conclusion: "✅ 结论",
+  };
+  return labels[type || "thinking"] || "💭 思考";
+}
 
 interface ThinkingChainDisplayProps {
   /** 思考链数据 */
@@ -125,6 +155,11 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
             aria-live="polite"
           >
             {headerText}
+            {validSteps.length > 0 && (
+              <span className={styles.stepCount}>
+                （{validSteps.length}步）
+              </span>
+            )}
           </span>
           <span
             className={`${styles.expandIcon} ${
@@ -139,9 +174,15 @@ export const ThinkingChainDisplay = memo<ThinkingChainDisplayProps>(
         {!isCollapsed && (
           <div className={styles.thinkingContent} ref={contentRef}>
             {validSteps.length > 0 ? (
-              validSteps.map((step) => (
-                <div key={step.id} className={styles.thinkingText}>
-                  {step.content}
+              validSteps.map((step, index) => (
+                <div key={step.id} className={styles.thinkingStep}>
+                  <div className={styles.stepHeader}>
+                    <span className={styles.stepNumber}>步骤 {index + 1}</span>
+                    <span className={styles.stepType}>
+                      {getStepTypeLabel((step as any).type)}
+                    </span>
+                  </div>
+                  <div className={styles.stepContent}>{step.content}</div>
                 </div>
               ))
             ) : isStreaming ? (

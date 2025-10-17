@@ -8,7 +8,7 @@ import { useNoteStore } from "../../store/noteStore";
 import { useFocusModeStore } from "../../store/focusModeStore";
 import { useTheme, noteColorThemes } from "../../theme";
 import { TiptapEditor } from "../TiptapEditor";
-import { ThinkingChainDisplay } from "../TiptapEditor/ThinkingChainDisplay";
+import { AntdStepsThinkingChain } from "../TiptapEditor/AntdStepsThinkingChain";
 import { NoteToolbar } from "../NoteToolbar/NoteToolbar";
 import type { ToolbarAction } from "../NoteToolbar/types";
 import { useOptimizedNoteDrag } from "../../utils/dragOptimization";
@@ -979,7 +979,7 @@ export const NoteCard = memo<NoteCardProps>(
                 className={styles.thinkingChainSection}
                 onDoubleClick={(e) => e.stopPropagation()}
               >
-                <ThinkingChainDisplay
+                <AntdStepsThinkingChain
                   thinkingData={aiData.thinkingChain}
                   isCollapsed={!thinkingChainExpanded}
                   onToggle={() =>
