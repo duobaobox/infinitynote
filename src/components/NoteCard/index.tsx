@@ -981,6 +981,7 @@ export const NoteCard = memo<NoteCardProps>(
                 <h3
                   className={styles.noteTitle}
                   onDoubleClick={handleTitleDoubleClick}
+                  title={note.title || "Untitled"} // 鼠标悬浮显示完整标题
                 >
                   {note.title || "Untitled"}
                 </h3>

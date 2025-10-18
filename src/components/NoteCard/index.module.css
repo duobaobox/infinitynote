@@ -67,6 +67,12 @@
   /* 继承便签卡片的上方圆角 */
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
+  /* 确保标题能够响应容器宽度变化 */
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .noteHeader:hover {
@@ -135,12 +141,14 @@
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
-  word-wrap: break-word;
   cursor: inherit; /* 继承父容器的拖拽光标 */
   user-select: none; /* 防止选中文字影响拖拽 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* 确保标题能够自适应容器宽度 */
+  flex: 1;
+  min-width: 0;
 }
 
 .noteText {

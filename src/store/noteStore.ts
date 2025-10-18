@@ -1311,12 +1311,11 @@ export const useNoteStore = create<NoteStore>()(
           // 直接调用createNote，不传入颜色值，让createNote方法根据设置决定是否使用随机颜色
           const noteId = await get().createNote(canvasId, position);
 
-          // 更新便签标题为提示词的前几个字
-          const title =
-            prompt.length > 20 ? prompt.slice(0, 20) + "..." : prompt;
+          // 使用完整的提示词作为标题（不截断）
+          // CSS 的 text-overflow: ellipsis 会根据容器宽度自动显示省略号
           await get().updateNote(noteId, {
-            title,
-            content: "<p>🤖 AI正在生成内容...</p>",
+            title: prompt,
+            content: "<p>🤖响应中...</p>",
           });
 
           console.log(

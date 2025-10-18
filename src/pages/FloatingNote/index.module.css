@@ -30,6 +30,9 @@
   align-items: center;
   height: 100%;
   -webkit-app-region: drag;
+  /* 确保标题能够响应容器宽度变化 */
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* 标题 */
@@ -41,6 +44,12 @@
   cursor: pointer;
   padding: 4px 8px;
   -webkit-app-region: no-drag;
+  /* 确保标题能够自适应容器宽度并显示省略号 */
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 标题输入框 */

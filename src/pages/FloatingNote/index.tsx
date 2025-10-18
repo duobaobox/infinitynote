@@ -313,7 +313,11 @@ const FloatingNoteContent: React.FC = () => {
                   placeholder="便签标题..."
                 />
               ) : (
-                <h3 className={styles.title} onClick={handleTitleClick}>
+                <h3
+                  className={styles.title}
+                  onClick={handleTitleClick}
+                  title={localTitle || "无标题便签"} // 鼠标悬浮显示完整标题
+                >
                   {localTitle || "无标题便签"}
                 </h3>
               )}
