@@ -104,6 +104,7 @@ export const AntdStepsThinkingChain = memo<AntdStepsThinkingChainProps>(
             style={{ height: 80, overflowY: "auto", padding: "0 8px 8px 8px" }}
           >
             <Steps
+              progressDot
               direction="vertical"
               size="small"
               current={validSteps.length - 1}

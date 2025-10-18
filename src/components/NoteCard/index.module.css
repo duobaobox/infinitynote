@@ -555,3 +555,28 @@
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-primary-bg);
 }
+
+/* AI生成中的便签样式 */
+.noteCard.aiGenerating {
+  /* 轻微的脉动动画提示AI正在生成 */
+  animation: aiGeneratingPulse 2s ease-in-out infinite;
+  /* 保持一定的边框高亮，但不显示选中边框 - 使用绿色主题 */
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+@keyframes aiGeneratingPulse {
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(52, 211, 153, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(52, 211, 153, 0.25),
+      0 0 0 2px rgba(52, 211, 153, 0.6);
+  }
+}
+
+/* AI生成时不显示选中高亮效果 */
+.noteCard.aiGenerating.selected {
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(52, 211, 153, 0.3);
+}

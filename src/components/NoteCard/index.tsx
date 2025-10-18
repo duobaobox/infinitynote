@@ -243,8 +243,10 @@ export const NoteCard = memo<NoteCardProps>(
           onSelect(note.id);
         }
 
-        // 显示工具栏
-        setShowToolbar(true);
+        // AI生成时不显示工具栏
+        if (!aiGenerating[note.id]) {
+          setShowToolbar(true);
+        }
 
         // 如果已经在编辑模式，直接返回让编辑器处理
         if (isEditing) {
@@ -628,6 +630,13 @@ export const NoteCard = memo<NoteCardProps>(
       }
     }, [isEditing, showToolbar, isEditingTitle, handleClickOutside]);
 
+    // AI生成时自动隐藏工具栏，生成结束后不自动显示
+    useEffect(() => {
+      if (aiGenerating[note.id]) {
+        setShowToolbar(false);
+      }
+    }, [aiGenerating, note.id]);
+
     // 缩放开始处理 - 使用useRef避免闭包问题
     const handleResizeStart = useCallback(
       (e: React.MouseEvent, direction: string) => {
@@ -900,7 +909,9 @@ export const NoteCard = memo<NoteCardProps>(
               dndIsDragging ? styles.dragging : ""
             } ${isSelected ? styles.selected : ""} ${
               isResizing ? styles.resizing : ""
-            } ${isEditing ? styles.editing : ""}`}
+            } ${isEditing ? styles.editing : ""} ${
+              aiGenerating[note.id] ? styles.aiGenerating : ""
+            }`}
             data-theme={isDark ? "dark" : "light"}
             style={{
               width: resizeSize?.width ?? note.size.width,
@@ -917,7 +928,10 @@ export const NoteCard = memo<NoteCardProps>(
               setIsHovered(false);
             }}
           >
-            {isSelected && <div className={styles.selectionBorder} />}
+            {/* AI生成时隐藏选中边框 */}
+            {isSelected && !aiGenerating[note.id] && (
+              <div className={styles.selectionBorder} />
+            )}
 
             {/* 
               便签头部区域 - 统一拖拽管理
@@ -1056,8 +1070,8 @@ export const NoteCard = memo<NoteCardProps>(
             )}
           </div>
 
-          {/* 便签工具栏 - 使用CSS定位在便签右侧 */}
-          {showToolbar && isSelected && (
+          {/* 便签工具栏 - 使用CSS定位在便签右侧，AI生成时隐藏 */}
+          {showToolbar && isSelected && !aiGenerating[note.id] && (
             <div className={styles.noteToolbarWrapper}>
               <NoteToolbar
                 noteId={note.id}
