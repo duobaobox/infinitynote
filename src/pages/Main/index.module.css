@@ -52,10 +52,19 @@
   z-index: 1;
 }
 
+/* 侧边栏内容容器 - flex布局 */
+.sidebarContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 /* 侧边栏Splitter样式 */
 .sidebarSplitter {
   flex: 1;
-  height: 100%;
+  min-height: 0; /* 确保flex子元素可以正确缩小 */
+  overflow: hidden;
 }
 
 /* 侧边栏头部区域样式 */
@@ -63,8 +72,20 @@
   height: 40px;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   padding: 0 8px;
   border-bottom: 1px solid var(--color-border-secondary);
+  flex-shrink: 0; /* 防止被压缩 */
+}
+
+/* 侧边栏底部区域样式 */
+.sidebarFooter {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  border-top: 1px solid var(--color-border-secondary);
+  flex-shrink: 0; /* 防止被压缩 */
 }
 
 /* 侧边栏头部所有按钮 */
@@ -90,7 +111,7 @@
 
 /* 设置按钮样式 */
 .settingsButton {
-  margin-right: 8px;
+  width: 100%;
   background-color: var(--background-secondary);
   border-color: var(--border-color);
   color: var(--text-color);
@@ -111,6 +132,27 @@
 .settingsButton:active {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* 侧边栏底部所有按钮 */
+.sidebarFooter :global(.ant-btn),
+.sidebarFooter button {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.sidebarFooter :global(.ant-btn:hover),
+.sidebarFooter :global(.ant-btn:focus),
+.sidebarFooter :global(.ant-btn:focus-visible),
+.sidebarFooter :global(.ant-btn:active),
+.sidebarFooter button:hover,
+.sidebarFooter button:focus,
+.sidebarFooter button:focus-visible,
+.sidebarFooter button:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 /* 操作按钮组样式 */
@@ -142,11 +184,13 @@
 /* 分段控制器包装器样式 */
 .segmentedWrapper {
   padding: 8px 8px 0 8px;
+  flex-shrink: 0; /* 防止被压缩 */
 }
 
 /* 添加画布按钮包装器样式 */
 .addButtonWrapper {
   padding: 0 8px 8px 8px;
+  flex-shrink: 0; /* 防止被压缩 */
 }
 
 /* 画布列表容器样式 */

@@ -1113,125 +1113,131 @@ const Main: React.FC = () => {
           theme={isDark ? "dark" : "light"}
           className={styles.sidebar}
         >
-          {/* 侧边栏顶部设置区域 */}
-          <div className={styles.sidebarHeader}>
-            {/* 设置按钮 */}
-            <Button
-              type="text"
-              icon={<DynamicIcon type="SettingOutlined" />}
-              size="small"
-              className={styles.settingsButton}
-              onClick={() => setSettingsOpen(true)}
-            >
-              设置
-            </Button>
+          {/* 侧边栏内容容器 - 使用flex布局 */}
+          <div className={styles.sidebarContent}>
+            {/* 侧边栏顶部操作区域 */}
+            <div className={styles.sidebarHeader}>
+              {/* 操作按钮组（折叠、刷新、撤销、重做） */}
+              <Space size={4} className={styles.actionButtons}>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DynamicIcon type="MenuFoldOutlined" />}
+                  onClick={() => handleSetCollapsed(true)}
+                ></Button>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DynamicIcon type="RedoOutlined" />}
+                  onClick={() => window.location.reload()}
+                  title="刷新页面"
+                ></Button>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DynamicIcon type="LeftOutlined" />}
+                  onClick={() => HistoryHelper.undo().catch(console.error)}
+                  disabled={!canUndo}
+                  title="撤销 (Ctrl+Z / ⌘Z)"
+                ></Button>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DynamicIcon type="RightOutlined" />}
+                  onClick={() => HistoryHelper.redo().catch(console.error)}
+                  disabled={!canRedo}
+                  title="重做 (Ctrl+Y / ⌘⇧Z)"
+                ></Button>
+              </Space>
+            </div>
 
-            {/* 弹性间距，将两侧元素分开 */}
-            <div style={{ flex: 1 }}></div>
+            {/* 分段控制器 - 用于切换视图模式（画布/工作台） */}
+            <div className={styles.segmentedWrapper}>
+              <Segmented
+                size="small"
+                value={viewMode}
+                onChange={(value) =>
+                  setViewMode(value as "canvas" | "workspace")
+                }
+                options={[
+                  { label: "画布", value: "canvas" },
+                  { label: "工作台", value: "workspace" },
+                ]}
+                className={styles.segmentedControl}
+                block
+              />
+            </div>
 
-            {/* 操作按钮组（折叠、刷新、撤销、重做） */}
-            <Space size={4} className={styles.actionButtons}>
+            {/* 添加画布按钮 */}
+            <div className={styles.addButtonWrapper}>
               <Button
                 type="text"
+                icon={<DynamicIcon type="PlusOutlined" />}
                 size="small"
-                icon={<DynamicIcon type="MenuFoldOutlined" />}
-                onClick={() => handleSetCollapsed(true)}
-              ></Button>
-              <Button
-                type="text"
-                size="small"
-                icon={<DynamicIcon type="RedoOutlined" />}
-                onClick={() => window.location.reload()}
-                title="刷新页面"
-              ></Button>
-              <Button
-                type="text"
-                size="small"
-                icon={<DynamicIcon type="LeftOutlined" />}
-                onClick={() => HistoryHelper.undo().catch(console.error)}
-                disabled={!canUndo}
-                title="撤销 (Ctrl+Z / ⌘Z)"
-              ></Button>
-              <Button
-                type="text"
-                size="small"
-                icon={<DynamicIcon type="RightOutlined" />}
-                onClick={() => HistoryHelper.redo().catch(console.error)}
-                disabled={!canRedo}
-                title="重做 (Ctrl+Y / ⌘⇧Z)"
-              ></Button>
-            </Space>
-          </div>
+                className={styles.addButton}
+                onClick={handleAddCanvas}
+              >
+                添加画布
+              </Button>
+            </div>
 
-          {/* 分段控制器 - 用于切换视图模式（画布/工作台） */}
-          <div className={styles.segmentedWrapper}>
-            <Segmented
-              size="small"
-              value={viewMode}
-              onChange={(value) => setViewMode(value as "canvas" | "workspace")}
-              options={[
-                { label: "画布", value: "canvas" },
-                { label: "工作台", value: "workspace" },
-              ]}
-              className={styles.segmentedControl}
-              block
-            />
-          </div>
+            {/* 使用Splitter组件分隔画布列表和便签列表区域 */}
+            <Splitter layout="vertical" className={styles.sidebarSplitter}>
+              <Splitter.Panel defaultSize="30%" min="20%" max="80%">
+                {/* 画布列表区域 */}
+                <div className={styles.canvasListContainer}>{canvasItems}</div>
+              </Splitter.Panel>
 
-          {/* 添加画布按钮 */}
-          <div className={styles.addButtonWrapper}>
-            <Button
-              type="text"
-              icon={<DynamicIcon type="PlusOutlined" />}
-              size="small"
-              className={styles.addButton}
-              onClick={handleAddCanvas}
-            >
-              添加画布
-            </Button>
-          </div>
-
-          {/* 使用Splitter组件分隔画布列表和便签列表区域 */}
-          <Splitter layout="vertical" className={styles.sidebarSplitter}>
-            <Splitter.Panel defaultSize="30%" min="20%" max="80%">
-              {/* 画布列表区域 */}
-              <div className={styles.canvasListContainer}>{canvasItems}</div>
-            </Splitter.Panel>
-
-            <Splitter.Panel defaultSize="70%" min="20%">
-              {/* 便签列表区域 */}
-              <div className={styles.notesListContainer}>
-                {/* 便签列表头部 */}
-                <div className={styles.notesListHeader}>
-                  {/* 标题行 */}
-                  <div className={styles.notesListTitle}>
-                    <div className={styles.notesListTitleText}>
-                      {canvases.find((c) => c.id === activeCanvasId)?.name ||
-                        "画布"}
+              <Splitter.Panel defaultSize="70%" min="20%">
+                {/* 便签列表区域 */}
+                <div className={styles.notesListContainer}>
+                  {/* 便签列表头部 */}
+                  <div className={styles.notesListHeader}>
+                    {/* 标题行 */}
+                    <div className={styles.notesListTitle}>
+                      <div className={styles.notesListTitleText}>
+                        {canvases.find((c) => c.id === activeCanvasId)?.name ||
+                          "画布"}
+                      </div>
+                      {/* 徽标数字 - 显示便签数量 */}
+                      <Badge
+                        count={currentCanvasNotes.length}
+                        style={{ backgroundColor: "var(--color-primary)" }}
+                      />
                     </div>
-                    {/* 徽标数字 - 显示便签数量 */}
-                    <Badge
-                      count={currentCanvasNotes.length}
-                      style={{ backgroundColor: "var(--color-primary)" }}
+
+                    {/* 搜索输入框 */}
+                    <Input
+                      placeholder="输入搜索内容"
+                      prefix={<DynamicIcon type="SearchOutlined" />}
+                      size="small"
+                      className={styles.notesListSearch}
+                      value={noteSearchKeyword}
+                      onChange={(e) => setNoteSearchKeyword(e.target.value)}
                     />
                   </div>
 
-                  {/* 搜索输入框 */}
-                  <Input
-                    placeholder="输入搜索内容"
-                    prefix={<DynamicIcon type="SearchOutlined" />}
-                    size="small"
-                    className={styles.notesListSearch}
-                    value={noteSearchKeyword}
-                    onChange={(e) => setNoteSearchKeyword(e.target.value)}
-                  />
+                  {/* 便签列表内容区域 */}
+                  <div className={styles.notesListContent}>{noteItems}</div>
                 </div>
+              </Splitter.Panel>
+            </Splitter>
 
-                {/* 便签列表内容区域 */}
-                <div className={styles.notesListContent}>{noteItems}</div>
-              </div>
-            </Splitter.Panel>
-          </Splitter>
+            {/* 侧边栏底部设置区域 */}
+            <div className={styles.sidebarFooter}>
+              {/* 设置按钮 */}
+              <Button
+                type="text"
+                icon={<DynamicIcon type="SettingOutlined" />}
+                size="small"
+                className={styles.settingsButton}
+                onClick={() => setSettingsOpen(true)}
+                block
+              >
+                设置
+              </Button>
+            </div>
+          </div>
         </Sider>
       ) : (
         // 折叠状态下的展开按钮
