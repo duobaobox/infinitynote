@@ -62,7 +62,7 @@ const SidebarFooterButtons: React.FC<{ onOpenSettings: () => void }> = ({
   onOpenSettings,
 }) => {
   const [cloudState, setCloudState] = useState<CloudConnectionState>("unknown");
-  const [cloudMessage, setCloudMessage] = useState<string>("未检测");
+  const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -73,23 +73,31 @@ const SidebarFooterButtons: React.FC<{ onOpenSettings: () => void }> = ({
           message?: string;
         };
         setCloudState(obj.state || "unknown");
-        setCloudMessage(obj.message || "未检测");
       }
     } catch {}
 
+    try {
+      const last = localStorage.getItem("infinitynote-webdav-last-backup-time");
+      if (last) setLastBackupAt(last);
+    } catch {}
+
     const onStatus = (e: Event) => {
-      const { state, message } = (e as CustomEvent).detail as {
+      const { state } = (e as CustomEvent).detail as {
         state: CloudConnectionState;
         message?: string;
       };
       setCloudState(state);
-      setCloudMessage(
-        message || (state === "connected" ? "连接正常" : "未连接")
-      );
     };
     window.addEventListener("cloudSyncStatus", onStatus as EventListener);
-    return () =>
+    const onBackup = (e: Event) => {
+      const { at } = (e as CustomEvent).detail as { at: string };
+      setLastBackupAt(at);
+    };
+    window.addEventListener("cloudSyncBackup", onBackup as EventListener);
+    return () => {
       window.removeEventListener("cloudSyncStatus", onStatus as EventListener);
+      window.removeEventListener("cloudSyncBackup", onBackup as EventListener);
+    };
   }, []);
 
   const stateText =
@@ -99,36 +107,61 @@ const SidebarFooterButtons: React.FC<{ onOpenSettings: () => void }> = ({
       ? "未连接"
       : "未检测";
 
+  const formatTime = (iso?: string | null) => {
+    if (!iso) return "无";
+    try {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return "无";
+      return d.toLocaleString("zh-CN", { hour12: false });
+    } catch {
+      return "无";
+    }
+  };
+
+  const tooltipNode = (
+    <div style={{ lineHeight: 1.5 }}>
+      <div>连接状态：{stateText}</div>
+      <div>上次备份：{formatTime(lastBackupAt)}</div>
+    </div>
+  );
+
   return (
     <div className={styles.sidebarFooter}>
       <div style={{ display: "flex", width: "100%", gap: 8 }}>
-        {/* 左侧：设置按钮（仅图标） */}
-        <Tooltip title="设置" placement="topLeft">
-          <Button
-            type="text"
-            icon={<DynamicIcon type="SettingOutlined" />}
-            size="small"
-            className={styles.iconOnlyButton}
-            onClick={onOpenSettings}
-            style={{ width: 28, minWidth: 28, padding: 0 }}
-          />
-        </Tooltip>
-        {/* 右侧：同步按钮（占满剩余空间，默认无背景） */}
-        <Tooltip title={cloudMessage} placement="topRight">
+        {/* 左侧：设置按钮（占满剩余空间） */}
+        <Button
+          type="text"
+          icon={<DynamicIcon type="SettingOutlined" />}
+          size="small"
+          className={styles.settingsButton}
+          onClick={onOpenSettings}
+          style={{ flex: 1 }}
+        >
+          设置
+        </Button>
+        {/* 右侧：同步按钮（仅图标） */}
+        <Tooltip title={tooltipNode} placement="topRight">
           <Button
             type="text"
             icon={<DynamicIcon type="CloudOutlined" />}
             size="small"
-            className={styles.plainButton}
+            className={styles.settingsButton}
             onClick={() => {
               onOpenSettings();
               window.dispatchEvent(
                 new CustomEvent("openSettings", { detail: { tab: "cloud" } })
               );
             }}
-            style={{ flex: 1 }}
+            style={{
+              width: 32,
+              minWidth: 32,
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            {`同步（${stateText}）`}
+            {/* icon-only */}
           </Button>
         </Tooltip>
       </div>

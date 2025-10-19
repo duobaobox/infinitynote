@@ -145,6 +145,14 @@ const CloudSettingsTab: React.FC<CloudSettingsTabProps> = () => {
       if (r.success) {
         setLastResult({ type: "success", text: "上传成功" });
         message.success("上传成功");
+        // 记录并广播最近一次备份时间
+        const at = new Date().toISOString();
+        try {
+          localStorage.setItem("infinitynote-webdav-last-backup-time", at);
+        } catch {}
+        window.dispatchEvent(
+          new CustomEvent("cloudSyncBackup", { detail: { at } })
+        );
       } else {
         setLastResult({ type: "error", text: r.message || "上传失败" });
         message.error(r.message || "上传失败");
@@ -264,28 +272,50 @@ const CloudSettingsTab: React.FC<CloudSettingsTabProps> = () => {
             <Input placeholder="infinitynote-full.json" />
           </Form.Item>
 
-          <Space wrap>
-            <Button onClick={onSave}>保存配置</Button>
-            <Button
-              type="primary"
-              loading={testing}
-              onClick={onTest}
-              disabled={!isElectron}
-            >
-              测试连接
-            </Button>
-            <Divider type="vertical" />
-            <Button loading={pushing} onClick={onPush} disabled={!isElectron}>
-              上传全量备份
-            </Button>
-            <Button
-              danger
-              loading={pulling}
-              onClick={onPull}
-              disabled={!isElectron}
-            >
-              从云端恢复
-            </Button>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <div style={{ display: "flex", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <Text type="secondary">上次备份时间：</Text>
+                <Text>
+                  {(() => {
+                    try {
+                      const last = localStorage.getItem(
+                        "infinitynote-webdav-last-backup-time"
+                      );
+                      if (!last) return "无";
+                      const d = new Date(last);
+                      if (Number.isNaN(d.getTime())) return "无";
+                      return d.toLocaleString("zh-CN", { hour12: false });
+                    } catch {
+                      return "无";
+                    }
+                  })()}
+                </Text>
+              </div>
+            </div>
+            <Space wrap>
+              <Button onClick={onSave}>保存配置</Button>
+              <Button
+                type="primary"
+                loading={testing}
+                onClick={onTest}
+                disabled={!isElectron}
+              >
+                测试连接
+              </Button>
+              <Divider type="vertical" />
+              <Button loading={pushing} onClick={onPush} disabled={!isElectron}>
+                上传全量备份
+              </Button>
+              <Button
+                danger
+                loading={pulling}
+                onClick={onPull}
+                disabled={!isElectron}
+              >
+                从云端恢复
+              </Button>
+            </Space>
           </Space>
         </Form>
         {lastResult && (
