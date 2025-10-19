@@ -134,6 +134,41 @@
   box-shadow: none !important;
 }
 
+/* 仅图标按钮（更干净） */
+
+.iconOnlyButton {
+  background-color: var(--background-secondary) !important;
+  border: none !important;
+  color: var(--text-color) !important;
+  box-shadow: none !important;
+}
+
+.iconOnlyButton:hover,
+.iconOnlyButton:focus,
+.iconOnlyButton:active {
+  background-color: var(--hover-bg-color) !important;
+  color: var(--color-text) !important;
+  box-shadow: none !important;
+}
+
+/* 纯净外观按钮（默认无背景） */
+.plainButton {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-color) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.plainButton:hover,
+.plainButton:focus,
+.plainButton:active {
+  background: transparent !important;
+  color: var(--color-text) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* 侧边栏底部所有按钮 */
 .sidebarFooter :global(.ant-btn),
 .sidebarFooter button {

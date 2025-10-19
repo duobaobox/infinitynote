@@ -40,6 +40,7 @@ import {
   Space, // 用于操作按钮组的间距控制
   Splitter, // 用于分隔画布列表和便签列表区域
   App, // 用于提供Context
+  Tooltip, // 提示信息
 } from "antd";
 import type { InputRef } from "antd";
 // 引入CSS模块样式
@@ -54,6 +55,86 @@ const DynamicIcon = ({ type }: { type: IconType }) => {
 
 // 解构Layout组件中的Sider和Content子组件
 const { Sider, Content } = Layout;
+
+// 侧边栏底部按钮（设置在左，同步在右并占满剩余空间）
+type CloudConnectionState = "connected" | "disconnected" | "unknown";
+const SidebarFooterButtons: React.FC<{ onOpenSettings: () => void }> = ({
+  onOpenSettings,
+}) => {
+  const [cloudState, setCloudState] = useState<CloudConnectionState>("unknown");
+  const [cloudMessage, setCloudMessage] = useState<string>("未检测");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("infinitynote-webdav-last-status");
+      if (raw) {
+        const obj = JSON.parse(raw) as {
+          state: CloudConnectionState;
+          message?: string;
+        };
+        setCloudState(obj.state || "unknown");
+        setCloudMessage(obj.message || "未检测");
+      }
+    } catch {}
+
+    const onStatus = (e: Event) => {
+      const { state, message } = (e as CustomEvent).detail as {
+        state: CloudConnectionState;
+        message?: string;
+      };
+      setCloudState(state);
+      setCloudMessage(
+        message || (state === "connected" ? "连接正常" : "未连接")
+      );
+    };
+    window.addEventListener("cloudSyncStatus", onStatus as EventListener);
+    return () =>
+      window.removeEventListener("cloudSyncStatus", onStatus as EventListener);
+  }, []);
+
+  const stateText =
+    cloudState === "connected"
+      ? "已连接"
+      : cloudState === "disconnected"
+      ? "未连接"
+      : "未检测";
+
+  return (
+    <div className={styles.sidebarFooter}>
+      <div style={{ display: "flex", width: "100%", gap: 8 }}>
+        {/* 左侧：设置按钮（仅图标） */}
+        <Tooltip title="设置" placement="topLeft">
+          <Button
+            type="text"
+            icon={<DynamicIcon type="SettingOutlined" />}
+            size="small"
+            className={styles.iconOnlyButton}
+            onClick={onOpenSettings}
+            style={{ width: 28, minWidth: 28, padding: 0 }}
+          />
+        </Tooltip>
+        {/* 右侧：同步按钮（占满剩余空间，默认无背景） */}
+        <Tooltip title={cloudMessage} placement="topRight">
+          <Button
+            type="text"
+            icon={<DynamicIcon type="CloudOutlined" />}
+            size="small"
+            className={styles.plainButton}
+            onClick={() => {
+              onOpenSettings();
+              window.dispatchEvent(
+                new CustomEvent("openSettings", { detail: { tab: "cloud" } })
+              );
+            }}
+            style={{ flex: 1 }}
+          >
+            {`同步（${stateText}）`}
+          </Button>
+        </Tooltip>
+      </div>
+    </div>
+  );
+};
 
 // 日志去重机制
 const loggedMessages = new Set<string>();
@@ -1224,19 +1305,9 @@ const Main: React.FC = () => {
             </Splitter>
 
             {/* 侧边栏底部设置区域 */}
-            <div className={styles.sidebarFooter}>
-              {/* 设置按钮 */}
-              <Button
-                type="text"
-                icon={<DynamicIcon type="SettingOutlined" />}
-                size="small"
-                className={styles.settingsButton}
-                onClick={() => setSettingsOpen(true)}
-                block
-              >
-                设置
-              </Button>
-            </div>
+            <SidebarFooterButtons
+              onOpenSettings={() => setSettingsOpen(true)}
+            />
           </div>
         </Sider>
       ) : (

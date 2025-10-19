@@ -13,6 +13,7 @@ import {
 import type { CloudSettings } from "../types";
 import styles from "../index.module.css";
 import { WebDavSyncService } from "../../../services/sync";
+import { CloudSyncStatus } from "../components/CloudSyncStatus";
 
 const { Text } = Typography;
 
@@ -83,13 +84,53 @@ const CloudSettingsTab: React.FC<CloudSettingsTabProps> = () => {
       if (r.success) {
         setLastResult({ type: "success", text: "连接成功，目录可用" });
         message.success("连接成功");
+        // 广播并持久化状态
+        const payload = {
+          state: "connected" as const,
+          message: r.message || "连接成功",
+        };
+        try {
+          localStorage.setItem(
+            "infinitynote-webdav-last-status",
+            JSON.stringify(payload)
+          );
+        } catch {}
+        window.dispatchEvent(
+          new CustomEvent("cloudSyncStatus", { detail: payload })
+        );
       } else {
         setLastResult({ type: "error", text: r.message || "连接失败" });
         message.error(r.message || "连接失败");
+        const payload = {
+          state: "disconnected" as const,
+          message: r.message || "连接失败",
+        };
+        try {
+          localStorage.setItem(
+            "infinitynote-webdav-last-status",
+            JSON.stringify(payload)
+          );
+        } catch {}
+        window.dispatchEvent(
+          new CustomEvent("cloudSyncStatus", { detail: payload })
+        );
       }
     } catch (e: any) {
       setLastResult({ type: "error", text: e?.message || String(e) });
       message.error(e?.message || "连接测试异常");
+      const payload = {
+        state: "disconnected" as const,
+        message: e?.message || "连接测试异常",
+      };
+      try {
+        localStorage.setItem(
+          "infinitynote-webdav-last-status",
+          JSON.stringify(payload)
+        );
+      } catch {}
+      window.dispatchEvent(
+        new CustomEvent("cloudSyncStatus", { detail: payload })
+      );
     } finally {
       setTesting(false);
     }
@@ -168,6 +209,7 @@ const CloudSettingsTab: React.FC<CloudSettingsTabProps> = () => {
           />
         </div>
       )}
+      <CloudSyncStatus />
       <Card size="small" title="WebDAV 云同步设置">
         <Form
           form={form}
@@ -257,8 +299,8 @@ const CloudSettingsTab: React.FC<CloudSettingsTabProps> = () => {
         )}
         <Divider />
         <Text type="secondary">
-          提示：当前为
-          MVP（手动全量备份/恢复）。后续将支持增量双向同步与冲突合并。
+          提示：当前webdav同步功能为
+          最小可用版（手动全量备份/恢复）。后续将支持增量双向同步与冲突合并。
         </Text>
       </Card>
     </div>

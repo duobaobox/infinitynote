@@ -73,9 +73,15 @@ import styles from "./index.module.css";
  * @param props.onClose - 关闭模态框的回调函数
  * @returns 设置模态框组件
  */
-const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({
+  open,
+  onClose,
+  initialTab,
+}) => {
   // 当前选中的设置选项卡
-  const [selectedKey, setSelectedKey] = useState<SettingTabKey>("model");
+  const [selectedKey, setSelectedKey] = useState<SettingTabKey>(
+    initialTab || "model"
+  );
 
   // 设置配置状态
   const [settings, setSettings] = useState<SettingsConfig>(
@@ -87,6 +93,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
    */
   useEffect(() => {
     if (open) {
+      // 每次打开时，如果外部指定了初始标签，则跳转到指定标签
+      if (initialTab) {
+        setSelectedKey(initialTab);
+      }
       // 从本地存储加载设置
       const loadedSettings = loadSettingsFromStorage();
 
@@ -135,7 +145,23 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ open, onClose }) => {
 
       updateStorageStats();
     }
-  }, [open]);
+  }, [open, initialTab]);
+
+  // 监听外部事件以切换到指定标签页（例如从工具栏或快捷按钮打开）
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { tab?: SettingTabKey }
+        | undefined;
+      if (detail?.tab) {
+        setSelectedKey(detail.tab);
+      }
+    };
+    window.addEventListener("openSettings", handler as EventListener);
+    return () => {
+      window.removeEventListener("openSettings", handler as EventListener);
+    };
+  }, []);
 
   const handleSettingChange = <K extends keyof SettingsConfig>(
     section: K,

@@ -38,6 +38,8 @@ export interface SettingsModalProps {
   open: boolean;
   /** 关闭模态框的回调函数 */
   onClose: () => void;
+  /** 初始打开的标签页（可选） */
+  initialTab?: SettingTabKey;
 }
 
 /**
