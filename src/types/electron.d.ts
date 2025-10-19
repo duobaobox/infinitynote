@@ -11,6 +11,34 @@ export interface ElectronAPI {
     close: () => Promise<void>;
     isMaximized: () => Promise<boolean>;
   };
+  // WebDAV 同步 API
+  webdav?: {
+    test: (config: {
+      baseUrl: string;
+      username: string;
+      password: string;
+      remoteDir: string;
+    }) => Promise<{ success: boolean; error?: string }>;
+    push: (payload: {
+      config: {
+        baseUrl: string;
+        username: string;
+        password: string;
+        remoteDir: string;
+      };
+      filename?: string;
+      content: string;
+    }) => Promise<{ success: boolean; etag?: string; error?: string }>;
+    pull: (payload: {
+      config: {
+        baseUrl: string;
+        username: string;
+        password: string;
+        remoteDir: string;
+      };
+      filename?: string;
+    }) => Promise<{ success: boolean; content?: string; error?: string }>;
+  };
   tray: {
     show: () => Promise<void>;
     hide: () => Promise<void>;

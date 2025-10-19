@@ -7,6 +7,7 @@ const {
   nativeImage,
 } = require("electron");
 const path = require("path");
+const { URL } = require("url");
 
 // 设置应用名称（确保在所有平台显示正确的名称）
 app.name = "无限便签";
@@ -507,3 +508,134 @@ process.on("uncaughtException", (error) =>
 process.on("unhandledRejection", (error) =>
   console.error("Unhandled Rejection:", error)
 );
+
+// =============== WebDAV 同步（主进程实现以避免CORS） ===============
+
+/**
+ * 组合远端路径
+ * @param {string} baseUrl 例如 https://dav.example.com/remote.php/dav/files/user
+ * @param {string} remoteDir 例如 /InfinityNote
+ * @param {string} filename 例如 infinitynote-full.json
+ */
+function buildRemoteUrl(baseUrl, remoteDir, filename) {
+  try {
+    if (!baseUrl || !/^https?:\/\//i.test(baseUrl)) {
+      throw new Error("无效或缺失的 WebDAV 基础地址");
+    }
+    // 规范化斜杠
+    const base = String(baseUrl).replace(/\/+$/g, "");
+    let dir = (remoteDir || "/").trim();
+    if (!dir.startsWith("/")) dir = "/" + dir;
+    // 确保目录末尾没有多余斜杠（MKCOL时会单独处理）
+    dir = dir.replace(/\/+$/g, "");
+    const file = filename.replace(/^\/+/, "");
+    return `${base}${dir}/${file}`;
+  } catch (e) {
+    throw new Error("无效的 WebDAV URL 配置");
+  }
+}
+
+function buildDirUrl(baseUrl, remoteDir) {
+  if (!baseUrl || !/^https?:\/\//i.test(baseUrl)) {
+    throw new Error("无效或缺失的 WebDAV 基础地址");
+  }
+  const base = String(baseUrl).replace(/\/+$/g, "");
+  let dir = (remoteDir || "/").trim();
+  if (!dir.startsWith("/")) dir = "/" + dir;
+  // 目录URL以斜杠结尾，便于部分服务识别
+  if (!dir.endsWith("/")) dir += "/";
+  return `${base}${dir}`;
+}
+
+function buildAuthHeader(username, password) {
+  const token = Buffer.from(`${username || ""}:${password || ""}`).toString(
+    "base64"
+  );
+  return `Basic ${token}`;
+}
+
+async function ensureRemoteDirExists({
+  baseUrl,
+  remoteDir,
+  username,
+  password,
+}) {
+  const dirUrl = buildDirUrl(baseUrl, remoteDir);
+  const headers = {
+    Authorization: buildAuthHeader(username, password),
+  };
+
+  // 尝试 HEAD 检查
+  try {
+    const headResp = await fetch(dirUrl, { method: "HEAD", headers });
+    if (headResp.ok) return true;
+  } catch (_) {
+    // 忽略，继续尝试 MKCOL
+  }
+
+  // MKCOL 创建目录（如果已存在可能返回405/409，视为可接受）
+  const mkcolResp = await fetch(dirUrl, { method: "MKCOL", headers });
+  if (mkcolResp.ok) return true;
+  if ([405, 409, 301, 302].includes(mkcolResp.status)) return true;
+  const txt = await mkcolResp.text().catch(() => "");
+  throw new Error(`创建远端目录失败: ${mkcolResp.status} ${txt}`);
+}
+
+// 测试连接：尝试 HEAD 目录，不行则 MKCOL 再 HEAD
+ipcMain.handle("webdav:test", async (event, config) => {
+  try {
+    if (!config || !config.baseUrl) throw new Error("缺少基础地址");
+    await ensureRemoteDirExists(config);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) };
+  }
+});
+
+// 推送全量备份（content 为字符串JSON）
+ipcMain.handle("webdav:push", async (event, { config, content, filename }) => {
+  try {
+    if (!config || !config.baseUrl) throw new Error("缺少基础地址");
+    if (!content) throw new Error("缺少上传内容");
+    const name = filename || "infinitynote-full.json";
+    await ensureRemoteDirExists(config);
+    const url = buildRemoteUrl(config.baseUrl, config.remoteDir, name);
+
+    const headers = {
+      Authorization: buildAuthHeader(config.username, config.password),
+      "Content-Type": "application/json",
+    };
+
+    const resp = await fetch(url, { method: "PUT", headers, body: content });
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => "");
+      throw new Error(`上传失败: ${resp.status} ${txt}`);
+    }
+    const etag = resp.headers.get("etag");
+    return { success: true, etag };
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) };
+  }
+});
+
+// 拉取全量备份（返回文本）
+ipcMain.handle("webdav:pull", async (event, { config, filename }) => {
+  try {
+    if (!config || !config.baseUrl) throw new Error("缺少基础地址");
+    const name = filename || "infinitynote-full.json";
+    const url = buildRemoteUrl(config.baseUrl, config.remoteDir, name);
+    const headers = {
+      Authorization: buildAuthHeader(config.username, config.password),
+      Accept: "application/json,text/plain, */*",
+    };
+    const resp = await fetch(url, { method: "GET", headers });
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => "");
+      throw new Error(`下载失败: ${resp.status} ${txt}`);
+    }
+    const text = await resp.text();
+    return { success: true, content: text };
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) };
+  }
+});

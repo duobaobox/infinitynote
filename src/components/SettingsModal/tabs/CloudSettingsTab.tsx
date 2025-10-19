@@ -1,65 +1,266 @@
-/**
- * CloudSettingsTab - 云同步设置选项卡组件
- *
- * 功能说明：
- * 云同步功能的配置界面，目前处于开发阶段，主要展示功能预告和开发进度。
- * 未来将提供完整的云端数据同步功能，支持多设备间的数据同步。
- *
- * 当前状态：
- * - 🚧 开发中：云同步功能正在开发，暂时只有占位界面
- * - 📋 功能预告：展示即将推出的云同步功能说明
- * - ⏳ 敬请期待：提示用户关注后续版本更新
- *
- * 规划功能：
- *
- * ☁️ 云端同步：
- * - 📱 多设备同步：在手机、平板、电脑间同步笔记数据
- * - 🔄 实时同步：数据变更后自动同步到云端
- * - 📤 增量同步：只同步变更的数据，节省带宽
- * - 🔒 数据加密：云端数据采用端到端加密保护
- *
- * 🌐 云服务提供商：
- * - GitHub：基于 GitHub Gist 的同步方案
- * - Dropbox：文件同步服务集成
- * - OneDrive：微软云存储集成
- * - 自定义：支持自建云存储服务
- *
- * @author InfinityNote Team
- * @since v1.5.7
- * @lastModified 2024-12-13
- */
-
-import React from "react";
-import { Typography, Card } from "antd";
+import React, { useMemo, useState } from "react";
+import {
+  App,
+  Button,
+  Card,
+  Form,
+  Input,
+  Space,
+  Typography,
+  Divider,
+  Alert,
+} from "antd";
 import type { CloudSettings } from "../types";
 import styles from "../index.module.css";
+import { WebDavSyncService } from "../../../services/sync";
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 export interface CloudSettingsTabProps {
   settings: CloudSettings;
 }
 
+// 本地存储键
+const STORAGE_KEY = "infinitynote-webdav-config";
+
+type WebDavForm = {
+  baseUrl: string;
+  username: string;
+  password: string;
+  remoteDir: string;
+  filename?: string;
+};
+
+const loadConfig = (): Partial<WebDavForm> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveConfig = (cfg: WebDavForm) => {
+  try {
+    // 提示：生产中应对敏感信息加密存储
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+  } catch {}
+};
+
 const CloudSettingsTab: React.FC<CloudSettingsTabProps> = () => {
+  const { message, modal } = App.useApp();
+  const [form] = Form.useForm<WebDavForm>();
+  const [testing, setTesting] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [pulling, setPulling] = useState(false);
+  const [lastResult, setLastResult] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const isElectron =
+    typeof window !== "undefined" && (window as any).isElectron === true;
+
+  // 初始化表单
+  const initial = useMemo<Partial<WebDavForm>>(() => loadConfig(), []);
+
+  const buildService = () => {
+    const cfg = form.getFieldsValue();
+    return new WebDavSyncService({
+      baseUrl: cfg.baseUrl?.trim() || "",
+      username: cfg.username?.trim() || "",
+      password: cfg.password || "",
+      remoteDir: cfg.remoteDir?.trim() || "/InfinityNote",
+      filename: (cfg.filename || "infinitynote-full.json").trim(),
+    });
+  };
+
+  const onTest = async () => {
+    try {
+      await form.validateFields();
+      setTesting(true);
+      const svc = buildService();
+      const r = await svc.testConnection();
+      if (r.success) {
+        setLastResult({ type: "success", text: "连接成功，目录可用" });
+        message.success("连接成功");
+      } else {
+        setLastResult({ type: "error", text: r.message || "连接失败" });
+        message.error(r.message || "连接失败");
+      }
+    } catch (e: any) {
+      setLastResult({ type: "error", text: e?.message || String(e) });
+      message.error(e?.message || "连接测试异常");
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const onPush = async () => {
+    try {
+      await form.validateFields();
+      setPushing(true);
+      const svc = buildService();
+      const r = await svc.pushFull();
+      if (r.success) {
+        setLastResult({ type: "success", text: "上传成功" });
+        message.success("上传成功");
+      } else {
+        setLastResult({ type: "error", text: r.message || "上传失败" });
+        message.error(r.message || "上传失败");
+      }
+    } catch (e: any) {
+      setLastResult({ type: "error", text: e?.message || String(e) });
+      message.error(e?.message || "上传异常");
+    } finally {
+      setPushing(false);
+    }
+  };
+
+  const onPull = async () => {
+    await form.validateFields();
+    modal.confirm({
+      title: "确认从云端恢复？",
+      content: "此操作将覆盖本地所有数据，请确保已备份。",
+      okText: "确定恢复",
+      okType: "danger",
+      cancelText: "取消",
+      onOk: async () => {
+        try {
+          setPulling(true);
+          const svc = buildService();
+          const r = await svc.pullFull();
+          if (r.success) {
+            setLastResult({
+              type: "success",
+              text: "下载并导入成功，将刷新页面",
+            });
+            message.success("导入成功，页面即将刷新");
+            setTimeout(() => window.location.reload(), 800);
+          } else {
+            setLastResult({ type: "error", text: r.message || "导入失败" });
+            message.error(r.message || "导入失败");
+          }
+        } catch (e: any) {
+          setLastResult({ type: "error", text: e?.message || String(e) });
+          message.error(e?.message || "导入异常");
+        } finally {
+          setPulling(false);
+        }
+      },
+    });
+  };
+
+  const onSave = async () => {
+    const values = await form.validateFields();
+    saveConfig(values);
+    message.success("配置已保存");
+  };
+
   return (
     <div className={styles.contentSection}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        {/* 同步状态 */}
-        <Card size="small" title="同步状态" style={{ flex: 1 }}>
-          <div className={styles.syncStatus}>
-            <Text type="secondary" strong>
-              云同步功能即将推出
-            </Text>
-            <Paragraph
-              type="secondary"
-              style={{ marginTop: "8px", marginBottom: 0 }}
+      {!isElectron && (
+        <div style={{ marginBottom: 12 }}>
+          <Alert
+            type="warning"
+            showIcon
+            message="当前在浏览器预览环境，无法使用 WebDAV"
+            description="请在 Electron 中运行本应用后再测试同步：npm run electron:dev（或使用已打包的应用）。"
+          />
+        </div>
+      )}
+      <Card size="small" title="WebDAV 云同步设置">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            baseUrl: initial.baseUrl || "",
+            username: initial.username || "",
+            password: initial.password || "",
+            remoteDir: initial.remoteDir || "/InfinityNote",
+            filename: initial.filename || "infinitynote-full.json",
+          }}
+          onValuesChange={(_, all) => {
+            // 自动保存（非敏感场景可考虑关闭自动）
+            try {
+              saveConfig(all as WebDavForm);
+            } catch {}
+          }}
+        >
+          <Form.Item
+            label="WebDAV 基础地址"
+            name="baseUrl"
+            rules={[{ required: true, message: "请输入 WebDAV 基础地址" }]}
+            extra="例如：https://dav.example.com/remote.php/dav/files/youruser"
+          >
+            <Input placeholder="https://..." />
+          </Form.Item>
+          <Form.Item
+            label="用户名"
+            name="username"
+            rules={[{ required: true, message: "请输入用户名" }]}
+          >
+            <Input placeholder="用户名" autoComplete="username" />
+          </Form.Item>
+          <Form.Item
+            label="密码/令牌"
+            name="password"
+            rules={[{ required: true, message: "请输入密码或访问令牌" }]}
+          >
+            <Input.Password
+              placeholder="密码或应用令牌"
+              autoComplete="current-password"
+            />
+          </Form.Item>
+          <Form.Item
+            label="远端目录"
+            name="remoteDir"
+            extra="默认 /InfinityNote，将自动创建"
+          >
+            <Input placeholder="/InfinityNote" />
+          </Form.Item>
+          <Form.Item label="文件名" name="filename" extra="单文件全量备份名">
+            <Input placeholder="infinitynote-full.json" />
+          </Form.Item>
+
+          <Space wrap>
+            <Button onClick={onSave}>保存配置</Button>
+            <Button
+              type="primary"
+              loading={testing}
+              onClick={onTest}
+              disabled={!isElectron}
             >
-              我们正在开发云同步功能，让您可以在多个设备之间同步笔记。
-              敬请期待后续版本的更新。
-            </Paragraph>
+              测试连接
+            </Button>
+            <Divider type="vertical" />
+            <Button loading={pushing} onClick={onPush} disabled={!isElectron}>
+              上传全量备份
+            </Button>
+            <Button
+              danger
+              loading={pulling}
+              onClick={onPull}
+              disabled={!isElectron}
+            >
+              从云端恢复
+            </Button>
+          </Space>
+        </Form>
+        {lastResult && (
+          <div style={{ marginTop: 12 }}>
+            {lastResult.type === "success" ? (
+              <Alert type="success" message={lastResult.text} showIcon />
+            ) : (
+              <Alert type="error" message={lastResult.text} showIcon />
+            )}
           </div>
-        </Card>
-      </div>
+        )}
+        <Divider />
+        <Text type="secondary">
+          提示：当前为
+          MVP（手动全量备份/恢复）。后续将支持增量双向同步与冲突合并。
+        </Text>
+      </Card>
     </div>
   );
 };

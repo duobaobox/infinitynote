@@ -31,6 +31,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getFloatingNoteData: (noteId) =>
       ipcRenderer.invoke("get-floating-note-data", noteId),
   },
+  // WebDAV 同步
+  webdav: {
+    test: (config) => ipcRenderer.invoke("webdav:test", config),
+    push: (payload) => ipcRenderer.invoke("webdav:push", payload),
+    pull: (payload) => ipcRenderer.invoke("webdav:pull", payload),
+  },
+  // WebDAV 同步
+  webdav: {
+    test: (config) => ipcRenderer.invoke("webdav:test", config),
+    push: (payload) => ipcRenderer.invoke("webdav:push", payload),
+    pull: (payload) => ipcRenderer.invoke("webdav:pull", payload),
+  },
   // 事件监听
   onMenuAction: (callback) => {
     const menuEvents = [
