@@ -28,9 +28,9 @@ const FloatingNoteContent: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [localTitle, setLocalTitle] = useState("");
   const [localContent, setLocalContent] = useState("");
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  // const [isEditingTitle, setIsEditingTitle] = useState(false); // 已废弃，去除标题编辑
   const [isEditing, setIsEditing] = useState(false); // 编辑模式状态
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  // const titleInputRef = useRef<HTMLInputElement>(null); // 已废弃
   const floatingWindowRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
@@ -67,15 +67,7 @@ const FloatingNoteContent: React.FC = () => {
     [noteId]
   );
 
-  // 标题变化处理
-  const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newTitle = e.target.value;
-      setLocalTitle(newTitle);
-      debouncedSave({ title: newTitle });
-    },
-    [debouncedSave]
-  );
+  // 标题变化处理（已废弃，去除编辑标题功能）
 
   // 内容变化处理
   const handleContentChange = useCallback(
@@ -105,30 +97,7 @@ const FloatingNoteContent: React.FC = () => {
     setIsEditing(false);
   }, []);
 
-  // 标题编辑
-  const handleTitleClick = useCallback(() => {
-    setIsEditingTitle(true);
-    setTimeout(() => {
-      titleInputRef.current?.focus();
-      titleInputRef.current?.select();
-    }, 0);
-  }, []);
-
-  const handleTitleBlur = useCallback(() => {
-    setIsEditingTitle(false);
-  }, []);
-
-  const handleTitleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        setIsEditingTitle(false);
-      } else if (e.key === "Escape") {
-        setLocalTitle(noteData?.title || "");
-        setIsEditingTitle(false);
-      }
-    },
-    [noteData]
-  );
+  // 标题编辑相关逻辑已移除
 
   // 关闭悬浮便签
   const handleClose = useCallback(() => {
@@ -298,31 +267,13 @@ const FloatingNoteContent: React.FC = () => {
             background: backgroundColor,
           }}
         >
-          {/* 标题栏 - 可拖拽 */}
+          {/* 标题栏 - 仅可拖拽 */}
           <div className={styles.floatingHeader}>
             <div className={styles.dragHandle}>
-              {isEditingTitle ? (
-                <input
-                  ref={titleInputRef}
-                  type="text"
-                  value={localTitle}
-                  onChange={handleTitleChange}
-                  onBlur={handleTitleBlur}
-                  onKeyDown={handleTitleKeyDown}
-                  className={styles.titleInput}
-                  placeholder="便签标题..."
-                />
-              ) : (
-                <h3
-                  className={styles.title}
-                  onClick={handleTitleClick}
-                  title={localTitle || "无标题便签"} // 鼠标悬浮显示完整标题
-                >
-                  {localTitle || "无标题便签"}
-                </h3>
-              )}
+              <h3 className={styles.title} title={localTitle || "无标题便签"}>
+                {localTitle || "无标题便签"}
+              </h3>
             </div>
-
             {/* 关闭按钮 */}
             <Button
               icon={<CloseOutlined />}
