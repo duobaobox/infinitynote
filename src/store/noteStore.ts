@@ -406,6 +406,13 @@ export const useNoteStore = create<NoteStore>()(
           if (canvasId) {
             noteStoreEvents.notifyNoteDeleted(id, canvasId);
           }
+          
+          // 如果存在对应的悬浮窗口，关闭它
+          if (window.electronAPI?.floating?.closeFloatingNote) {
+            window.electronAPI.floating.closeFloatingNote(id).catch(() => {
+              // 静默失败，可能悬浮窗口不存在
+            });
+          }
         } catch (error) {
           console.error("❌ 删除便签失败:", error);
           // 重新加载数据以恢复状态
@@ -460,6 +467,15 @@ export const useNoteStore = create<NoteStore>()(
           } catch (historyError) {
             console.error("记录历史失败:", historyError);
             // 继续执行，不影响主流程
+          }
+          
+          // 关闭对应的悬浮窗口
+          if (window.electronAPI?.floating?.closeFloatingNote) {
+            ids.forEach(id => {
+              window.electronAPI.floating.closeFloatingNote(id).catch(() => {
+                // 静默失败，可能悬浮窗口不存在
+              });
+            });
           }
         } catch (error) {
           console.error("❌ 批量删除便签失败:", error);
@@ -1502,6 +1518,15 @@ if (typeof window !== "undefined") {
         (id: string) => !canvasNotes.some((note: Note) => note.id === id)
       ),
     }));
+    
+    // 关闭该画布上所有便签对应的悬浮窗口
+    if (window.electronAPI?.floating?.closeFloatingNote) {
+      canvasNotes.forEach(note => {
+        window.electronAPI.floating.closeFloatingNote(note.id).catch(() => {
+          // 静默失败，可能悬浮窗口不存在
+        });
+      });
+    }
   });
 
   // 监听数据同步请求

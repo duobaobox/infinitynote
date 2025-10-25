@@ -173,6 +173,49 @@ function createFloatingNoteWindow(noteData) {
     }, 500);
   });
 
+  // 注册编辑快捷键 - 为悬浮窗口添加与主窗口相同的快捷键支持
+  floatingWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.type !== "keyDown") return;
+
+    const { control, meta, shift, alt, key } = input;
+    const isMac = process.platform === "darwin";
+    const modifier = isMac ? meta : control;
+
+    // 开发者工具快捷键：Cmd+Option+I (macOS) 或 Ctrl+Shift+I (Windows/Linux)
+    if (isMac && meta && alt && key.toLowerCase() === "i") {
+      floatingWindow.webContents.toggleDevTools();
+      return;
+    }
+    if (!isMac && control && shift && key.toLowerCase() === "i") {
+      floatingWindow.webContents.toggleDevTools();
+      return;
+    }
+
+    if (!modifier) return;
+
+    switch (key.toLowerCase()) {
+      case "c":
+        floatingWindow.webContents.copy();
+        break;
+      case "v":
+        floatingWindow.webContents.paste();
+        break;
+      case "x":
+        floatingWindow.webContents.cut();
+        break;
+      case "a":
+        floatingWindow.webContents.selectAll();
+        break;
+      case "z":
+        if (shift) {
+          floatingWindow.webContents.redo();
+        } else {
+          floatingWindow.webContents.undo();
+        }
+        break;
+    }
+  });
+
   // 窗口关闭时清理
   floatingWindow.on("closed", () => {
     floatingWindows.delete(noteId);
@@ -352,17 +395,7 @@ app.whenReady().then(() => {
           },
         ]
       : []),
-    // 窗口菜单
-    {
-      label: "窗口",
-      submenu: [
-        { role: "minimize", label: "最小化" },
-        { role: "zoom", label: "缩放" },
-        ...(isMac
-          ? [{ type: "separator" }, { role: "front", label: "全部置于顶层" }]
-          : [{ role: "close", label: "关闭" }]),
-      ],
-    },
+
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
