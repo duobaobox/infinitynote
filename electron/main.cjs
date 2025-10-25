@@ -133,8 +133,8 @@ function createFloatingNoteWindow(noteData) {
     height: Math.max(height || 300, 200),
     minWidth: 250,
     minHeight: 150,
-    frame: false, // 无边框窗口
-    transparent: true, // 透明背景
+  frame: false, // 无边框窗口
+  transparent: false, // 关闭透明，保证可缩放
     alwaysOnTop: true, // 始终在顶部
     resizable: true,
     movable: true,
