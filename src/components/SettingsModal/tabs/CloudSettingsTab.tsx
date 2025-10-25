@@ -213,7 +213,7 @@ const CloudSettingsTab: React.FC<CloudSettingsTabProps> = () => {
             type="warning"
             showIcon
             message="当前在浏览器预览环境，无法使用 WebDAV"
-            description="请在 Electron 中运行本应用后再测试同步：npm run electron:dev（或使用已打包的应用）。"
+            description="请在客户端使用！"
           />
         </div>
       )}
