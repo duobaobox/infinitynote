@@ -36,8 +36,7 @@
     "electron:build:win": "npm run build && electron-builder --win",
     "electron:build:linux": "npm run build && electron-builder --linux",
     "electron:build:all": "bash scripts/build-all.sh",
-    "release:clean": "bash scripts/clean-release.sh",
-    "prepare": "husky"
+    "release:clean": "bash scripts/clean-release.sh"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.2",
