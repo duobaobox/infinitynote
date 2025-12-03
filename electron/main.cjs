@@ -5,6 +5,7 @@ const {
   Menu,
   Tray,
   nativeImage,
+  safeStorage,
 } = require("electron");
 const path = require("path");
 const { URL } = require("url");
@@ -15,6 +16,9 @@ app.name = "无限便签";
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 let mainWindow;
 let tray = null;
+
+// 安全存储缓存（内存中的解密数据）
+const secureStorageCache = new Map();
 
 // 悬浮窗口管理 - 使用 Map 管理多个悬浮窗口
 let floatingWindows = new Map(); // key: noteId, value: BrowserWindow
@@ -428,6 +432,78 @@ app.on("window-all-closed", () => {
 
 ipcMain.handle("app:getVersion", () => app.getVersion());
 ipcMain.handle("app:getPlatform", () => process.platform);
+
+// ===== 安全存储 IPC 处理 =====
+
+// 使用 safeStorage 加密存储数据
+ipcMain.handle("secure-storage:set", async (event, key, value) => {
+  try {
+    if (!safeStorage.isEncryptionAvailable()) {
+      console.warn("⚠️ safeStorage 加密不可用，使用内存存储");
+      secureStorageCache.set(key, value);
+      return { success: true, fallback: true };
+    }
+    
+    const encrypted = safeStorage.encryptString(value);
+    // 存储到文件或其他持久化存储
+    // 这里使用简单的内存缓存演示
+    secureStorageCache.set(key, encrypted);
+    console.log(`✅ 安全存储成功: ${key}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ 安全存储失败: ${key}`, error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 从 safeStorage 解密读取数据
+ipcMain.handle("secure-storage:get", async (event, key) => {
+  try {
+    const stored = secureStorageCache.get(key);
+    if (!stored) {
+      return null;
+    }
+    
+    if (!safeStorage.isEncryptionAvailable()) {
+      // 如果加密不可用，假设存储的是明文
+      return stored;
+    }
+    
+    // 如果是 Buffer（加密数据），则解密
+    if (Buffer.isBuffer(stored)) {
+      return safeStorage.decryptString(stored);
+    }
+    
+    return stored;
+  } catch (error) {
+    console.error(`❌ 安全读取失败: ${key}`, error);
+    return null;
+  }
+});
+
+// 删除安全存储的数据
+ipcMain.handle("secure-storage:remove", async (event, key) => {
+  try {
+    secureStorageCache.delete(key);
+    console.log(`✅ 安全删除成功: ${key}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ 安全删除失败: ${key}`, error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 清除所有安全存储
+ipcMain.handle("secure-storage:clear", async () => {
+  try {
+    secureStorageCache.clear();
+    console.log("✅ 安全存储已清除");
+    return { success: true };
+  } catch (error) {
+    console.error("❌ 清除安全存储失败", error);
+    return { success: false, error: error.message };
+  }
+});
 
 // 托盘相关 IPC 接口
 ipcMain.handle("tray:show", () => {

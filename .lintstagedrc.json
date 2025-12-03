@@ -1,0 +1,5 @@
+{
+  "*.{ts,tsx}": ["npx eslint --fix", "npx vitest related --run"],
+  "*.{js,jsx}": ["npx eslint --fix"],
+  "*.{json,md}": ["npx prettier --write"]
+}

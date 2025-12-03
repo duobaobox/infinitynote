@@ -22,16 +22,21 @@
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "test": "node tests/run-tests.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:legacy": "node tests/run-tests.js",
     "test:performance": "node tests/core/performance-benchmark.js",
     "test:bundle": "node tests/utils/analyze-bundle-size.js",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
     "electron:build": "npm run build && electron-builder",
     "electron:build:mac": "npm run build && electron-builder --mac",
     "electron:build:win": "npm run build && electron-builder --win",
-    "electron:build:lin1ux": "npm run build && electron-builder --linux",
+    "electron:build:linux": "npm run build && electron-builder --linux",
     "electron:build:all": "bash scripts/build-all.sh",
-    "release:clean": "bash scripts/clean-release.sh"
+    "release:clean": "bash scripts/clean-release.sh",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.2",
@@ -63,11 +68,18 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@eslint/js": "^9.33.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/coverage-v8": "^4.0.15",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^38.2.1",
@@ -76,9 +88,14 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
+    "jsdom": "^27.2.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",
+    "vitest": "^4.0.15",
     "wait-on": "^9.0.1"
   }
 }

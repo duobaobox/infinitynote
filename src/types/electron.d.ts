@@ -72,6 +72,13 @@ export interface ElectronAPI {
   ) => () => void;
   platform: string;
   isDev: boolean;
+  // 安全存储 API
+  secureStorage?: {
+    set: (key: string, value: string) => Promise<{ success: boolean; fallback?: boolean; error?: string }>;
+    get: (key: string) => Promise<string | null>;
+    remove: (key: string) => Promise<{ success: boolean; error?: string }>;
+    clear: () => Promise<{ success: boolean; error?: string }>;
+  };
 }
 
 declare global {

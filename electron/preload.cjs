@@ -15,6 +15,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
     updateTooltip: (tooltip) =>
       ipcRenderer.invoke("tray:updateTooltip", tooltip),
   },
+  // 安全存储 API
+  secureStorage: {
+    set: (key, value) => ipcRenderer.invoke("secure-storage:set", key, value),
+    get: (key) => ipcRenderer.invoke("secure-storage:get", key),
+    remove: (key) => ipcRenderer.invoke("secure-storage:remove", key),
+    clear: () => ipcRenderer.invoke("secure-storage:clear"),
+  },
   // 悬浮便签功能
   floating: {
     createFloatingNote: (noteData) =>
@@ -30,12 +37,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ),
     getFloatingNoteData: (noteId) =>
       ipcRenderer.invoke("get-floating-note-data", noteId),
-  },
-  // WebDAV 同步
-  webdav: {
-    test: (config) => ipcRenderer.invoke("webdav:test", config),
-    push: (payload) => ipcRenderer.invoke("webdav:push", payload),
-    pull: (payload) => ipcRenderer.invoke("webdav:pull", payload),
   },
   // WebDAV 同步
   webdav: {
