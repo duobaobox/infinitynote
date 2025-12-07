@@ -125,7 +125,14 @@
     "icon": "build/icon.png",
     "maintainer": "无限便签团队"
   },
-  "publish": null,
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "duobaobox",
+      "repo": "infinitynote2",
+      "releaseType": "draft"
+    }
+  ],
   "compression": "normal",
   "asar": true,
   "asarUnpack": ["**/*.node"],

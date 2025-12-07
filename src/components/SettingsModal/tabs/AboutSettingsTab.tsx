@@ -32,8 +32,8 @@
  * @lastModified 2024-12-13
  */
 
-import React from "react";
-import { message, Button, Switch, Typography, Card } from "antd";
+import React, { useEffect, useState } from "react";
+import { message, Button, Switch, Typography, Card, Progress } from "antd";
 import logo from "../../../assets/logo.png";
 
 import {
@@ -58,6 +58,7 @@ export interface AboutSettingsTabProps {
 const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
   onOpenTestPanel,
 }) => {
+  const isElectron = Boolean(window.electronAPI);
   const manualUrl = "https://www.kdocs.cn/l/cj6sWRtZJqcl";
   const changelogUrl = "https://www.kdocs.cn/l/coD3PhBb3dOO";
   const feedbackUrl = "https://www.kdocs.cn/l/ciBC3O9EMswq";
@@ -65,6 +66,17 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
   const repoUrl = "https://github.com/duobaobox/infinitynote2";
   const bilibiliUrl =
     "https://space.bilibili.com/254954861?spm_id_from=333.788.0.0";
+  const [appVersion, setAppVersion] = useState<string>("-");
+  const [updateStatus, setUpdateStatus] = useState<string>("");
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem("infinitynote:auto-update");
+    return stored === "true";
+  });
   const featureItems = [
     {
       icon: <QuestionCircleOutlined />,
@@ -119,6 +131,176 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
     },
   ];
 
+  const handleCheckUpdate = async () => {
+    if (!window.electronAPI?.updates?.check) {
+      messageApi.info("当前环境不支持自动更新");
+      return;
+    }
+
+    setChecking(true);
+    setUpdateStatus("正在检查更新...");
+
+    try {
+      const result = await window.electronAPI.updates.check();
+      if (!result?.success) {
+        setUpdateStatus(result?.message || "检查更新失败");
+        messageApi.error(result?.message || "检查更新失败");
+        setChecking(false);
+      }
+    } catch (error) {
+      console.error("检查更新失败", error);
+      messageApi.error("检查更新失败");
+      setChecking(false);
+    }
+  };
+
+  const handleDownloadUpdate = async () => {
+    if (!window.electronAPI?.updates?.download) {
+      messageApi.info("当前环境不支持自动更新");
+      return;
+    }
+
+    setDownloading(true);
+    setUpdateStatus("正在准备下载更新...");
+
+    try {
+      const result = await window.electronAPI.updates.download();
+      if (!result?.success) {
+        setUpdateStatus(result?.message || "下载更新失败");
+        messageApi.error(result?.message || "下载更新失败");
+        setDownloading(false);
+      }
+    } catch (error) {
+      console.error("下载更新失败", error);
+      messageApi.error("下载更新失败");
+      setDownloading(false);
+    }
+  };
+
+  const handleInstallUpdate = async () => {
+    if (!window.electronAPI?.updates?.install) {
+      messageApi.info("当前环境不支持自动更新");
+      return;
+    }
+    await window.electronAPI.updates.install();
+  };
+
+  const handleAutoUpdateToggle = (checked: boolean) => {
+    setAutoUpdateEnabled(checked);
+    localStorage.setItem("infinitynote:auto-update", String(checked));
+    if (checked) {
+      handleCheckUpdate();
+    }
+  };
+
+  const renderUpdateAction = () => {
+    if (downloaded) {
+      return (
+        <Button type="primary" onClick={handleInstallUpdate}>
+          安装更新并重启
+        </Button>
+      );
+    }
+
+    if (updateAvailable) {
+      return (
+        <Button
+          type="primary"
+          loading={downloading}
+          onClick={handleDownloadUpdate}
+        >
+          {downloading
+            ? progress != null
+              ? `下载中 ${progress}%`
+              : "正在下载..."
+            : "下载更新"}
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        type="primary"
+        loading={checking}
+        onClick={handleCheckUpdate}
+        disabled={!isElectron}
+      >
+        检查更新
+      </Button>
+    );
+  };
+
+  useEffect(() => {
+    if (window.electronAPI?.getVersion) {
+      window.electronAPI
+        .getVersion()
+        .then((version) => setAppVersion(version))
+        .catch(() => setAppVersion("-"));
+    }
+  }, []);
+
+  useEffect(() => {
+    const disposer = window.electronAPI?.updates?.onStatus?.((payload) => {
+      switch (payload.status) {
+        case "checking":
+          setChecking(true);
+          setUpdateStatus("正在检查更新...");
+          setUpdateAvailable(false);
+          setDownloaded(false);
+          setProgress(null);
+          break;
+        case "available":
+          setChecking(false);
+          setUpdateAvailable(true);
+          setDownloaded(false);
+          setUpdateStatus("发现新版本，点击下载即可更新");
+          break;
+        case "not-available":
+          setChecking(false);
+          setUpdateAvailable(false);
+          setDownloaded(false);
+          setUpdateStatus("当前已是最新版本");
+          setProgress(null);
+          break;
+        case "download-progress": {
+          setDownloading(true);
+          const percent = Math.round(payload.progress?.percent ?? 0);
+          setProgress(percent);
+          setUpdateStatus(`正在下载更新 ${percent}%`);
+          break;
+        }
+        case "downloaded":
+          setDownloading(false);
+          setChecking(false);
+          setDownloaded(true);
+          setUpdateAvailable(true);
+          setUpdateStatus("更新包已下载，点击安装并重启");
+          setProgress(100);
+          break;
+        case "error":
+          setChecking(false);
+          setDownloading(false);
+          setUpdateStatus(payload.message || "更新失败");
+          break;
+        default:
+          break;
+      }
+    });
+
+    return () => {
+      if (typeof disposer === "function") {
+        disposer();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (autoUpdateEnabled && isElectron) {
+      handleCheckUpdate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoUpdateEnabled, isElectron]);
+
   return (
     <React.Fragment>
       {contextHolder}
@@ -145,7 +327,7 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
                   >
                     无限便签 InfinityNote
                   </div>
-                  <Text type="secondary">版本 2.2.0</Text>
+                  <Text type="secondary">版本 {appVersion}</Text>
                   <Text style={{ display: "block", marginTop: 8 }}>
                     一款支持无限画布、AI智能、便签链接与多种整理方式的现代化便签应用。
                   </Text>
@@ -185,8 +367,8 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center",
-                gap: "16px",
+                alignItems: "flex-start",
+                gap: "12px",
               }}
             >
               <div>
@@ -196,14 +378,26 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
                 >
                   手动检查应用更新
                 </div>
+                <Text
+                  type="secondary"
+                  style={{ display: "block", marginTop: 8, maxWidth: 480 }}
+                >
+                  {updateStatus ||
+                    (isElectron
+                      ? "点击右侧按钮检查更新，或开启自动更新"
+                      : "当前为浏览器模式，自动更新不可用")}
+                </Text>
               </div>
-              <Button
-                type="primary"
-                onClick={() => messageApi.info("该功能即将上线")}
-              >
-                检查更新
-              </Button>
+              <div style={{ display: "flex", gap: 8 }}>
+                {renderUpdateAction()}
+              </div>
             </div>
+
+            {progress !== null && (
+              <div style={{ marginTop: 12 }}>
+                <Progress percent={progress} size="small" />
+              </div>
+            )}
 
             <div
               style={{
@@ -221,7 +415,11 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
                   启用后自动检查并安装更新
                 </div>
               </div>
-              <Switch onClick={() => messageApi.info("该功能即将上线")} />
+              <Switch
+                checked={autoUpdateEnabled}
+                onChange={handleAutoUpdateToggle}
+                disabled={!isElectron}
+              />
             </div>
           </Card>
 

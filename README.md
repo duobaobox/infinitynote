@@ -231,6 +231,17 @@ npm run lint:fix
 npm run type-check
 ```
 
+## 🔄 自动更新与发布
+
+- 更新通道：使用 GitHub Releases（`duobaobox/infinitynote2`）。
+- 构建产物：electron-builder 自动生成 `latest.yml`/`app-update.yml` 及对应安装包，供客户端增量更新。
+- 发布步骤：
+  1.  提前在 GitHub 设置 `GH_TOKEN`（repo 发布权限）。
+  2.  确保 `package.json` 的版本号已递增，并执行 `npm install` 安装依赖（包含 `electron-updater`）。
+  3.  运行 `GH_TOKEN=your_token npm run electron:build -- --publish always`（或指定平台的构建脚本加 `--publish always`）。
+  4.  构建完成后会在 GitHub 创建 Draft Release 并上传安装包 + 更新元数据文件，发布后客户端即可增量更新。
+- 客户端使用：在「设置 > 关于我们」里点击「检查更新」或开启「自动更新」。下载完成后点击「安装更新并重启」。
+
 ## �🤝 贡献指南
 
 我们欢迎所有形式的贡献！无论是报告 Bug、提出新功能建议，还是提交代码。

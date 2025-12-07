@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("electronAPI", {
+// 向渲染进程暴露受控的 API
+const api = {
   getVersion: () => ipcRenderer.invoke("app:getVersion"),
   getPlatform: () => ipcRenderer.invoke("app:getPlatform"),
   window: {
@@ -15,7 +16,16 @@ contextBridge.exposeInMainWorld("electronAPI", {
     updateTooltip: (tooltip) =>
       ipcRenderer.invoke("tray:updateTooltip", tooltip),
   },
-  // 悬浮便签功能
+  updates: {
+    check: () => ipcRenderer.invoke("update:check"),
+    download: () => ipcRenderer.invoke("update:download"),
+    install: () => ipcRenderer.invoke("update:install"),
+    onStatus: (callback) => {
+      const handler = (_event, payload) => callback(payload);
+      ipcRenderer.on("update:status", handler);
+      return () => ipcRenderer.removeListener("update:status", handler);
+    },
+  },
   floating: {
     createFloatingNote: (noteData) =>
       ipcRenderer.invoke("create-floating-note", noteData),
@@ -31,25 +41,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getFloatingNoteData: (noteId) =>
       ipcRenderer.invoke("get-floating-note-data", noteId),
   },
-  // WebDAV 同步
   webdav: {
     test: (config) => ipcRenderer.invoke("webdav:test", config),
     push: (payload) => ipcRenderer.invoke("webdav:push", payload),
     pull: (payload) => ipcRenderer.invoke("webdav:pull", payload),
   },
-  // WebDAV 同步
-  webdav: {
-    test: (config) => ipcRenderer.invoke("webdav:test", config),
-    push: (payload) => ipcRenderer.invoke("webdav:push", payload),
-    pull: (payload) => ipcRenderer.invoke("webdav:pull", payload),
-  },
-  // 事件监听
   onMenuAction: (callback) => {
     const menuEvents = [
-      "note-data", // 悬浮便签数据
-      "note-data-updated", // 便签数据更新
-      "floating-note-updated", // 悬浮便签更新通知主窗口
-      "floating-note-resized", // 悬浮便签大小变化
+      "note-data",
+      "note-data-updated",
+      "floating-note-updated",
+      "floating-note-resized",
     ];
 
     const handlers = {};
@@ -62,7 +64,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ipcRenderer.on(event, handler);
     });
 
-    // 返回清理函数
     return () => {
       menuEvents.forEach((event) => {
         if (handlers[event]) {
@@ -73,7 +74,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
   platform: process.platform,
   isDev: process.env.NODE_ENV === "development",
-});
+};
 
+contextBridge.exposeInMainWorld("electronAPI", api);
 contextBridge.exposeInMainWorld("isElectron", true);
 console.log("Electron preload script loaded");

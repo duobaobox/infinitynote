@@ -25,6 +25,29 @@ export interface ElectronAPI {
         username: string;
         password: string;
         remoteDir: string;
+        updates?: {
+          check: () => Promise<{
+            success: boolean;
+            message?: string;
+            info?: any;
+          }>;
+          download: () => Promise<{ success: boolean; message?: string }>;
+          install: () => Promise<{ success: boolean; message?: string }>;
+          onStatus: (
+            callback: (payload: {
+              status:
+                | "checking"
+                | "available"
+                | "not-available"
+                | "download-progress"
+                | "downloaded"
+                | "error";
+              message?: string;
+              info?: any;
+              progress?: any;
+            }) => void
+          ) => () => void;
+        };
       };
       filename?: string;
       content: string;
@@ -38,6 +61,25 @@ export interface ElectronAPI {
       };
       filename?: string;
     }) => Promise<{ success: boolean; content?: string; error?: string }>;
+  };
+  updates?: {
+    check: () => Promise<{ success: boolean; message?: string; info?: any }>;
+    download: () => Promise<{ success: boolean; message?: string }>;
+    install: () => Promise<{ success: boolean; message?: string }>;
+    onStatus: (
+      callback: (payload: {
+        status:
+          | "checking"
+          | "available"
+          | "not-available"
+          | "download-progress"
+          | "downloaded"
+          | "error";
+        message?: string;
+        info?: any;
+        progress?: any;
+      }) => void
+    ) => () => void;
   };
   tray: {
     show: () => Promise<void>;
