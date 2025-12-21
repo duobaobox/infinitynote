@@ -4,7 +4,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/duobaobox/infinitynote2)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/duobaobox/infinitynote)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.3-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
@@ -83,14 +83,14 @@
 
 #### 下载预构建版本（推荐）
 
-前往 [Releases](https://github.com/duobaobox/infinitynote2/releases) 页面下载适合您系统的安装包：
+前往 [Releases](https://github.com/duobaobox/infinitynote/releases) 页面下载适合您系统的安装包：
 
 **macOS**:
 
 - Apple Silicon (M1/M2/M3): `无限便签-2.0.0-arm64.dmg`
 - Intel 芯片: `无限便签-2.0.0.dmg`
 
-详细安装说明请查看 [INSTALL.md](./INSTALL.md)
+详细安装说明请参考下文的 [从源码构建](#️-从源码构建) 章节。
 
 **Windows** (即将推出):
 
@@ -111,8 +111,8 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/duobaobox/infinitynote2.git
-cd infinitynote2
+git clone https://github.com/duobaobox/infinitynote.git
+cd infinitynote
 
 # 2. 安装依赖
 npm install
@@ -150,7 +150,7 @@ npm run electron:build:linux   # Linux
 
 > 💡 **提示**: API 密钥仅存储在本地，不会上传到任何服务器
 
-## � 使用文档
+## 使用文档
 
 ### 基础操作
 
@@ -178,7 +178,7 @@ npm run electron:build:linux   # Linux
 ## 📁 项目结构
 
 ```
-infinitynote2/
+infinitynote/
 ├── electron/              # Electron 主进程和预加载脚本
 ├── src/
 │   ├── components/        # React 组件
@@ -203,7 +203,7 @@ infinitynote2/
 └── public/                # 静态资源
 ```
 
-## � 开发与测试
+## 开发与测试
 
 ### 运行测试
 
@@ -233,7 +233,7 @@ npm run type-check
 
 ## 🔄 自动更新与发布
 
-- 更新通道：使用 GitHub Releases（`duobaobox/infinitynote2`）。
+- 更新通道：使用 GitHub Releases（`duobaobox/infinitynote`）。
 - 构建产物：electron-builder 自动生成 `latest.yml`/`app-update.yml` 及对应安装包，供客户端增量更新。
 - 发布步骤：
   1.  提前在 GitHub 设置 `GH_TOKEN`（repo 发布权限）。
@@ -242,7 +242,7 @@ npm run type-check
   4.  构建完成后会在 GitHub 创建 Draft Release 并上传安装包 + 更新元数据文件，发布后客户端即可增量更新。
 - 客户端使用：在「设置 > 关于我们」里点击「检查更新」或开启「自动更新」。下载完成后点击「安装更新并重启」。
 
-## �🤝 贡献指南
+## 🤝 贡献指南
 
 我们欢迎所有形式的贡献！无论是报告 Bug、提出新功能建议，还是提交代码。
 
@@ -266,7 +266,7 @@ npm run type-check
 
 ### 报告问题
 
-发现 Bug？请通过 [Issues](https://github.com/duobaobox/infinitynote2/issues) 报告，并包含：
+发现 Bug？请通过 [Issues](https://github.com/duobaobox/infinitynote/issues) 报告，并包含：
 
 - 问题描述
 - 复现步骤
@@ -284,7 +284,7 @@ npm run type-check
 - [ ] **v2.5**: 回收站功能开发
 - [ ] **v3.0**: 画布分享功能开发
 
-查看详细的 [Roadmap](https://github.com/duobaobox/infinitynote2/projects) 和 [更新日志](./CHANGELOG.md)
+查看详细的 [Roadmap](https://github.com/duobaobox/infinitynote/projects) 和 [更新日志](./CHANGELOG.md)
 
 ## 📄 许可证
 
@@ -305,17 +305,17 @@ Copyright © 2025 [duobaobox](https://github.com/duobaobox)
 - [Dexie.js](https://dexie.org/) - IndexedDB 封装库
 - [leader-line](https://anseki.github.io/leader-line/) - 连接线绘制库
 
-## � 社区与支持
+## 社区与支持
 
-- 📮 **问题反馈**: [GitHub Issues](https://github.com/duobaobox/infinitynote2/issues)
-- 💡 **功能建议**: [GitHub Discussions](https://github.com/duobaobox/infinitynote2/discussions)
+- 📮 **问题反馈**: [GitHub Issues](https://github.com/duobaobox/infinitynote/issues)
+- 💡 **功能建议**: [GitHub Discussions](https://github.com/duobaobox/infinitynote/discussions)
 - 📧 **联系作者**: 通过 GitHub Profile 联系
 
 ## ⭐ Star History
 
 如果这个项目对您有帮助，请给我们一个 ⭐！
 
-[![Star History Chart](https://api.star-history.com/svg?repos=duobaobox/infinitynote2&type=Date)](https://star-history.com/#duobaobox/infinitynote2&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=duobaobox/infinitynote&type=Date)](https://star-history.com/#duobaobox/infinitynote&Date)
 
 ---
 
@@ -323,6 +323,6 @@ Copyright © 2025 [duobaobox](https://github.com/duobaobox)
 
 **用 ❤️ 制作 | Made with Love**
 
-[回到顶部](#infinitynote-2) ↑
+[回到顶部](#infinitynote) ↑
 
 </div>

@@ -120,7 +120,7 @@
     "requestExecutionLevel": "user"
   },
   "linux": {
-    "target": ["AppImage", "deb", "rpm"],
+    "target": ["AppImage", "deb"],
     "category": "Office",
     "icon": "build/icon.png",
     "maintainer": "无限便签团队"
@@ -129,7 +129,7 @@
     {
       "provider": "github",
       "owner": "duobaobox",
-      "repo": "infinitynote2",
+      "repo": "infinitynote",
       "releaseType": "draft"
     }
   ],
