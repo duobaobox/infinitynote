@@ -1152,7 +1152,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
                 height: window.innerHeight,
               }}
               onNoteClick={(e, note) =>
-                selectNote(note.id, e.ctrlKey || e.metaKey)
+                selectNote(note.id, e.shiftKey || e.ctrlKey || e.metaKey)
               }
               onNoteResize={() => {
                 // 缩放回调已经在NoteCard内部通过resizeNote处理了

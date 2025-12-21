@@ -93,13 +93,23 @@ export const VirtualizedNoteContainer: React.FC<
 
   // 处理便签选择
   const handleNoteSelect = useCallback(
-    (noteId: string) => {
+    (noteId: string, event?: React.MouseEvent) => {
       if (onNoteClick) {
         // 如果有父组件传递的点击处理函数，则调用
-        const fakeEvent = { stopPropagation: () => {} } as React.MouseEvent;
+        // 若有真实事件，传递真实事件；否则创建一个包含必要属性的假事件
         const targetNote = notes.find((note) => note.id === noteId);
         if (targetNote) {
-          onNoteClick(fakeEvent, targetNote);
+          if (event) {
+            onNoteClick(event, targetNote);
+          } else {
+            const fakeEvent = {
+              stopPropagation: () => {},
+              shiftKey: false,
+              ctrlKey: false,
+              metaKey: false,
+            } as React.MouseEvent;
+            onNoteClick(fakeEvent, targetNote);
+          }
         }
       }
     },

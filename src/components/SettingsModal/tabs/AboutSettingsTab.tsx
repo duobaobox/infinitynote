@@ -385,7 +385,7 @@ const AboutSettingsTab: React.FC<AboutSettingsTabProps> = ({
                   {updateStatus ||
                     (isElectron
                       ? "点击右侧按钮检查更新，或开启自动更新"
-                      : "当前为浏览器模式，自动更新不可用")}
+                      : "当前为浏览器模式，自动更新不可用，开发者会后台更新新版本，您每次打开应用时都会自动更新！")}
                 </Text>
               </div>
               <div style={{ display: "flex", gap: 8 }}>

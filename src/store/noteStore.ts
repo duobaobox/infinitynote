@@ -182,6 +182,14 @@ interface NoteActions {
   ) => Promise<void>;
   /** 检查便签是否需要整理 */
   checkNeedsOrganization: (canvasId: string) => boolean;
+  /** 将选中的便签排列成横向布局以便比对 */
+  arrangeSelectedNotesForComparison: (
+    viewportWidth: number,
+    viewportHeight: number,
+    viewportX?: number,
+    viewportY?: number,
+    gap?: number
+  ) => Promise<void>;
 
   // 层级管理常量
   readonly LAYER_STEP: number;
@@ -1470,11 +1478,101 @@ export const useNoteStore = create<NoteStore>()(
               Math.abs(note.size.height - firstSize.height) <= 10
           );
 
-          return !hasUniformSize; // 如果尺寸不统一，则需要整理
+        return !hasUniformSize; // 如果尺寸不统一，则需要整理
         } catch (error) {
           console.warn("检查整理需求时出错:", error);
           return true; // 出错时默认认为需要整理
         }
+      },
+
+      /**
+       * 将选中的便签排列成横向布局以便比对
+       * @param viewportWidth 视口宽度（画布坐标）
+       * @param viewportHeight 视口高度（画布坐标）
+       * @param viewportX 视口左上角X坐标（画布坐标）
+       * @param viewportY 视口左上角Y坐标（画布坐标）
+       * @param gap 便签之间的间距，默认20px
+       */
+      arrangeSelectedNotesForComparison: async (
+        viewportWidth: number,
+        viewportHeight: number,
+        viewportX = 0,
+        viewportY = 0,
+        gap = 20
+      ) => {
+        const { selectedNoteIds, notes } = get();
+
+        // 过滤出选中的便签
+        const selectedNotes = notes.filter((note) =>
+          selectedNoteIds.includes(note.id)
+        );
+
+        if (selectedNotes.length < 2) {
+          console.warn("“排版比对”需要至少选中2个便签");
+          return;
+        }
+
+        const n = selectedNotes.length;
+
+        // 横向排布：所有便签在一行，最大化高度便于阅读
+        const cols = n;
+
+        // 计算每个单元格的尺寸
+        const cellWidth = (viewportWidth - (cols + 1) * gap) / cols;
+        const cellHeight = viewportHeight - 2 * gap; // 占满视口高度
+
+        console.log(
+          `📊 排版比对: ${n} 个便签 -> 横向排布, 单元格尺寸: ${cellWidth.toFixed(
+            0
+          )}x${cellHeight.toFixed(0)}`
+        );
+
+        // 构建更新列表 - 基于视口左上角定位
+        const updates: {
+          id: string;
+          position: Position;
+          size: Size;
+        }[] = selectedNotes.map((note, index) => {
+          return {
+            id: note.id,
+            position: {
+              x: viewportX + gap + index * (cellWidth + gap),
+              y: viewportY + gap,
+            },
+            size: {
+              width: cellWidth,
+              height: cellHeight,
+            },
+          };
+        });
+
+        // 批量更新便签
+        const updatePromises = updates.map(async (update) => {
+          // 先更新内存状态
+          set((state) => ({
+            notes: state.notes.map((note) =>
+              note.id === update.id
+                ? {
+                    ...note,
+                    position: update.position,
+                    size: update.size,
+                    updatedAt: new Date(),
+                  }
+                : note
+            ),
+          }));
+
+          // 同步到数据库
+          return dbOperations.updateNote(update.id, {
+            position: update.position,
+            size: update.size,
+            updatedAt: new Date(),
+          });
+        });
+
+        await Promise.all(updatePromises);
+
+        console.log(`✅ 排版比对完成！`);
       },
     }),
     {

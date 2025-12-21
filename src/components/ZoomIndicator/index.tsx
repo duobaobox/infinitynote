@@ -29,8 +29,14 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
 }) => {
   const { viewport, zoomIn, zoomOut, resetViewport, activeCanvasId } =
     useCanvasStore();
-  const { organizeCurrentCanvasNotes, getNotesByCanvas } = useNoteStore();
+  const {
+    organizeCurrentCanvasNotes,
+    getNotesByCanvas,
+    selectedNoteIds,
+    arrangeSelectedNotesForComparison,
+  } = useNoteStore();
   const [isOrganizing, setIsOrganizing] = useState(false);
+  const [isArranging, setIsArranging] = useState(false);
 
   // 获取App Context中的message实例
   const { message } = App.useApp();
@@ -76,6 +82,41 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
     }
   };
 
+  // 处理排版比对
+  const handleArrangeForComparison = async () => {
+    if (selectedNoteIds.length < 2) {
+      message.info("请先按住 Shift 选中至少 2 个便签");
+      return;
+    }
+
+    try {
+      setIsArranging(true);
+
+      // 获取视口尺寸和位置（转换为画布坐标）
+      // 视口位置是 offset 的负值（因为 offset 是画布原点相对于视口的偏移）
+      const viewportWidth = window.innerWidth * 0.9 / viewport.scale;
+      const viewportHeight = window.innerHeight * 0.92 / viewport.scale;
+      const viewportX = -viewport.offset.x / viewport.scale;
+      const viewportY = -viewport.offset.y / viewport.scale;
+
+      await arrangeSelectedNotesForComparison(
+        viewportWidth,
+        viewportHeight,
+        viewportX,
+        viewportY
+      );
+
+      message.success(`已将 ${selectedNoteIds.length} 个便签横向排列`);
+    } catch (error) {
+      console.error("排版比对失败:", error);
+      message.error(
+        `排版失败: ${error instanceof Error ? error.message : "未知错误"}`
+      );
+    } finally {
+      setIsArranging(false);
+    }
+  };
+
   return (
     <div className={styles.zoomIndicator}>
       <Space
@@ -114,6 +155,28 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
               loading={isOrganizing}
               disabled={!activeCanvasId || isOrganizing}
               className={styles.zoomButton}
+            />
+          </Tooltip>
+
+          {/* 排版比对按钮 */}
+          <Tooltip
+            title={
+              selectedNoteIds.length >= 2
+                ? `将 ${selectedNoteIds.length} 个选中便签铺满画布比对`
+                : "按住 Shift 多选便签后可排版比对"
+            }
+            placement="left"
+          >
+            <Button
+              type={selectedNoteIds.length >= 2 ? "primary" : "text"}
+              size="small"
+              icon={<DynamicIcon type="TableOutlined" />}
+              onClick={handleArrangeForComparison}
+              loading={isArranging}
+              disabled={selectedNoteIds.length < 2 || isArranging}
+              className={`${styles.zoomButton} ${
+                selectedNoteIds.length >= 2 ? styles.activeButton : ""
+              }`}
             />
           </Tooltip>
         </Space>

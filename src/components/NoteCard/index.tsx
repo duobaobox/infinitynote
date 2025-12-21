@@ -23,7 +23,7 @@ import styles from "./index.module.css";
 interface NoteCardProps {
   note: Note;
   scale: number;
-  onSelect: (noteId: string) => void;
+  onSelect: (noteId: string, event?: React.MouseEvent) => void;
   isSelected: boolean;
   onResize?: (noteId: string, size: Size) => void;
 }
@@ -240,7 +240,7 @@ export const NoteCard = memo<NoteCardProps>(
 
         // 选中便签
         if (!note.isSelected) {
-          onSelect(note.id);
+          onSelect(note.id, e);
         }
 
         // AI生成时不显示工具栏
@@ -374,21 +374,40 @@ export const NoteCard = memo<NoteCardProps>(
             setShowToolbar(false);
             break;
           case "duplicate":
-            // 复制便签文本内容到剪贴板
+            // 复制便签内容到剪贴板（同时包含富文本和纯文本格式）
             try {
-              // 从HTML内容中提取纯文本
+              // 获取HTML内容
+              const htmlContent = note.content;
+
+              // 从HTML内容中提取纯文本作为后备
               const tempDiv = document.createElement("div");
-              tempDiv.innerHTML = note.content;
+              tempDiv.innerHTML = htmlContent;
               const plainText = tempDiv.textContent || tempDiv.innerText || "";
 
-              // 复制到剪贴板
-              await navigator.clipboard.writeText(plainText);
+              // 使用 ClipboardItem API 同时复制 HTML 和纯文本
+              // 这样粘贴到支持富文本的编辑器时会保留格式
+              const clipboardItem = new ClipboardItem({
+                "text/html": new Blob([htmlContent], { type: "text/html" }),
+                "text/plain": new Blob([plainText], { type: "text/plain" }),
+              });
+
+              await navigator.clipboard.write([clipboardItem]);
 
               // 显示成功提示
-              message.success("文本已复制到剪贴板");
+              message.success("已复制富文本内容");
             } catch (error) {
-              console.error("复制文本失败:", error);
-              message.error("复制失败，请重试");
+              console.error("复制富文本失败:", error);
+              // 降级为纯文本复制
+              try {
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = note.content;
+                const plainText = tempDiv.textContent || tempDiv.innerText || "";
+                await navigator.clipboard.writeText(plainText);
+                message.success("已复制纯文本内容");
+              } catch (fallbackError) {
+                console.error("复制失败:", fallbackError);
+                message.error("复制失败，请重试");
+              }
             }
             break;
           case "floating":
@@ -653,7 +672,7 @@ export const NoteCard = memo<NoteCardProps>(
 
         // 确保便签被选中
         if (!isSelected) {
-          onSelect(noteIdRef.current);
+          onSelect(noteIdRef.current, undefined);
         }
 
         // 初始化缩放数据 - 使用当前的尺寸
