@@ -78,6 +78,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
   }, [isDragMode]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isPanning, setIsPanning] = useState(false);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(
     null
   );
@@ -534,9 +535,10 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           e.button === 1 ||
           (e.button === 0 && e.ctrlKey) ||
           (e.button === 0 && e.altKey) ||
+          (e.button === 0 && isSpacePressed) || // 允许空格键+左键拖动
           (e.button === 0 && isDragMode) // 拖动模式下左键拖动
         ) {
-          // 中键或Ctrl+左键或Alt+左键或拖动模式下的左键
+          // 中键或Ctrl/Alt/Space+左键或拖动模式下的左键
           e.preventDefault();
           e.stopPropagation();
           panningRef.current = true;
@@ -759,8 +761,33 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
       return () => document.removeEventListener("keydown", handleKeyDown);
     }
 
-    // 使用新的键盘事件管理器
+    // 处理器定义
     const handlers = [
+      {
+        key: "canvas-space-down",
+        priority: 70,
+        handler: (e: KeyboardEvent) => {
+          if (e.key === " " && !isSpacePressed) {
+            setIsSpacePressed(true);
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
+      {
+        key: "canvas-space-up",
+        priority: 70,
+        type: "keyup" as const,
+        handler: (e: KeyboardEvent) => {
+          if (e.key === " ") {
+            setIsSpacePressed(false);
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
       {
         key: "canvas-zoom-in",
         priority: 80,
@@ -858,6 +885,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     handleCreateNote,
     clearSelection,
     isPanning,
+    isSpacePressed,
   ]);
   // 计算最终的画布偏移量：结合全局offset和本地优化offset
   const finalOffset = useMemo(() => {
@@ -1020,7 +1048,11 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          cursor: isPanning ? "grabbing" : isDragMode ? "grab" : "default",
+          cursor: isPanning
+            ? "grabbing"
+            : isSpacePressed || isDragMode
+            ? "grab"
+            : "default",
           backgroundColor: isDark
             ? "#1a1a1a"
             : displaySettings.canvasColor || "#f0f2f5",
@@ -1209,7 +1241,9 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         <div className={styles.dragModeIndicator}>
           <DynamicIcon type="DragOutlined" />
           <span>画布移动模式</span>
-          <span className={styles.dragModeHint}>按 ESC 退出</span>
+          <span className={styles.dragModeHint}>
+            按 ESC 退出 | Option+拖拽 (Mac) / Ctrl+拖拽 (Win)
+          </span>
         </div>
       )}
 

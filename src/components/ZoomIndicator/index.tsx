@@ -131,7 +131,11 @@ export const ZoomIndicator: React.FC<ZoomIndicatorProps> = ({
         <Space direction="vertical" size={4} align="center">
           {/* 拖动画布按钮 */}
           <Tooltip
-            title={isDragMode ? "关闭拖动模式" : "开启拖动模式（快捷键：空格）"}
+            title={
+              isDragMode
+                ? "关闭拖动模式"
+                : "开启拖动模式 | 快捷拖动：Option+拖拽 (Mac) / Ctrl+拖拽 (Win/Linux)"
+            }
             placement="left"
           >
             <Button
