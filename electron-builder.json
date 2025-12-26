@@ -61,8 +61,13 @@
         "path": "/Applications"
       }
     ],
-    "title": "无限便签 安装器",
-    "backgroundColor": "#ffffff"
+    "title": "InfinityNote Installer",
+    "backgroundColor": "#ffffff",
+    "window": {
+      "width": 540,
+      "height": 380
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   },
   "win": {
     "target": [
