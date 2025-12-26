@@ -61,13 +61,8 @@
         "path": "/Applications"
       }
     ],
-    "title": "InfinityNote Installer",
-    "backgroundColor": "#ffffff",
-    "window": {
-      "width": 540,
-      "height": 380
-    },
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    "title": "InfinityNote",
+    "backgroundColor": "#ffffff"
   },
   "win": {
     "target": [
