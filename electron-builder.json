@@ -1,6 +1,6 @@
 {
   "appId": "com.infinitynote.app",
-  "productName": "无限便签",
+  "productName": "InfinityNote",
   "copyright": "Copyright © 2025 无限便签团队",
   "directories": {
     "output": "release",
@@ -27,6 +27,7 @@
   ],
   "mac": {
     "category": "public.app-category.productivity",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
     "target": [
       {
         "target": "dmg",
@@ -52,7 +53,8 @@
     "contents": [
       {
         "x": 130,
-        "y": 220
+        "y": 220,
+        "type": "file"
       },
       {
         "x": 410,
@@ -62,7 +64,12 @@
       }
     ],
     "title": "InfinityNote",
-    "backgroundColor": "#ffffff"
+    "backgroundColor": "#ffffff",
+    "iconSize": 128,
+    "window": {
+      "width": 540,
+      "height": 460
+    }
   },
   "win": {
     "target": [
