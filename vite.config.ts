@@ -74,6 +74,16 @@ export default defineConfig({
 
     // 压缩配置
     minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ["console.log", "console.info", "console.debug"],
+      },
+      format: {
+        comments: false,
+      },
+    },
 
     // 设置chunk大小警告阈值
     chunkSizeWarningLimit: 1000,
@@ -81,8 +91,16 @@ export default defineConfig({
     // 启用CSS代码分割
     cssCodeSplit: true,
 
-    // 生成source map（可选，生产环境可关闭）
+    // 生成source map（生产环境关闭以提升性能）
     sourcemap: false,
+
+    // 报告压缩后的包大小
+    reportCompressedSize: false,
+
+    // 优化依赖项
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 
   // 开发服务器配置

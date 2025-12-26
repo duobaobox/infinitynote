@@ -44,6 +44,17 @@ contextBridge.exposeInMainWorld("electronAPI", {
     push: (payload) => ipcRenderer.invoke("webdav:push", payload),
     pull: (payload) => ipcRenderer.invoke("webdav:pull", payload),
   },
+  // 自动更新 API
+  updates: {
+    check: () => ipcRenderer.invoke("updates:check"),
+    download: () => ipcRenderer.invoke("updates:download"),
+    install: () => ipcRenderer.invoke("updates:install"),
+    onStatus: (callback) => {
+      const handler = (event, payload) => callback(payload);
+      ipcRenderer.on("update-status", handler);
+      return () => ipcRenderer.removeListener("update-status", handler);
+    },
+  },
   // 事件监听
   onMenuAction: (callback) => {
     const menuEvents = [

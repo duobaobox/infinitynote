@@ -72,6 +72,8 @@ jobs:
             release/*.AppImage
             release/*.deb
             release/*.rpm
+            release/*.yml
+            release/*.blockmap
           retention-days: 7
 
   release:

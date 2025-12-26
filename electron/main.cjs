@@ -9,11 +9,16 @@ const {
 } = require("electron");
 const path = require("path");
 const { URL } = require("url");
+const { autoUpdater } = require("electron-updater");
 
 // 设置应用名称（确保在所有平台显示正确的名称）
 app.name = "无限便签";
 
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
+
+// 配置 autoUpdater
+autoUpdater.autoDownload = false; // 不自动下载，由用户手动触发
+autoUpdater.autoInstallOnAppQuit = false; // 不自动安装
 let mainWindow;
 let tray = null;
 
@@ -137,8 +142,8 @@ function createFloatingNoteWindow(noteData) {
     height: Math.max(height || 300, 200),
     minWidth: 250,
     minHeight: 150,
-  frame: false, // 无边框窗口
-  transparent: false, // 关闭透明，保证可缩放
+    frame: false, // 无边框窗口
+    transparent: false, // 关闭透明，保证可缩放
     alwaysOnTop: true, // 始终在顶部
     resizable: true,
     movable: true,
@@ -149,7 +154,9 @@ function createFloatingNoteWindow(noteData) {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
-      sandbox: false,
+      sandbox: false, // 保持关闭以确保跨平台兼容性
+      enableWebSQL: false,
+      spellcheck: false,
     },
     show: false, // 延迟显示
   });
@@ -231,10 +238,10 @@ function createFloatingNoteWindow(noteData) {
   // 存储窗口引用
   floatingWindows.set(noteId, floatingWindow);
 
-  // 开发环境打开开发者工具
-  if (isDev) {
-    floatingWindow.webContents.openDevTools();
-  }
+  // 不在生产环境打开开发者工具
+  // if (isDev) {
+  //   floatingWindow.webContents.openDevTools();
+  // }
 
   return floatingWindow;
 }
@@ -252,18 +259,29 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
-      sandbox: false,
+      sandbox: false, // 保持关闭以确保跨平台兼容性
+      enableWebSQL: false,
+      spellcheck: false,
+      backgroundThrottling: false,
     },
     titleBarStyle: "default",
     frame: true,
     backgroundColor: "#ffffff",
+    show: false,
+  });
+
+  // 窗口准备好后再显示，避免白屏闪烁
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
   });
 
   if (isDev) {
     mainWindow.loadURL("http://localhost:5173");
+    // 仅在开发环境打开 DevTools
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+    // 生产环境禁用 DevTools
   }
 
   mainWindow.on("closed", () => {
@@ -350,7 +368,31 @@ function createWindow() {
   });
 }
 
+// ===== 性能优化配置（跨平台兼容）=====
+
+// 根据平台条件性地启用优化
+if (!isDev) {
+  // 生产环境通用优化
+  app.commandLine.appendSwitch("disable-renderer-backgrounding");
+
+  // macOS 特定优化
+  if (process.platform === "darwin") {
+    app.commandLine.appendSwitch("enable-smooth-scrolling");
+  }
+
+  // Windows 特定优化
+  if (process.platform === "win32") {
+    app.commandLine.appendSwitch("high-dpi-support", "1");
+    app.commandLine.appendSwitch("force-color-profile", "srgb");
+  }
+}
+
 app.whenReady().then(() => {
+  // 初始化自动更新（仅生产环境）
+  if (!isDev) {
+    setupAutoUpdater();
+  }
+
   // 设置应用菜单（macOS 保留应用名称菜单，符合系统规范）
   const isMac = process.platform === "darwin";
 
@@ -399,7 +441,6 @@ app.whenReady().then(() => {
           },
         ]
       : []),
-
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
@@ -443,7 +484,7 @@ ipcMain.handle("secure-storage:set", async (event, key, value) => {
       secureStorageCache.set(key, value);
       return { success: true, fallback: true };
     }
-    
+
     const encrypted = safeStorage.encryptString(value);
     // 存储到文件或其他持久化存储
     // 这里使用简单的内存缓存演示
@@ -463,17 +504,17 @@ ipcMain.handle("secure-storage:get", async (event, key) => {
     if (!stored) {
       return null;
     }
-    
+
     if (!safeStorage.isEncryptionAvailable()) {
       // 如果加密不可用，假设存储的是明文
       return stored;
     }
-    
+
     // 如果是 Buffer（加密数据），则解密
     if (Buffer.isBuffer(stored)) {
       return safeStorage.decryptString(stored);
     }
-    
+
     return stored;
   } catch (error) {
     console.error(`❌ 安全读取失败: ${key}`, error);
@@ -746,5 +787,103 @@ ipcMain.handle("webdav:pull", async (event, { config, filename }) => {
     return { success: true, content: text };
   } catch (error) {
     return { success: false, error: error?.message || String(error) };
+  }
+});
+
+// ===== 自动更新 IPC 处理 =====
+
+// 自动更新事件监听
+function setupAutoUpdater() {
+  // 检查更新
+  autoUpdater.on("checking-for-update", () => {
+    console.log("正在检查更新...");
+    sendUpdateStatus("checking", "正在检查更新...");
+  });
+
+  // 发现新版本
+  autoUpdater.on("update-available", (info) => {
+    console.log("发现新版本:", info.version);
+    sendUpdateStatus("available", `发现新版本 ${info.version}`, info);
+  });
+
+  // 没有可用更新
+  autoUpdater.on("update-not-available", (info) => {
+    console.log("当前已是最新版本");
+    sendUpdateStatus("not-available", "当前已是最新版本", info);
+  });
+
+  // 下载进度
+  autoUpdater.on("download-progress", (progressObj) => {
+    console.log(`下载进度: ${Math.round(progressObj.percent)}%`);
+    sendUpdateStatus("download-progress", "正在下载更新", null, progressObj);
+  });
+
+  // 下载完成
+  autoUpdater.on("update-downloaded", (info) => {
+    console.log("更新包已下载完成");
+    sendUpdateStatus("downloaded", "更新包已下载，请点击安装并重启", info);
+  });
+
+  // 更新错误
+  autoUpdater.on("error", (err) => {
+    console.error("更新错误:", err);
+    sendUpdateStatus("error", err.message || "更新失败");
+  });
+}
+
+// 发送更新状态到渲染进程
+function sendUpdateStatus(status, message, info = null, progress = null) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("update-status", {
+      status,
+      message,
+      info,
+      progress,
+    });
+  }
+}
+
+// 检查更新
+ipcMain.handle("updates:check", async () => {
+  if (isDev) {
+    return { success: false, message: "开发环境不支持自动更新" };
+  }
+
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return { success: true, info: result };
+  } catch (error) {
+    console.error("检查更新失败:", error);
+    return { success: false, message: error.message || "检查更新失败" };
+  }
+});
+
+// 下载更新
+ipcMain.handle("updates:download", async () => {
+  if (isDev) {
+    return { success: false, message: "开发环境不支持自动更新" };
+  }
+
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (error) {
+    console.error("下载更新失败:", error);
+    return { success: false, message: error.message || "下载更新失败" };
+  }
+});
+
+// 安装更新并重启
+ipcMain.handle("updates:install", async () => {
+  if (isDev) {
+    return { success: false, message: "开发环境不支持自动更新" };
+  }
+
+  try {
+    autoUpdater.quitAndInstall(false, true);
+    return { success: true };
+  } catch (error) {
+    console.error("安装更新失败:", error);
+    return { success: false, message: error.message || "安装更新失败" };
   }
 });

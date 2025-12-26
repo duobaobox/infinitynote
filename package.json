@@ -1,11 +1,15 @@
 {
   "name": "infinitynote",
   "private": true,
-  "version": "2.2.2",
+  "version": "2.2.3",
   "type": "module",
   "description": "无限便签 - 无限画布便签应用",
   "author": "无限便签团队",
   "main": "electron/main.cjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/duobaobox/infinitynote.git"
+  },
   "keywords": [
     "note",
     "canvas",
