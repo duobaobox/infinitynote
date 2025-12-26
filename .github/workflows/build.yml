@@ -98,9 +98,16 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/infinitynote-macos-latest/**/*
-            artifacts/infinitynote-ubuntu-latest/**/*
-            artifacts/infinitynote-windows-latest/**/*
+            artifacts/infinitynote-macos-latest/*.dmg
+            artifacts/infinitynote-macos-latest/*.zip
+            artifacts/infinitynote-macos-latest/*.blockmap
+            artifacts/infinitynote-macos-latest/latest-mac.yml
+            artifacts/infinitynote-windows-latest/*.exe
+            artifacts/infinitynote-windows-latest/*.blockmap
+            artifacts/infinitynote-windows-latest/latest.yml
+            artifacts/infinitynote-ubuntu-latest/*.AppImage
+            artifacts/infinitynote-ubuntu-latest/*.deb
+            artifacts/infinitynote-ubuntu-latest/latest-linux.yml
           draft: false
           prerelease: false
           generate_release_notes: true
