@@ -114,8 +114,8 @@
 git clone https://github.com/duobaobox/infinitynote.git
 cd infinitynote
 
-# 2. 安装依赖
-npm install
+# 2. 使用 cnpm 安装依赖（推荐，速度更快）
+cnpm install --legacy-peer-deps
 
 # 3. 启动开发服务器（Web 版）
 npm run dev
@@ -123,6 +123,23 @@ npm run dev
 # 4. 或启动 Electron 开发环境（推荐）
 npm run electron:dev
 ```
+
+#### 代码质量检查
+
+在提交代码前，请运行完整的代码验证：
+
+```bash
+# 运行所有检查：TypeScript 类型检查、ESLint、格式化、单元测试
+npm run verify
+
+# 或分别运行：
+npm run type-check    # TypeScript 类型检查
+npm run lint:fix      # ESLint 检查和自动修复
+npm test              # 运行单元测试
+npm run test:coverage # 生成覆盖率报告
+```
+
+**注意**: Windows 用户如果 git hooks 失效，请手动运行上述命令确保代码质量。
 
 #### 构建应用
 

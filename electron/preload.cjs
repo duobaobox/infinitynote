@@ -1,7 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-// 向渲染进程暴露受控的 API
-const api = {
+contextBridge.exposeInMainWorld("electronAPI", {
   getVersion: () => ipcRenderer.invoke("app:getVersion"),
   getPlatform: () => ipcRenderer.invoke("app:getPlatform"),
   window: {
@@ -16,16 +15,14 @@ const api = {
     updateTooltip: (tooltip) =>
       ipcRenderer.invoke("tray:updateTooltip", tooltip),
   },
-  updates: {
-    check: () => ipcRenderer.invoke("update:check"),
-    download: () => ipcRenderer.invoke("update:download"),
-    install: () => ipcRenderer.invoke("update:install"),
-    onStatus: (callback) => {
-      const handler = (_event, payload) => callback(payload);
-      ipcRenderer.on("update:status", handler);
-      return () => ipcRenderer.removeListener("update:status", handler);
-    },
+  // 安全存储 API
+  secureStorage: {
+    set: (key, value) => ipcRenderer.invoke("secure-storage:set", key, value),
+    get: (key) => ipcRenderer.invoke("secure-storage:get", key),
+    remove: (key) => ipcRenderer.invoke("secure-storage:remove", key),
+    clear: () => ipcRenderer.invoke("secure-storage:clear"),
   },
+  // 悬浮便签功能
   floating: {
     createFloatingNote: (noteData) =>
       ipcRenderer.invoke("create-floating-note", noteData),
@@ -41,17 +38,19 @@ const api = {
     getFloatingNoteData: (noteId) =>
       ipcRenderer.invoke("get-floating-note-data", noteId),
   },
+  // WebDAV 同步
   webdav: {
     test: (config) => ipcRenderer.invoke("webdav:test", config),
     push: (payload) => ipcRenderer.invoke("webdav:push", payload),
     pull: (payload) => ipcRenderer.invoke("webdav:pull", payload),
   },
+  // 事件监听
   onMenuAction: (callback) => {
     const menuEvents = [
-      "note-data",
-      "note-data-updated",
-      "floating-note-updated",
-      "floating-note-resized",
+      "note-data", // 悬浮便签数据
+      "note-data-updated", // 便签数据更新
+      "floating-note-updated", // 悬浮便签更新通知主窗口
+      "floating-note-resized", // 悬浮便签大小变化
     ];
 
     const handlers = {};
@@ -64,6 +63,7 @@ const api = {
       ipcRenderer.on(event, handler);
     });
 
+    // 返回清理函数
     return () => {
       menuEvents.forEach((event) => {
         if (handlers[event]) {
@@ -74,8 +74,7 @@ const api = {
   },
   platform: process.platform,
   isDev: process.env.NODE_ENV === "development",
-};
+});
 
-contextBridge.exposeInMainWorld("electronAPI", api);
 contextBridge.exposeInMainWorld("isElectron", true);
 console.log("Electron preload script loaded");

@@ -1,0 +1,3 @@
+# npx lint-staged --allow-empty
+# Note: Disabled on Windows due to PATH issues with npm global packages
+# Run manually: npm run lint:fix && npm test

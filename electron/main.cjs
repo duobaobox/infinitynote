@@ -5,8 +5,8 @@ const {
   Menu,
   Tray,
   nativeImage,
+  safeStorage,
 } = require("electron");
-const { autoUpdater } = require("electron-updater");
 const path = require("path");
 const { URL } = require("url");
 
@@ -17,43 +17,11 @@ const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 let mainWindow;
 let tray = null;
 
+// 安全存储缓存（内存中的解密数据）
+const secureStorageCache = new Map();
+
 // 悬浮窗口管理 - 使用 Map 管理多个悬浮窗口
 let floatingWindows = new Map(); // key: noteId, value: BrowserWindow
-
-// 自动更新状态下行到渲染进程
-const sendUpdateStatus = (status, payload = {}) => {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send("update:status", { status, ...payload });
-  }
-};
-
-// 初始化自动更新监听
-const setupAutoUpdater = () => {
-  autoUpdater.autoDownload = false;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  autoUpdater.on("checking-for-update", () => sendUpdateStatus("checking"));
-
-  autoUpdater.on("update-available", (info) =>
-    sendUpdateStatus("available", { info })
-  );
-
-  autoUpdater.on("update-not-available", (info) =>
-    sendUpdateStatus("not-available", { info })
-  );
-
-  autoUpdater.on("error", (error) =>
-    sendUpdateStatus("error", { message: error?.message || String(error) })
-  );
-
-  autoUpdater.on("download-progress", (progress) =>
-    sendUpdateStatus("download-progress", { progress })
-  );
-
-  autoUpdater.on("update-downloaded", (info) =>
-    sendUpdateStatus("downloaded", { info })
-  );
-};
 
 // 获取系统托盘图标路径（所有平台统一使用 tray@2x.png）
 function getTrayIcon() {
@@ -169,8 +137,8 @@ function createFloatingNoteWindow(noteData) {
     height: Math.max(height || 300, 200),
     minWidth: 250,
     minHeight: 150,
-    frame: false, // 无边框窗口
-    transparent: false, // 关闭透明，保证可缩放
+  frame: false, // 无边框窗口
+  transparent: false, // 关闭透明，保证可缩放
     alwaysOnTop: true, // 始终在顶部
     resizable: true,
     movable: true,
@@ -383,8 +351,6 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  setupAutoUpdater();
-
   // 设置应用菜单（macOS 保留应用名称菜单，符合系统规范）
   const isMac = process.platform === "darwin";
 
@@ -433,6 +399,7 @@ app.whenReady().then(() => {
           },
         ]
       : []),
+
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate));
@@ -466,42 +433,75 @@ app.on("window-all-closed", () => {
 ipcMain.handle("app:getVersion", () => app.getVersion());
 ipcMain.handle("app:getPlatform", () => process.platform);
 
-// 自动更新相关 IPC 接口
-ipcMain.handle("update:check", async () => {
-  if (isDev) {
-    return { success: false, message: "开发环境不支持检查更新" };
-  }
+// ===== 安全存储 IPC 处理 =====
 
+// 使用 safeStorage 加密存储数据
+ipcMain.handle("secure-storage:set", async (event, key, value) => {
   try {
-    const result = await autoUpdater.checkForUpdates();
-    return { success: true, info: result?.updateInfo };
+    if (!safeStorage.isEncryptionAvailable()) {
+      console.warn("⚠️ safeStorage 加密不可用，使用内存存储");
+      secureStorageCache.set(key, value);
+      return { success: true, fallback: true };
+    }
+    
+    const encrypted = safeStorage.encryptString(value);
+    // 存储到文件或其他持久化存储
+    // 这里使用简单的内存缓存演示
+    secureStorageCache.set(key, encrypted);
+    console.log(`✅ 安全存储成功: ${key}`);
+    return { success: true };
   } catch (error) {
-    console.error("检查更新失败", error);
-    return { success: false, message: error?.message || String(error) };
+    console.error(`❌ 安全存储失败: ${key}`, error);
+    return { success: false, error: error.message };
   }
 });
 
-ipcMain.handle("update:download", async () => {
-  if (isDev) {
-    return { success: false, message: "开发环境不支持下载更新" };
-  }
-
+// 从 safeStorage 解密读取数据
+ipcMain.handle("secure-storage:get", async (event, key) => {
   try {
-    await autoUpdater.downloadUpdate();
-    return { success: true };
+    const stored = secureStorageCache.get(key);
+    if (!stored) {
+      return null;
+    }
+    
+    if (!safeStorage.isEncryptionAvailable()) {
+      // 如果加密不可用，假设存储的是明文
+      return stored;
+    }
+    
+    // 如果是 Buffer（加密数据），则解密
+    if (Buffer.isBuffer(stored)) {
+      return safeStorage.decryptString(stored);
+    }
+    
+    return stored;
   } catch (error) {
-    console.error("下载更新失败", error);
-    return { success: false, message: error?.message || String(error) };
+    console.error(`❌ 安全读取失败: ${key}`, error);
+    return null;
   }
 });
 
-ipcMain.handle("update:install", () => {
+// 删除安全存储的数据
+ipcMain.handle("secure-storage:remove", async (event, key) => {
   try {
-    autoUpdater.quitAndInstall();
+    secureStorageCache.delete(key);
+    console.log(`✅ 安全删除成功: ${key}`);
     return { success: true };
   } catch (error) {
-    console.error("安装更新失败", error);
-    return { success: false, message: error?.message || String(error) };
+    console.error(`❌ 安全删除失败: ${key}`, error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 清除所有安全存储
+ipcMain.handle("secure-storage:clear", async () => {
+  try {
+    secureStorageCache.clear();
+    console.log("✅ 安全存储已清除");
+    return { success: true };
+  } catch (error) {
+    console.error("❌ 清除安全存储失败", error);
+    return { success: false, error: error.message };
   }
 });
 
