@@ -3,7 +3,7 @@
  * 专注于AI提供商和模型的配置、测试功能
  */
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import {
   Card,
   Form,
@@ -13,10 +13,16 @@ import {
   Space,
   Typography,
   App,
+  Divider,
 } from "antd";
+import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useTheme } from "../../../theme";
 import type { AIConfigurationState } from "../../../types/ai";
 import { API_PROVIDERS, MODEL_OPTIONS_BY_PROVIDER } from "../constants";
+import { CustomProviderForm } from "./CustomProviderForm";
+import type { CustomProviderConfig } from "../../../services/ai/CustomProvider";
+import { aiService } from "../../../services/aiService";
+import { isCustomProviderId } from "../../../services/ai/ProviderRegistry";
 
 const { Text } = Typography;
 
@@ -67,9 +73,51 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
     return colors[providerId] || (isDark ? "#a6a6a6" : "#666");
   };
 
+  // 自定义提供商状态
+  const [customProviders, setCustomProviders] = useState<CustomProviderConfig[]>([]);
+  const [isCustomFormOpen, setIsCustomFormOpen] = useState(false);
+  const [editingCustomProvider, setEditingCustomProvider] = useState<CustomProviderConfig | undefined>();
+
+  // 加载自定义提供商
+  const loadCustomProviders = useCallback(async () => {
+    const providers = await aiService.getCustomProviders();
+    setCustomProviders(providers);
+  }, []);
+
+  useEffect(() => {
+    loadCustomProviders();
+  }, [loadCustomProviders]);
+
+  // 编辑自定义提供商
+  const handleEditCustomProvider = useCallback((config: CustomProviderConfig) => {
+    setEditingCustomProvider(config);
+    setIsCustomFormOpen(true);
+  }, []);
+
+  // 自定义提供商保存后的回调
+  const handleCustomProviderSaved = useCallback(() => {
+    loadCustomProviders();
+    setEditingCustomProvider(undefined);
+  }, [loadCustomProviders]);
+
   // 处理提供商变更
   const handleProviderChange = useCallback(
     (provider: string) => {
+      // 检查是否为自定义提供商
+      if (isCustomProviderId(provider)) {
+        const customConfig = customProviders.find(p => p.id === provider);
+        if (customConfig) {
+          onConfigChange({
+            selectedProvider: provider,
+            selectedModel: customConfig.defaultModel || customConfig.models[0] || "",
+            connectionStatus: "idle",
+            errorMessage: undefined,
+          });
+          return;
+        }
+      }
+
+      // 内置提供商
       const providerModels =
         MODEL_OPTIONS_BY_PROVIDER[
           provider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
@@ -82,7 +130,7 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
         errorMessage: undefined,
       });
     },
-    [onConfigChange]
+    [onConfigChange, customProviders]
   );
 
   // 处理模型变更
@@ -137,10 +185,20 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
   );
 
   // 获取当前选择的模型选项
-  const providerModelOptions =
-    MODEL_OPTIONS_BY_PROVIDER[
+  const providerModelOptions = useMemo(() => {
+    // 自定义提供商
+    if (isCustomProviderId(configState.selectedProvider)) {
+      const customConfig = customProviders.find(p => p.id === configState.selectedProvider);
+      if (customConfig) {
+        return customConfig.models.map(m => ({ value: m, label: m }));
+      }
+    }
+
+    // 内置提供商
+    return MODEL_OPTIONS_BY_PROVIDER[
       configState.selectedProvider as keyof typeof MODEL_OPTIONS_BY_PROVIDER
     ] || [];
+  }, [configState.selectedProvider, customProviders]);
 
   const modelOptions = useMemo(() => {
     if (!configState.selectedModel) {
@@ -220,7 +278,95 @@ export const ModelConfiguration: React.FC<ModelConfigurationProps> = ({
               </div>
             </div>
           ))}
+
+          {/* 分隔线：自定义提供商 */}
+          {customProviders.length > 0 && (
+            <Divider style={{ margin: "8px 0", fontSize: "12px" }}>
+              自定义供应商
+            </Divider>
+          )}
+
+          {/* 自定义提供商列表 */}
+          {customProviders.map((provider) => (
+            <div
+              key={provider.id}
+              style={{
+                padding: "10px 12px",
+                cursor: "pointer",
+                backgroundColor:
+                  configState.selectedProvider === provider.id
+                    ? isDark
+                      ? "var(--primary-color-hover-bg)"
+                      : "var(--primary-color-active-bg)"
+                    : "transparent",
+                borderLeft:
+                  configState.selectedProvider === provider.id
+                    ? `3px solid #8c8c8c`
+                    : "3px solid transparent",
+                borderRadius: "4px",
+                marginBottom: "6px",
+              }}
+              onClick={() => handleProviderChange(provider.id)}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      backgroundColor: "#8c8c8c",
+                    }}
+                  />
+                  <Text strong={configState.selectedProvider === provider.id}>
+                    {provider.name}
+                  </Text>
+                </div>
+                <EditOutlined
+                  style={{ fontSize: "12px", color: "#8c8c8c" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditCustomProvider(provider);
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+
+          {/* 添加自定义提供商按钮 */}
+          <div
+            style={{
+              padding: "10px 12px",
+              cursor: "pointer",
+              borderRadius: "4px",
+              marginTop: "8px",
+              border: "1px dashed #8c8c8c",
+              textAlign: "center",
+            }}
+            onClick={() => {
+              setEditingCustomProvider(undefined);
+              setIsCustomFormOpen(true);
+            }}
+          >
+            <Space>
+              <PlusOutlined />
+              <Text type="secondary">添加自定义供应商</Text>
+            </Space>
+          </div>
         </div>
+
+        {/* 自定义提供商表单弹窗 */}
+        <CustomProviderForm
+          open={isCustomFormOpen}
+          onClose={() => {
+            setIsCustomFormOpen(false);
+            setEditingCustomProvider(undefined);
+          }}
+          onSaved={handleCustomProviderSaved}
+          editConfig={editingCustomProvider}
+        />
       </Card>
 
       {/* 右侧：配置详情 */}

@@ -194,6 +194,7 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     clearSelection,
     startDrag,
     endDrag,
+    deleteNotes,
   } = useNoteStore();
 
   // 测试面板状态
@@ -747,6 +748,14 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
           case "Escape":
             clearSelection();
             break;
+          case "Delete":
+          case "Backspace":
+            // 删除选中的便签
+            if (selectedNoteIds.length > 0) {
+              e.preventDefault();
+              deleteNotes(selectedNoteIds);
+            }
+            break;
           case " ":
             // 空格键在非编辑状态下才处理（已经在上面检查过了）
             if (!isPanning) {
@@ -865,6 +874,19 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
         },
         context: "canvas" as const,
       },
+      {
+        key: "canvas-delete-notes",
+        priority: 80,
+        handler: (e: KeyboardEvent) => {
+          if ((e.key === "Delete" || e.key === "Backspace") && selectedNoteIds.length > 0) {
+            e.preventDefault();
+            deleteNotes(selectedNoteIds);
+            return true;
+          }
+          return false;
+        },
+        context: "canvas" as const,
+      },
     ];
 
     // 注册所有处理器
@@ -886,6 +908,8 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     clearSelection,
     isPanning,
     isSpacePressed,
+    selectedNoteIds,
+    deleteNotes,
   ]);
   // 计算最终的画布偏移量：结合全局offset和本地优化offset
   const finalOffset = useMemo(() => {
@@ -905,6 +929,20 @@ export const Canvas: React.FC<CanvasProps> = ({ isDragMode = false }) => {
     }
 
     if (hasUserPannedRef.current) {
+      return;
+    }
+
+    // 如果 viewport 已经从数据库恢复了位置（不是默认的屏幕中心），则跳过自动居中
+    // 这样可以保持用户上次退出时的画布位置
+    const defaultCenterX = containerSize.width / 2;
+    const defaultCenterY = containerSize.height / 2;
+    const isDefaultPosition = 
+      Math.abs(viewport.offset.x - defaultCenterX) < 10 &&
+      Math.abs(viewport.offset.y - defaultCenterY) < 10;
+    
+    if (!isDefaultPosition) {
+      // 已有保存的位置，跳过自动居中
+      autoCenterScheduledRef.current = false;
       return;
     }
 

@@ -76,12 +76,12 @@ export class SecurityManager {
 
   /**
    * 验证API密钥格式
+   * 不再强制验证格式，只检查非空
    */
-  validateAPIKey(provider: string, key: string): boolean {
-    if (!providerRegistry.isValidProviderId(provider)) {
-      return key.length > 20; // 兜底验证
-    }
-    return providerRegistry.validateApiKey(provider as ProviderId, key);
+  validateAPIKey(_provider: string, key: string): boolean {
+    // 只验证非空，不再验证格式
+    // 不同厂商的 API Key 格式差异太大，强制验证反而影响用户体验
+    return key.trim().length > 0;
   }
 
   /**
@@ -134,6 +134,10 @@ class AIService {
     this.initializeProviders();
     this.loadUserSettings().catch((error: any) => {
       console.error("初始化时加载AI设置失败:", error);
+    });
+    // 加载自定义提供商
+    this.loadCustomProviders().catch((error: any) => {
+      console.error("初始化时加载自定义提供商失败:", error);
     });
   }
 
@@ -373,9 +377,8 @@ class AIService {
           this.migrateSettingsToNewStructure(savedSettings);
 
         // 验证和修复模型设置
-        const fixedSettings = await this.validateAndFixModelSettings(
-          migratedSettings
-        );
+        const fixedSettings =
+          await this.validateAndFixModelSettings(migratedSettings);
 
         this.currentSettings = { ...this.currentSettings, ...fixedSettings };
 
@@ -883,6 +886,170 @@ class AIService {
     } catch (error) {
       console.error("保存AI设置失败:", error);
       throw error;
+    }
+  }
+
+  // ==================== 自定义提供商管理 ====================
+
+  /**
+   * 保存自定义提供商配置
+   * @param config 自定义提供商配置
+   */
+  async saveCustomProvider(
+    config: import("./ai/CustomProvider").CustomProviderConfig
+  ): Promise<void> {
+    try {
+      // 验证 ID 格式
+      if (!config.id.startsWith("custom_")) {
+        throw new Error("自定义提供商 ID 必须以 'custom_' 开头");
+      }
+
+      // 保存到数据库
+      const dbConfig: AIConfigDB = {
+        id: config.id,
+        type: "custom_provider",
+        provider: config.id,
+        value: JSON.stringify(config),
+        encrypted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await dbOperations.saveAIConfig(dbConfig);
+
+      // 注册到 ProviderRegistry
+      providerRegistry.registerCustomProvider(config);
+
+      console.log(`✅ 自定义提供商已保存: ${config.name} (${config.id})`);
+    } catch (error) {
+      console.error(`❌ 保存自定义提供商失败:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取所有自定义提供商配置
+   */
+  async getCustomProviders(): Promise<
+    import("./ai/CustomProvider").CustomProviderConfig[]
+  > {
+    try {
+      const configs = await dbOperations.getAllAIConfigs();
+      const customProviders = configs
+        .filter((c) => c.type === "custom_provider")
+        .map((c) => {
+          try {
+            return JSON.parse(
+              c.value!
+            ) as import("./ai/CustomProvider").CustomProviderConfig;
+          } catch {
+            return null;
+          }
+        })
+        .filter(
+          (c): c is import("./ai/CustomProvider").CustomProviderConfig =>
+            c !== null
+        );
+
+      return customProviders;
+    } catch (error) {
+      console.error(`❌ 获取自定义提供商列表失败:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * 获取单个自定义提供商配置
+   * @param providerId 提供商 ID
+   */
+  async getCustomProvider(
+    providerId: string
+  ): Promise<import("./ai/CustomProvider").CustomProviderConfig | null> {
+    try {
+      const config = await dbOperations.getAIConfig(providerId);
+      if (config?.value && config.type === "custom_provider") {
+        return JSON.parse(
+          config.value
+        ) as import("./ai/CustomProvider").CustomProviderConfig;
+      }
+      return null;
+    } catch (error) {
+      console.error(`❌ 获取自定义提供商失败 (${providerId}):`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 删除自定义提供商
+   * @param providerId 提供商 ID
+   */
+  async deleteCustomProvider(providerId: string): Promise<boolean> {
+    try {
+      if (!providerId.startsWith("custom_")) {
+        console.warn(`❌ 尝试删除非自定义提供商: ${providerId}`);
+        return false;
+      }
+
+      // 从数据库删除
+      await dbOperations.deleteAIConfig(providerId);
+
+      // 从 ProviderRegistry 注销
+      providerRegistry.unregisterCustomProvider(providerId);
+
+      // 从提供商缓存中移除
+      this.providers.delete(providerId);
+
+      console.log(`✅ 自定义提供商已删除: ${providerId}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ 删除自定义提供商失败 (${providerId}):`, error);
+      return false;
+    }
+  }
+
+  /**
+   * 更新自定义提供商配置
+   * @param providerId 提供商 ID
+   * @param updates 要更新的字段
+   */
+  async updateCustomProvider(
+    providerId: string,
+    updates: Partial<import("./ai/CustomProvider").CustomProviderConfig>
+  ): Promise<boolean> {
+    try {
+      const existing = await this.getCustomProvider(providerId);
+      if (!existing) {
+        console.error(`❌ 自定义提供商不存在: ${providerId}`);
+        return false;
+      }
+
+      const updated: import("./ai/CustomProvider").CustomProviderConfig = {
+        ...existing,
+        ...updates,
+        id: existing.id, // ID 不可更改
+        updatedAt: new Date().toISOString(),
+      };
+
+      await this.saveCustomProvider(updated);
+      return true;
+    } catch (error) {
+      console.error(`❌ 更新自定义提供商失败 (${providerId}):`, error);
+      return false;
+    }
+  }
+
+  /**
+   * 初始化加载所有自定义提供商
+   * 在应用启动时调用
+   */
+  async loadCustomProviders(): Promise<void> {
+    try {
+      const customProviders = await this.getCustomProviders();
+      if (customProviders.length > 0) {
+        providerRegistry.loadCustomProviders(customProviders);
+        console.log(`✅ 已加载 ${customProviders.length} 个自定义提供商`);
+      }
+    } catch (error) {
+      console.error(`❌ 加载自定义提供商失败:`, error);
     }
   }
 }

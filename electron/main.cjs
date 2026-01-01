@@ -206,18 +206,23 @@ function createFloatingNoteWindow(noteData) {
 
     switch (key.toLowerCase()) {
       case "c":
+        event.preventDefault();
         floatingWindow.webContents.copy();
         break;
       case "v":
+        event.preventDefault();
         floatingWindow.webContents.paste();
         break;
       case "x":
+        event.preventDefault();
         floatingWindow.webContents.cut();
         break;
       case "a":
+        event.preventDefault();
         floatingWindow.webContents.selectAll();
         break;
       case "z":
+        event.preventDefault();
         if (shift) {
           floatingWindow.webContents.redo();
         } else {
@@ -346,18 +351,23 @@ function createWindow() {
 
     switch (key.toLowerCase()) {
       case "c":
+        event.preventDefault();
         mainWindow.webContents.copy();
         break;
       case "v":
+        event.preventDefault();
         mainWindow.webContents.paste();
         break;
       case "x":
+        event.preventDefault();
         mainWindow.webContents.cut();
         break;
       case "a":
+        event.preventDefault();
         mainWindow.webContents.selectAll();
         break;
       case "z":
+        event.preventDefault();
         if (shift) {
           mainWindow.webContents.redo();
         } else {

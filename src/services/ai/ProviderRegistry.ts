@@ -10,6 +10,7 @@
  */
 
 import type { AIProvider } from "../../types/ai";
+import type { CustomProviderConfig } from "./CustomProvider";
 
 /**
  * 提供商元数据接口
@@ -43,9 +44,9 @@ export interface ProviderMetadata {
 }
 
 /**
- * 提供商类型定义
+ * 内置提供商类型定义
  */
-export type ProviderId =
+export type BuiltinProviderId =
   | "zhipu"
   | "deepseek"
   | "openai"
@@ -54,9 +55,21 @@ export type ProviderId =
   | "anthropic";
 
 /**
+ * 提供商类型定义（包含内置和自定义）
+ */
+export type ProviderId = BuiltinProviderId | `custom_${string}`;
+
+/**
+ * 检查是否为自定义提供商 ID
+ */
+export function isCustomProviderId(id: string): id is `custom_${string}` {
+  return id.startsWith("custom_");
+}
+
+/**
  * 提供商注册表
  */
-const PROVIDER_REGISTRY: Record<ProviderId, ProviderMetadata> = {
+const PROVIDER_REGISTRY: Record<BuiltinProviderId, ProviderMetadata> = {
   zhipu: {
     id: "zhipu",
     name: "智谱AI",
@@ -208,6 +221,10 @@ const PROVIDER_REGISTRY: Record<ProviderId, ProviderMetadata> = {
 export class ProviderRegistry {
   private static instance: ProviderRegistry;
   private loadedProviders = new Map<ProviderId, AIProvider>();
+  /** 自定义提供商配置存储 */
+  private customProviders = new Map<string, CustomProviderConfig>();
+  /** 自定义提供商元数据缓存 */
+  private customProviderMetadata = new Map<string, ProviderMetadata>();
 
   private constructor() {}
 
@@ -219,17 +236,36 @@ export class ProviderRegistry {
   }
 
   /**
-   * 获取所有提供商ID列表
+   * 获取所有内置提供商ID列表
    */
-  getAllProviderIds(): ProviderId[] {
-    return Object.keys(PROVIDER_REGISTRY) as ProviderId[];
+  getAllBuiltinProviderIds(): BuiltinProviderId[] {
+    return Object.keys(PROVIDER_REGISTRY) as BuiltinProviderId[];
   }
 
   /**
-   * 获取提供商元数据
+   * 获取所有提供商ID列表（包含自定义）
+   */
+  getAllProviderIds(): ProviderId[] {
+    const builtinIds = this.getAllBuiltinProviderIds();
+    const customIds = Array.from(this.customProviders.keys()) as ProviderId[];
+    return [...builtinIds, ...customIds];
+  }
+
+  /**
+   * 获取提供商元数据（支持内置和自定义）
    */
   getProviderMetadata(providerId: ProviderId): ProviderMetadata {
-    const metadata = PROVIDER_REGISTRY[providerId];
+    // 先检查是否为自定义提供商
+    if (isCustomProviderId(providerId)) {
+      const customMetadata = this.customProviderMetadata.get(providerId);
+      if (!customMetadata) {
+        throw new Error(`未找到自定义提供商: ${providerId}`);
+      }
+      return customMetadata;
+    }
+
+    // 内置提供商
+    const metadata = PROVIDER_REGISTRY[providerId as BuiltinProviderId];
     if (!metadata) {
       throw new Error(`未知的提供商: ${providerId}`);
     }
@@ -237,16 +273,25 @@ export class ProviderRegistry {
   }
 
   /**
-   * 获取所有提供商元数据
+   * 获取所有提供商元数据（包含自定义）
    */
   getAllProviderMetadata(): ProviderMetadata[] {
-    return Object.values(PROVIDER_REGISTRY);
+    const builtinMetadata = Object.values(PROVIDER_REGISTRY);
+    const customMetadata = Array.from(this.customProviderMetadata.values());
+    return [...builtinMetadata, ...customMetadata];
   }
 
   /**
-   * 验证提供商ID是否有效
+   * 验证提供商ID是否有效（包含自定义提供商）
    */
   isValidProviderId(providerId: string): providerId is ProviderId {
+    return providerId in PROVIDER_REGISTRY || this.customProviders.has(providerId);
+  }
+
+  /**
+   * 检查是否为内置提供商
+   */
+  isBuiltinProvider(providerId: string): providerId is BuiltinProviderId {
     return providerId in PROVIDER_REGISTRY;
   }
 
@@ -267,10 +312,23 @@ export class ProviderRegistry {
       return this.loadedProviders.get(providerId)!;
     }
 
-    // 动态加载
-    const metadata = this.getProviderMetadata(providerId);
-    const ProviderClass = await metadata.loader();
-    const provider = new ProviderClass();
+    let provider: AIProvider;
+
+    // 检查是否为自定义提供商
+    if (isCustomProviderId(providerId)) {
+      const customConfig = this.customProviders.get(providerId);
+      if (!customConfig) {
+        throw new Error(`未找到自定义提供商配置: ${providerId}`);
+      }
+      // 动态加载 CustomProvider
+      const { CustomProvider } = await import("./CustomProvider");
+      provider = new CustomProvider(customConfig);
+    } else {
+      // 内置提供商：动态加载
+      const metadata = this.getProviderMetadata(providerId);
+      const ProviderClass = await metadata.loader();
+      provider = new ProviderClass();
+    }
 
     // 缓存实例
     this.loadedProviders.set(providerId, provider);
@@ -315,6 +373,134 @@ export class ProviderRegistry {
    */
   supportsStreaming(providerId: ProviderId): boolean {
     return this.getProviderMetadata(providerId).supportsStreaming;
+  }
+
+  // ==================== 自定义提供商管理 ====================
+
+  /**
+   * 注册自定义提供商
+   */
+  registerCustomProvider(config: CustomProviderConfig): void {
+    // 验证 ID 格式
+    if (!config.id.startsWith("custom_")) {
+      throw new Error("自定义提供商 ID 必须以 'custom_' 开头");
+    }
+
+    // 存储配置
+    this.customProviders.set(config.id, config);
+
+    // 生成并缓存元数据
+    const metadata = this.buildCustomProviderMetadata(config);
+    this.customProviderMetadata.set(config.id, metadata);
+
+    // 清除已加载的实例（如果存在），以便下次使用新配置
+    this.loadedProviders.delete(config.id as ProviderId);
+
+    console.log(`✅ 自定义提供商已注册: ${config.name} (${config.id})`);
+  }
+
+  /**
+   * 注销自定义提供商
+   */
+  unregisterCustomProvider(providerId: string): boolean {
+    if (!isCustomProviderId(providerId)) {
+      console.warn(`尝试注销非自定义提供商: ${providerId}`);
+      return false;
+    }
+
+    const existed = this.customProviders.delete(providerId);
+    this.customProviderMetadata.delete(providerId);
+    this.loadedProviders.delete(providerId as ProviderId);
+
+    if (existed) {
+      console.log(`✅ 自定义提供商已注销: ${providerId}`);
+    }
+
+    return existed;
+  }
+
+  /**
+   * 获取所有自定义提供商配置
+   */
+  getAllCustomProviders(): CustomProviderConfig[] {
+    return Array.from(this.customProviders.values());
+  }
+
+  /**
+   * 获取单个自定义提供商配置
+   */
+  getCustomProvider(providerId: string): CustomProviderConfig | undefined {
+    return this.customProviders.get(providerId);
+  }
+
+  /**
+   * 更新自定义提供商配置
+   */
+  updateCustomProvider(providerId: string, updates: Partial<CustomProviderConfig>): boolean {
+    const existing = this.customProviders.get(providerId);
+    if (!existing) {
+      return false;
+    }
+
+    const updated: CustomProviderConfig = {
+      ...existing,
+      ...updates,
+      id: existing.id, // ID 不可更改
+      updatedAt: new Date().toISOString(),
+    };
+
+    this.registerCustomProvider(updated);
+    return true;
+  }
+
+  /**
+   * 构建自定义提供商的元数据
+   */
+  private buildCustomProviderMetadata(config: CustomProviderConfig): ProviderMetadata {
+    return {
+      id: config.id,
+      name: config.name,
+      description: `自定义提供商 - ${config.baseUrl}`,
+      website: config.baseUrl,
+      supportedModels: config.models,
+      defaultModel: config.defaultModel,
+      supportsStreaming: true,
+      supportsThinking: false,
+      apiKeyPattern: /.*/, // 自定义提供商不强制验证密钥格式
+      colors: {
+        light: "#8c8c8c", // 自定义提供商使用灰色
+        dark: "#a6a6a6",
+      },
+      loader: async () => {
+        const { CustomProvider } = await import("./CustomProvider");
+        return class extends CustomProvider {
+          constructor() {
+            super(config);
+          }
+        } as unknown as new () => AIProvider;
+      },
+    };
+  }
+
+  /**
+   * 批量加载自定义提供商（用于应用启动时恢复）
+   */
+  loadCustomProviders(configs: CustomProviderConfig[]): void {
+    for (const config of configs) {
+      try {
+        this.registerCustomProvider(config);
+      } catch (error) {
+        console.error(`加载自定义提供商失败: ${config.id}`, error);
+      }
+    }
+    console.log(`✅ 已加载 ${configs.length} 个自定义提供商`);
+  }
+
+  /**
+   * 获取自定义提供商的元数据
+   */
+  getCustomProviderMetadata(providerId: string): ProviderMetadata | undefined {
+    return this.customProviderMetadata.get(providerId);
   }
 }
 

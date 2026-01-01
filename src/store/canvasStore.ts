@@ -631,12 +631,19 @@ export const useCanvasStore = create<CanvasStore>()(
         set((state) => {
           const newViewport = { ...state.viewport, scale: clampedScale };
 
+          // 同时更新 canvases 数组中当前画布的 scale（用于切换画布时恢复）
+          const updatedCanvases = state.canvases.map((canvas) =>
+            canvas.id === state.activeCanvasId
+              ? { ...canvas, scale: clampedScale }
+              : canvas
+          );
+
           // 使用防抖保存，避免缩放时频繁更新数据库
           if (state.activeCanvasId) {
             debouncedSaveCanvas(state.activeCanvasId, { scale: clampedScale });
           }
 
-          return { viewport: newViewport };
+          return { viewport: newViewport, canvases: updatedCanvases };
         });
       },
 
@@ -645,12 +652,19 @@ export const useCanvasStore = create<CanvasStore>()(
         set((state) => {
           const newViewport = { ...state.viewport, offset };
 
+          // 同时更新 canvases 数组中当前画布的 offset（用于切换画布时恢复）
+          const updatedCanvases = state.canvases.map((canvas) =>
+            canvas.id === state.activeCanvasId
+              ? { ...canvas, offset }
+              : canvas
+          );
+
           // 使用防抖保存，避免拖动时频繁更新数据库
           if (state.activeCanvasId) {
             debouncedSaveCanvas(state.activeCanvasId, { offset });
           }
 
-          return { viewport: newViewport };
+          return { viewport: newViewport, canvases: updatedCanvases };
         });
       },
 
@@ -891,9 +905,18 @@ export const useCanvasStore = create<CanvasStore>()(
               `🎨 画布去重合并完成，共 ${mergedCanvases.length} 个画布`
             );
 
+            // 恢复活跃画布的视口状态（位置记忆功能）
+            const activeCanvas = mergedCanvases.find(c => c.id === activeCanvasId);
+            const restoredViewport = activeCanvas ? {
+              ...state.viewport,
+              scale: getNearestZoomLevel(activeCanvas.scale),
+              offset: activeCanvas.offset,
+            } : state.viewport;
+
             return {
               canvases: mergedCanvases,
               activeCanvasId,
+              viewport: restoredViewport,
             };
           });
 

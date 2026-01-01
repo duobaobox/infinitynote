@@ -37,7 +37,7 @@ export interface CanvasDB extends Canvas {
  */
 export interface AIConfigDB {
   id: string; // 配置项唯一标识，如 'api_key_zhipu', 'ai_settings' 等
-  type: "api_key" | "settings" | "other"; // 配置类型
+  type: "api_key" | "settings" | "custom_provider" | "other"; // 配置类型
   provider?: string; // AI提供商名称（仅对api_key类型有效）
   value: string; // 配置值（JSON字符串或加密字符串）
   encrypted: boolean; // 是否已加密
