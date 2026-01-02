@@ -1,7 +1,7 @@
 {
   "name": "infinitynote",
   "private": true,
-  "version": "2.2.4",
+  "version": "2.2.5",
   "type": "module",
   "description": "无限便签 - 无限画布便签应用",
   "author": "无限便签团队",
