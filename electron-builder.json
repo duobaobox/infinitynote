@@ -30,12 +30,12 @@
     "artifactName": "${productName}-${version}-${arch}.${ext}",
     "target": [
       {
-        "target": "dmg",
+        "target": "zip",
         "arch": ["x64", "arm64"]
       },
       {
-        "target": "zip",
-        "arch": ["x64", "arm64"]
+        "target": "dmg",
+        "arch": ["arm64"]
       }
     ],
     "icon": "build/icon.icns",
